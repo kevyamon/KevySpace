@@ -1,188 +1,162 @@
-// src/components/CommentsSection.jsx
-import React, { useState, useRef, useEffect } from 'react';
-import { User, Send, Reply, Edit2, Trash2, MoreVertical } from 'lucide-react';
+// src/pages/Watch.jsx
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import api from '../services/api';
+import { AuthContext } from '../context/AuthContext';
+import toast from 'react-hot-toast';
+import { Loader2 } from 'lucide-react';
+import io from 'socket.io-client';
 
-const CommentsSection = ({ comments, currentUser, onPostComment, onDeleteComment, onEditComment }) => {
-  const [commentText, setCommentText] = useState('');
-  const [editingCommentId, setEditingCommentId] = useState(null);
-  const [editText, setEditText] = useState('');
+// Composants
+import VideoPlayer from '../components/VideoPlayer';
+import VideoInfo from '../components/VideoInfo';
+import CommentsSection from '../components/CommentsSection';
+
+// Connexion Socket
+const socket = io('https://kevyspace-backend.onrender.com');
+
+const Watch = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   
-  // Menu Dropdown
-  const [activeMenuId, setActiveMenuId] = useState(null);
+  // -- ÉTATS --
+  const [video, setVideo] = useState(null);
+  const [loading, setLoading] = useState(true);
   
-  const inputRef = useRef(null);
+  // États synchronisés temps réel
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [viewsCount, setViewsCount] = useState(0);
+
+  const hasViewedRef = useRef(false);
 
   useEffect(() => {
-    const handleClickOutside = () => setActiveMenuId(null);
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
+    let isMounted = true;
+    hasViewedRef.current = false;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (commentText.trim()) {
-      onPostComment(commentText);
-      setCommentText('');
+    const fetchVideo = async () => {
+      try {
+        const res = await api.get(`/api/videos/${id}`);
+        const data = res.data.data || res.data;
+        
+        if (isMounted) {
+          setVideo(data);
+          setViewsCount(data.views || 0);
+          setLikesCount(data.likes ? data.likes.length : 0);
+          if (user && data.likes) setIsLiked(data.likes.includes(user._id));
+          setLoading(false);
+        }
+      } catch (err) {
+        toast.error("Impossible de charger la vidéo");
+        navigate('/');
+      }
+    };
+
+    if (user) fetchVideo();
+
+    // --- ÉCOUTEURS SOCKETS (TEMPS RÉEL) ---
+    
+    // 1. Pour les Likes
+    const handleLikeUpdate = (payload) => {
+        if (payload.id === id) { 
+            setLikesCount(payload.likes.length);
+            if (user) setIsLiked(payload.likes.includes(user._id));
+        }
+    };
+
+    // 2. Pour les Vues (NOUVEAU - COMME LES LIKES)
+    const handleViewUpdate = (payload) => {
+        if (payload.id === id) {
+            setViewsCount(payload.views);
+        }
+    };
+
+    // 3. Pour les Commentaires
+    const handleCommentsUpdate = (payload) => {
+        if (payload.id === id) {
+             setVideo(prev => ({ ...prev, comments: payload.comments }));
+        }
+    };
+
+    socket.on('video_updated', handleLikeUpdate);
+    socket.on('video_viewed', handleViewUpdate); // <--- On écoute les vues ici
+    socket.on('video_comments_updated', handleCommentsUpdate);
+
+    return () => { 
+        isMounted = false; 
+        socket.off('video_updated', handleLikeUpdate);
+        socket.off('video_viewed', handleViewUpdate);
+        socket.off('video_comments_updated', handleCommentsUpdate);
+    };
+
+  }, [id, user, navigate]);
+
+  // -- HANDLERS --
+
+  const handleViewTrigger = async () => {
+    if (hasViewedRef.current) return;
+    try {
+        hasViewedRef.current = true;
+        // On envoie juste la requête, le Socket s'occupera de mettre à jour l'affichage
+        await api.put(`/api/videos/${id}/view`);
+    } catch (err) { console.error(err); }
+  };
+
+  const handleLike = async () => {
+    // Optimistic UI
+    const wasLiked = isLiked;
+    setIsLiked(!wasLiked);
+    setLikesCount(prev => wasLiked ? prev - 1 : prev + 1);
+
+    try {
+      await api.put(`/api/videos/${id}/like`);
+    } catch (err) {
+      setIsLiked(wasLiked);
+      setLikesCount(prev => wasLiked ? prev : prev - 1);
     }
   };
 
-  const handleReply = (userName) => {
-    setCommentText(`@${userName} `);
-    inputRef.current?.focus();
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Lien copié !");
   };
 
-  const startEdit = (e, comment) => {
-    e.stopPropagation();
-    setEditingCommentId(comment._id);
-    setEditText(comment.text);
-    setActiveMenuId(null);
+  // Actions Commentaires
+  const handlePostComment = async (text) => {
+    try {
+      await api.post(`/api/videos/${id}/comment`, { text });
+      toast.success("Publié !");
+    } catch (err) { toast.error("Erreur envoi"); }
   };
 
-  const saveEdit = (commentId) => {
-    onEditComment(commentId, editText);
-    setEditingCommentId(null);
+  const handleDeleteComment = async (commentId) => {
+    if(!window.confirm("Supprimer ce commentaire ?")) return;
+    try {
+        await api.delete(`/api/videos/${id}/comment/${commentId}`);
+        toast.success("Supprimé");
+    } catch (err) { toast.error("Erreur suppression"); }
   };
 
-  const handleDelete = (e, id) => {
-    e.stopPropagation();
-    onDeleteComment(id);
-    setActiveMenuId(null);
+  const handleEditComment = async (commentId, newText) => {
+    try {
+        await api.put(`/api/videos/${id}/comment/${commentId}`, { text: newText });
+        toast.success("Modifié");
+    } catch (err) { toast.error("Erreur modification"); }
   };
 
-  const toggleMenu = (e, id) => {
-    e.stopPropagation();
-    setActiveMenuId(activeMenuId === id ? null : id);
-  };
-
-  // FONCTION DE SÉCURITÉ : Vérifie si je suis le propriétaire
-  const isOwner = (comment) => {
-    if (!currentUser || !comment.user) return false;
-    // On convertit tout en String pour éviter les bugs ObjectId vs String
-    const currentId = String(currentUser._id);
-    const commentUserId = String(comment.user._id || comment.user); 
-    return currentId === commentUserId;
-  };
+  if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loader2 className="animate-spin" color="var(--color-gold)" size={32} /></div>;
+  if (!video) return null;
 
   return (
-    <div>
-      <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px' }}>
-        Commentaires <span style={{ color: '#86868B', fontSize: '14px', fontWeight: '500' }}>({comments?.length || 0})</span>
-      </h3>
-
-      {/* FORMULAIRE */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-        <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--color-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontWeight: 'bold', flexShrink: 0 }}>
-          {currentUser?.name?.charAt(0)}
-        </div>
-        <div style={{ flex: 1, position: 'relative' }}>
-          <input 
-            ref={inputRef}
-            type="text" 
-            placeholder="Ajouter un commentaire..."
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            style={{ width: '100%', padding: '12px 44px 12px 16px', borderRadius: '20px', border: '1px solid #E5E5EA', backgroundColor: '#FAFAFA', fontSize: '14px', outline: 'none' }}
-          />
-          <button type="submit" disabled={!commentText.trim()} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: commentText.trim() ? 'var(--color-gold)' : '#CCC' }}>
-            <Send size={18} />
-          </button>
-        </div>
-      </form>
-
-      {/* LISTE */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '500px', overflowY: 'auto', paddingRight: '4px' }}>
-        {comments && comments.length > 0 ? (
-          comments.map((com) => {
-            // SÉCURITÉ DATE : Si pas de date, on met la date actuelle pour éviter le crash
-            const safeDate = com.createdAt ? new Date(com.createdAt) : new Date();
-
-            return (
-              <div key={com._id} style={{ display: 'flex', gap: '12px', position: 'relative' }}>
-                
-                {/* Avatar */}
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#E5E5EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', flexShrink: 0, overflow: 'hidden' }}>
-                   {com.user?.avatar && com.user.avatar !== 'no-photo.jpg' ? (
-                       <img src={com.user.avatar} style={{width:'100%', height:'100%', objectFit:'cover'}} alt="avt" />
-                   ) : (
-                       com.user?.name?.charAt(0) || <User size={16} />
-                   )}
-                </div>
-                
-                <div style={{ flex: 1 }}>
-                  {/* En-tête */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: '600', color: '#1D1D1F' }}>{com.user?.name || "Utilisateur"}</span>
-                      <span style={{ fontSize: '11px', color: '#86868B' }}>{safeDate.toLocaleDateString()}</span>
-                    </div>
-
-                    {/* MENU DROPDOWN (Affiché seulement si Propriétaire) */}
-                    {isOwner(com) && !editingCommentId && (
-                      <div style={{ position: 'relative' }}>
-                        <button 
-                          onClick={(e) => toggleMenu(e, com._id)} 
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#86868B' }}
-                        >
-                          <MoreVertical size={16} />
-                        </button>
-                        
-                        {/* LE MENU FLOTTANT */}
-                        {activeMenuId === com._id && (
-                          <div style={{ 
-                            position: 'absolute', right: 0, top: '24px', 
-                            backgroundColor: '#FFF', 
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)', 
-                            borderRadius: '12px', 
-                            zIndex: 10, overflow: 'hidden', minWidth: '120px'
-                          }}>
-                            <button onClick={(e) => startEdit(e, com)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', border: 'none', background: 'none', fontSize: '13px', color: '#1D1D1F', cursor: 'pointer', textAlign: 'left', ':hover': {background: '#F5F5F7'} }}>
-                              <Edit2 size={14} /> Modifier
-                            </button>
-                            <button onClick={(e) => handleDelete(e, com._id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', border: 'none', background: 'none', fontSize: '13px', color: '#FF3B30', cursor: 'pointer', textAlign: 'left' }}>
-                              <Trash2 size={14} /> Supprimer
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Contenu ou Édition */}
-                  {editingCommentId === com._id ? (
-                    <div style={{ marginBottom: '6px' }}>
-                      <textarea 
-                          value={editText} 
-                          onChange={(e) => setEditText(e.target.value)} 
-                          autoFocus 
-                          style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid var(--color-gold)', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', minHeight: '60px' }} 
-                      />
-                      <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                        <button onClick={() => saveEdit(com._id)} style={{ fontSize: '11px', fontWeight: 'bold', color: '#FFF', background: 'var(--color-gold)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Enregistrer</button>
-                        <button onClick={() => setEditingCommentId(null)} style={{ fontSize: '11px', color: '#1D1D1F', background: '#F2F2F7', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Annuler</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <p style={{ fontSize: '14px', color: '#444', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>{com.text}</p>
-                  )}
-
-                  {/* Bouton Répondre */}
-                  {!editingCommentId && (
-                      <div style={{ marginTop: '6px' }}>
-                      <button onClick={() => handleReply(com.user?.name)} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', fontSize: '11px', fontWeight: '600', color: '#86868B', cursor: 'pointer' }}>
-                          <Reply size={14} /> Répondre
-                      </button>
-                      </div>
-                  )}
-                </div>
-              </div>
-            );
-          })
-        ) : (
-          <p style={{ textAlign: 'center', color: '#999', fontSize: '14px', fontStyle: 'italic', marginTop: '10px' }}>Soyez le premier à commenter !</p>
-        )}
+    <div style={{ minHeight: '100%', backgroundColor: '#FFF', paddingBottom: '40px', display: 'flex', flexDirection: 'column' }}>
+      <VideoPlayer videoUrl={video.videoUrl} thumbnailUrl={video.thumbnailUrl} onPlay={handleViewTrigger} />
+      <VideoInfo video={video} viewsCount={viewsCount} likesCount={likesCount} isLiked={isLiked} onLike={handleLike} onShare={handleShare} />
+      <div style={{ padding: '0 20px' }}>
+        <CommentsSection comments={video.comments} currentUser={user} onPostComment={handlePostComment} onDeleteComment={handleDeleteComment} onEditComment={handleEditComment} />
       </div>
     </div>
   );
 };
 
-export default CommentsSection;
+export default Watch;

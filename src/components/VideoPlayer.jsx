@@ -35,7 +35,7 @@ const VideoPlayer = ({ videoUrl, thumbnailUrl, onPlay }) => {
         controlsList="nodownload" 
         style={{ width: '100%', height: '100%', objectFit: 'contain' }}
         poster={thumbnailUrl}
-        onPlay={onPlay} // <--- C'est ici que la magie opère
+        onPlay={onPlay} // <--- DÉCLENCHEUR ESSENTIEL
       />
     </div>
   );
