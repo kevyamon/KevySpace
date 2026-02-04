@@ -48,6 +48,9 @@ function App() {
       <MobileLayout>
         <Toaster 
           position="top-center"
+          containerStyle={{
+            zIndex: 9999999 // LE SECRET : On passe au-dessus de toutes les modales (qui sont souvent à 99999)
+          }}
           toastOptions={{
             style: { borderRadius: '16px', background: '#333', color: '#fff' },
             success: { style: { background: '#E5F9E5', color: '#000', border: '1px solid #34C759' } },

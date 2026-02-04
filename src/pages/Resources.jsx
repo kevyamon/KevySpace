@@ -1,12 +1,11 @@
-// src/pages/Resources.jsx
 import React, { useEffect, useState } from 'react';
 import { Download, FileText, Search, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
-import io from 'socket.io-client'; // Import Socket
+import io from 'socket.io-client';
 
-// On se connecte au socket (l'URL dépend de ton env, ici localhost ou prod)
-const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+// 👇 CORRECTION ICI : ON MET L'URL RENDER EN DUR POUR ÊTRE SÛR
+const socket = io('https://kevyspace-backend.onrender.com');
 
 const Resources = () => {
   const [resources, setResources] = useState([]);
@@ -16,18 +15,14 @@ const Resources = () => {
   useEffect(() => {
     fetchResources();
 
-    // --- ÉCOUTE TEMPS RÉEL ---
     socket.on('resource_action', (payload) => {
       if (payload.type === 'add') {
-        // On ajoute la nouvelle ressource en haut de la liste
         setResources(prev => [payload.data, ...prev]);
       } else if (payload.type === 'delete') {
-        // On retire la ressource supprimée
         setResources(prev => prev.filter(r => r._id !== payload.id));
       }
     });
 
-    // Nettoyage quand on quitte la page
     return () => {
       socket.off('resource_action');
     };

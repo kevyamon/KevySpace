@@ -6,8 +6,8 @@ import { AuthContext } from '../context/AuthContext';
 import io from 'socket.io-client';
 import toast from 'react-hot-toast';
 
-// Connexion au socket
-const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+// 1. Connexion simple au serveur Render
+const socket = io('https://kevyspace-backend.onrender.com');
 
 const Certificates = () => {
   const { user } = useContext(AuthContext);
@@ -17,19 +17,17 @@ const Certificates = () => {
   useEffect(() => {
     fetchCertificates();
 
-    // --- ÉCOUTE TEMPS RÉEL (SOCKET) ---
+    // 2. Écoute simple (comme Resources)
     socket.on('certificate_action', (payload) => {
-      // ⚠️ FILTRE IMPORTANT : On ne réagit que si ça concerne NOS certificats
-      // On compare l'ID du user concerné par l'action avec l'ID du user connecté
-      
-      const targetUserId = payload.data?.user || payload.userId; // 'add' envoie data.user, 'delete' envoie userId
-      
-      if (targetUserId === user._id) {
+      // On vérifie juste si c'est pour moi
+      if (payload.targetUserId === user._id) {
+        
         if (payload.type === 'add') {
           setCertificates(prev => [payload.data, ...prev]);
-          toast.success("Félicitations ! Vous avez reçu un nouveau certificat ! 🎓");
+          toast.success("Nouveau certificat reçu ! 🎓");
         } 
-        else if (payload.type === 'delete') {
+        
+        if (payload.type === 'delete') {
           setCertificates(prev => prev.filter(c => c._id !== payload.id));
         }
       }
@@ -38,7 +36,7 @@ const Certificates = () => {
     return () => {
       socket.off('certificate_action');
     };
-  }, [user._id]); // On dépend de user._id pour être sûr de bien filtrer
+  }, [user._id]);
 
   const fetchCertificates = async () => {
     try {
@@ -55,7 +53,6 @@ const Certificates = () => {
 
   return (
     <div style={{ padding: '24px 24px 100px 24px', minHeight: '100%' }}>
-      {/* HEADER */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
         <div style={{ width: '44px', height: '44px', borderRadius: '14px', backgroundColor: '#FFF9E6', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(255, 215, 0, 0.1)' }}>
           <Award size={24} color="#FFD700" />
@@ -67,7 +64,6 @@ const Certificates = () => {
       </div>
 
       {certificates.length === 0 ? (
-        // --- ÉTAT VIDE ---
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '60px', textAlign: 'center', padding: '40px 20px', backgroundColor: '#FFF', borderRadius: '24px', boxShadow: '0 8px 32px rgba(0,0,0,0.03)' }}>
           <div style={{ width: '100px', height: '100px', borderRadius: '50%', marginBottom: '24px', background: 'linear-gradient(135deg, #F5F5F7 0%, #FFF 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #E5E5EA' }}>
             <Lock size={40} color="#C7C7CC" />
@@ -76,7 +72,6 @@ const Certificates = () => {
           <p style={{ fontSize: '14px', color: '#86868B', lineHeight: '1.6', maxWidth: '300px' }}>Complétez vos formations pour débloquer vos certificats officiels.</p>
         </motion.div>
       ) : (
-        // --- LISTE DES CERTIFICATS ---
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
           <AnimatePresence>
             {certificates.map((cert) => (
