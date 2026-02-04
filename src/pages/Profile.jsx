@@ -1,16 +1,25 @@
 // src/pages/Profile.jsx
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react'; // <--- AJOUT useState
 import { AuthContext } from '../context/AuthContext';
 import { User, Mail, Phone, Shield, Edit2, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import EditProfileModal from '../components/EditProfileModal'; // <--- IMPORT
 
 const Profile = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [isEditOpen, setIsEditOpen] = useState(false); // <--- ÉTAT POUR LA MODALE
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  // Callback quand la modale a réussi
+  const handleUpdateSuccess = (updatedUser) => {
+    // Pour faire simple et robuste, on recharge la page pour rafraîchir le contexte
+    // (Dans une version V2, on mettra à jour le contexte directement)
+    window.location.reload();
   };
 
   return (
@@ -53,22 +62,25 @@ const Profile = () => {
 
       {/* INFORMATIONS DÉTAILLÉES */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        
         <InfoItem icon={<User size={20} />} label="Nom complet" value={user.name} />
         <InfoItem icon={<Mail size={20} />} label="Email" value={user.email} />
         <InfoItem icon={<Phone size={20} />} label="Téléphone" value={user.phone} />
         <InfoItem icon={<Shield size={20} />} label="Statut du compte" value="Actif" color="#34C759" />
-
       </div>
 
       {/* BOUTONS D'ACTION */}
       <div style={{ marginTop: '40px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <button style={{ 
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-          width: '100%', padding: '16px', borderRadius: '18px',
-          backgroundColor: '#1D1D1F', color: '#FFF', border: 'none',
-          fontSize: '14px', fontWeight: '700', cursor: 'pointer'
-        }}>
+        
+        {/* BOUTON MODIFIER - CONNECTÉ */}
+        <button 
+          onClick={() => setIsEditOpen(true)} // <--- CLIC
+          style={{ 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+            width: '100%', padding: '16px', borderRadius: '18px',
+            backgroundColor: '#1D1D1F', color: '#FFF', border: 'none',
+            fontSize: '14px', fontWeight: '700', cursor: 'pointer'
+          }}
+        >
           <Edit2 size={18} /> Modifier mes informations
         </button>
 
@@ -84,6 +96,14 @@ const Profile = () => {
           <LogOut size={18} /> Se déconnecter
         </button>
       </div>
+
+      {/* MODALE D'ÉDITION */}
+      <EditProfileModal 
+        isOpen={isEditOpen} 
+        onClose={() => setIsEditOpen(false)} 
+        user={user}
+        onUpdate={handleUpdateSuccess}
+      />
 
     </div>
   );
