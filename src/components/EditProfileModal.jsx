@@ -1,8 +1,8 @@
-// src/components/EditProfileModal.jsx
+// frontend/src/components/EditProfileModal.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom'; // Pour la redirection
-import { AuthContext } from '../context/AuthContext'; // Pour le logout
+import { useNavigate } from 'react-router-dom'; 
+import { AuthContext } from '../context/AuthContext'; 
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Loader2, User, Lock, Eye, EyeOff, LogOut, CheckCircle } from 'lucide-react';
 import api from '../services/api';
@@ -14,7 +14,7 @@ const EditProfileModal = ({ isOpen, onClose, user }) => {
 
   const [activeTab, setActiveTab] = useState('infos');
   const [loading, setLoading] = useState(false);
-  const [showReconnect, setShowReconnect] = useState(false); // <--- NOUVEL ÉTAT
+  const [showReconnect, setShowReconnect] = useState(false); 
   
   // États Formulaires
   const [infoData, setInfoData] = useState({ name: '', email: '', phone: '' });
@@ -33,9 +33,9 @@ const EditProfileModal = ({ isOpen, onClose, user }) => {
 
   // --- LOGIQUE DE RECONNEXION ---
   const handleReconnect = () => {
-    logout(); // 1. On vide le token/storage
-    navigate('/login'); // 2. On renvoie au login
-    onClose(); // 3. On ferme la modale (proprement)
+    logout(); 
+    navigate('/login'); 
+    onClose(); 
   };
 
   const handleInfoSubmit = async (e) => {
@@ -43,7 +43,7 @@ const EditProfileModal = ({ isOpen, onClose, user }) => {
     setLoading(true);
     try {
       await api.put('/api/auth/updatedetails', infoData);
-      setShowReconnect(true); // <--- ON ACTIVE L'ÉCRAN DE SUCCÈS
+      setShowReconnect(true); 
     } catch (err) {
       toast.error(err.response?.data?.error || "Erreur de mise à jour");
     } finally {
@@ -58,7 +58,7 @@ const EditProfileModal = ({ isOpen, onClose, user }) => {
     setLoading(true);
     try {
       await api.put('/api/auth/updatepassword', passData);
-      setShowReconnect(true); // <--- ON ACTIVE L'ÉCRAN DE SUCCÈS
+      setShowReconnect(true); 
     } catch (err) {
       toast.error(err.response?.data?.error || "Erreur mot de passe");
     } finally {
@@ -117,13 +117,24 @@ const EditProfileModal = ({ isOpen, onClose, user }) => {
 
           {/* MODALE */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20, x: '-50%' }}
-            animate={{ opacity: 1, scale: 1, y: 0, x: '-50%' }}
-            exit={{ opacity: 0, scale: 0.95, y: 20, x: '-50%' }}
+            initial={{ opacity: 0, scale: 0.95, y: '-40%', x: '-50%' }} // On commence un peu plus haut
+            animate={{ opacity: 1, scale: 1, y: '-50%', x: '-50%' }} // Centrage parfait
+            exit={{ opacity: 0, scale: 0.95, y: '-40%', x: '-50%' }}
             style={{
-              position: 'fixed', top: '50%', left: '50%', width: '90%', maxWidth: '400px',
-              backgroundColor: '#FFF', borderRadius: '24px', padding: '24px', zIndex: 99999,
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+              position: 'fixed', 
+              top: '50%', 
+              left: '50%', 
+              width: '90%', 
+              maxWidth: '400px',
+              maxHeight: '85vh', // IMPORTANT : Limite la hauteur à 85% de l'écran
+              overflowY: 'auto', // IMPORTANT : Active le scroll si ça dépasse (clavier ouvert)
+              backgroundColor: '#FFF', 
+              borderRadius: '24px', 
+              padding: '24px', 
+              zIndex: 99999,
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              // Petit fix pour le scroll fluide sur iOS
+              WebkitOverflowScrolling: 'touch' 
             }}
           >
             {/* Si showReconnect est vrai, on affiche l'écran de succès, sinon le formulaire */}
