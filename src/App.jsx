@@ -22,12 +22,12 @@ import Favorites from './pages/Favorites';
 import History from './pages/History';
 import Certificates from './pages/Certificates';
 import Resources from './pages/Resources';
-// Contact retiré (C'est une modale dans Sidebar)
 
 // --- PAGES ADMIN ---
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUpload from './pages/admin/AdminUpload';
-// AdminUsers retiré (Géré autrement ou inutile pour l'instant)
+import AdminResources from './pages/admin/AdminResources';     // <--- AJOUT
+import AdminCertificates from './pages/admin/AdminCertificates'; // <--- AJOUT
 
 function App() {
   const { user, loading } = useContext(AuthContext);
@@ -76,6 +76,9 @@ function App() {
           {/* ROUTES ADMIN */}
           <Route path="/admin/dashboard" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />
           <Route path="/admin/upload" element={user?.role === 'admin' ? <AdminUpload /> : <Navigate to="/" />} />
+          {/* Nouvelles routes Admin */}
+          <Route path="/admin/resources" element={user?.role === 'admin' ? <AdminResources /> : <Navigate to="/" />} />
+          <Route path="/admin/certificates" element={user?.role === 'admin' ? <AdminCertificates /> : <Navigate to="/" />} />
 
           {/* FALLBACK */}
           <Route path="*" element={<Navigate to="/" />} />

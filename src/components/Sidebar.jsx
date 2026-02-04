@@ -7,7 +7,7 @@ import ContactModal from './ContactModal';
 import { 
   X, Home, User, LogOut, 
   Heart, FileText, Download, Clock,
-  LayoutDashboard, UploadCloud, HelpCircle, Users
+  LayoutDashboard, UploadCloud, HelpCircle, Award
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -34,7 +34,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { icon: <User size={20} />, label: 'Mon Profil', path: '/profile' },
     { icon: <Heart size={20} />, label: 'Mes Favoris', path: '/favorites' }, 
     { icon: <Clock size={20} />, label: 'Historique', path: '/history' },   
-    { icon: <FileText size={20} />, label: 'Mes Certificats', path: '/certificates' }, 
+    { icon: <Award size={20} />, label: 'Mes Certificats', path: '/certificates' }, // Changé FileText par Award pour user aussi c'est plus joli
     { icon: <Download size={20} />, label: 'Ressources PDF', path: '/resources' },     
   ];
 
@@ -42,12 +42,14 @@ const Sidebar = ({ isOpen, onClose }) => {
   const adminLinks = [
     { icon: <LayoutDashboard size={20} />, label: 'Dashboard Admin', path: '/admin/dashboard', isAdmin: true },
     { icon: <UploadCloud size={20} />, label: 'Publier un cours', path: '/admin/upload', isAdmin: true },
-    // Si tu veux garder le lien Users dans le menu, décommente la ligne ci-dessous :
-    // { icon: <Users size={20} />, label: 'Utilisateurs', path: '/admin/users', isAdmin: true },
+    
+    // NOUVEAUX LIENS ADMIN
+    { icon: <Download size={20} />, label: 'Gérer Ressources', path: '/admin/resources', isAdmin: true },
+    { icon: <Award size={20} />, label: 'Gérer Certificats', path: '/admin/certificates', isAdmin: true },
     
     { isSeparator: true },
     
-    // 👇 CORRECTION ICI : On pointe vers '/home' pour forcer l'affichage User 👇
+    // 👇 Vue site pour l'admin
     { icon: <Home size={20} />, label: 'Vue Site (Accueil)', path: '/home', isHighlight: true },
     { icon: <User size={20} />, label: 'Mon Profil', path: '/profile' },
   ];
