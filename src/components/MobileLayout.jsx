@@ -1,3 +1,4 @@
+// src/components/MobileLayout.jsx
 import React, { useState, useContext } from 'react';
 import { Menu } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
@@ -16,44 +17,52 @@ const MobileLayout = ({ children }) => {
   return (
     <div style={{
       width: '100%',
-      height: '100dvh', /* Fixe la hauteur totale à l'écran */
+      height: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       backgroundColor: '#FAFAFA',
-      overflow: 'hidden', /* Le cadre global ne scrolle JAMAIS */
+      overflow: 'hidden',
       position: 'relative'
     }}>
       
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      {/* NAVBAR FIXE (Ne bouge pas) */}
+      {/* NAVBAR FIXE */}
       {showNavbar && (
         <div style={{
           flexShrink: 0, 
           height: '60px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+          display: 'flex', alignItems: 'center', 
+          // On utilise 'space-between' pour placer les éléments
+          justifyContent: 'space-between', 
           padding: '0 20px', backgroundColor: '#FFF', borderBottom: '1px solid #EEE',
-          zIndex: 10 /* Reste au-dessus du contenu qui défile */
+          zIndex: 10 
         }}>
-          <button onClick={() => setIsSidebarOpen(true)} style={{ background: 'none', border: 'none', padding: 0 }}>
-            <Menu size={24} color="#1D1D1F" />
-          </button>
+          
+          {/* 1. ELEMENT INVISIBLE À GAUCHE (Pour équilibrer et centrer le logo) */}
+          <div style={{ width: '24px' }}></div> 
+
+          {/* 2. LOGO CENTRÉ */}
           <div style={{ fontWeight: '800', fontSize: '18px' }}>
             Kevy<span style={{ color: 'var(--color-gold)' }}>Space</span>
           </div>
-          <div style={{ width: '24px' }}></div> 
+
+          {/* 3. HAMBURGER À DROITE (Enfin !) */}
+          <button onClick={() => setIsSidebarOpen(true)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+            <Menu size={24} color="#1D1D1F" />
+          </button>
+
         </div>
       )}
 
-      {/* ZONE DE CONTENU (C'est elle qui scrolle !) */}
+      {/* ZONE DE CONTENU */}
       <div style={{ 
-        flex: 1, /* Prend tout l'espace restant sous la navbar */
-        overflowY: 'auto', /* AUTORISE LE SCROLL VERTICAL ICI */
+        flex: 1, 
+        overflowY: 'auto', 
         overflowX: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        /* Pour un scroll fluide sur mobile */
         WebkitOverflowScrolling: 'touch' 
       }}>
         {children}

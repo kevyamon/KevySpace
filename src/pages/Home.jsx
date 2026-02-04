@@ -1,17 +1,14 @@
 // src/pages/Home.jsx
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { LogOut, Video as VideoIcon, Loader2, PlayCircle } from 'lucide-react';
-import api from '../services/api'; // <--- ON BRANCHE LE CERVEAU
-import Button from '../components/Button';
-import toast from 'react-hot-toast';
+import { Video as VideoIcon, Loader2, PlayCircle } from 'lucide-react';
+import api from '../services/api';
 
 const Home = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext); // Plus besoin de logout ici
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 1. CHARGEMENT DES DONNÉES AU DÉMARRAGE
   useEffect(() => {
     fetchVideos();
   }, []);
@@ -22,44 +19,29 @@ const Home = () => {
       setVideos(res.data.data);
     } catch (err) {
       console.error("Erreur chargement vidéos", err);
-      // Pas de toast d'erreur ici pour ne pas spammer si le serveur dort, 
-      // le loader tournera juste ou affichera vide.
     } finally {
       setLoading(false);
     }
   };
 
   const handleWatchVideo = (videoUrl) => {
-    // Pour l'instant, on ouvre dans un nouvel onglet
-    // Bientôt, on fera un vrai lecteur vidéo intégré !
     window.open(videoUrl, '_blank');
   };
 
   return (
     <div style={{ padding: '24px', paddingBottom: '100px' }}>
       
-      {/* HEADER : SALUTATION + LOGOUT */}
+      {/* HEADER : JUSTE LE TITRE (Plus de bouton logout qui traîne) */}
       <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
         marginBottom: '32px',
         marginTop: '20px'
       }}>
-        <div>
-          <h1 style={{ fontSize: '24px', marginBottom: '4px' }}>
-            Salut <span style={{ color: 'var(--color-gold-hover)' }}>{user?.name}</span> 👋
-          </h1>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: '14px' }}>
-            Prêt à apprendre ?
-          </p>
-        </div>
-        <button 
-          onClick={logout}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}
-        >
-          <LogOut color="#FF3B30" size={24} />
-        </button>
+        <h1 style={{ fontSize: '24px', marginBottom: '4px' }}>
+          Salut <span style={{ color: 'var(--color-gold-hover)' }}>{user?.name}</span>
+        </h1>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '14px' }}>
+          Prêt à apprendre ?
+        </p>
       </div>
 
       {/* LISTE DES COURS */}
@@ -103,10 +85,10 @@ const Home = () => {
               onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
               onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
-              {/* VIGNETTE (Icone pour l'instant) */}
+              {/* VIGNETTE */}
               <div style={{ 
                 width: '60px', height: '60px', borderRadius: '16px', 
-                backgroundColor: 'var(--color-gold)', // Fond doré
+                backgroundColor: 'var(--color-gold)', 
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0, color: '#FFF'
               }}>
