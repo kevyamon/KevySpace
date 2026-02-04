@@ -5,9 +5,9 @@ import { ArrowLeft, Award, Plus, Trash2, Loader2, User } from 'lucide-react';
 import api from '../../services/api';
 import CertificateModal from '../../components/admin/CertificateModal';
 import toast from 'react-hot-toast';
-import io from 'socket.io-client'; // <--- IMPORT SOCKET
+import io from 'socket.io-client'; // <--- 1. IMPORT SOCKET
 
-// Connexion Socket (URL Render)
+// 2. CONNEXION AU SERVEUR (Même URL que dans api.js)
 const socket = io('https://kevyspace-backend.onrender.com');
 
 const AdminCertificates = () => {
@@ -19,6 +19,7 @@ const AdminCertificates = () => {
 
   const fetchCertificates = async () => {
     try {
+      // Nouvelle route pour admin : voir TOUS les certificats
       const res = await api.get('/api/certificates/all');
       setCertificates(res.data.data);
     } catch (err) { console.error(err); }
@@ -26,28 +27,26 @@ const AdminCertificates = () => {
   };
 
   useEffect(() => { 
-      fetchCertificates(); 
+    // Chargement initial
+    fetchCertificates(); 
 
-      // ÉCOUTE TEMPS RÉEL
-      socket.on('certificate_action', (payload) => {
-          // Si ajout : on l'ajoute en haut de liste
-          if (payload.type === 'add') {
-              // Comme le payload.data ne contient pas forcément le "user" populé (juste l'ID), 
-              // on refait un fetch rapide pour avoir les noms corrects ou on gère manuellement.
-              // Pour simplifier et garantir les données : on refetch tout (c'est léger pour l'admin)
-              fetchCertificates(); 
-              // Ou optimisé : setCertificates(prev => [payload.data, ...prev]) (mais il manquera le user.name)
-          }
+    // 3. ÉCOUTEUR D'ÉVÉNEMENTS (TEMPS RÉEL)
+    const handleCertificateAction = (payload) => {
+        if (payload.type === 'add') {
+            // Option simple : on recharge tout pour avoir les données populées (nom, avatar...)
+            fetchCertificates();
+        }
+        if (payload.type === 'delete') {
+            setCertificates(prev => prev.filter(c => c._id !== payload.id));
+        }
+    };
 
-          // Si suppression : on filtre
-          if (payload.type === 'delete') {
-              setCertificates(prev => prev.filter(c => c._id !== payload.id));
-          }
-      });
+    socket.on('certificate_action', handleCertificateAction);
 
-      return () => {
-          socket.off('certificate_action');
-      };
+    // Nettoyage à la fermeture du composant
+    return () => {
+        socket.off('certificate_action', handleCertificateAction);
+    };
   }, []);
 
   const handleDelete = async (id) => {
@@ -56,8 +55,8 @@ const AdminCertificates = () => {
     try {
       await api.delete(`/api/certificates/${id}`);
       toast.success("Certificat révoqué");
-      // Note: Le socket se chargera de mettre à jour la liste visuellement
-      // Mais pour une réactivité instantanée pour CELUI qui clique, on peut aussi filtrer ici
+      // Note : Le socket s'occupera de la mise à jour visuelle, 
+      // mais on peut aussi le faire ici pour une réactivité immédiate locale
       setCertificates(prev => prev.filter(c => c._id !== id));
     } catch (err) {
       toast.error("Erreur suppression");
@@ -96,6 +95,7 @@ const AdminCertificates = () => {
                 <div key={cert._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: '#FFF', borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#F5F5F7', color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize:'14px', fontWeight:'bold', overflow:'hidden' }}>
+                           {/* Gestion Avatar améliorée */}
                             {cert.user?.avatar && cert.user.avatar !== 'no-photo.jpg' ? (
                                 <img src={cert.user.avatar} style={{width:'100%', height:'100%', objectFit:'cover'}} alt="u" />
                             ) : (
