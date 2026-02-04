@@ -1,4 +1,4 @@
-// src/pages/Certificates.jsx
+// frontend/src/pages/Certificates.jsx
 import React, { useEffect, useState, useContext, useRef } from 'react';
 import { Award, Lock, Download, Loader2, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,57 +7,60 @@ import { AuthContext } from '../context/AuthContext';
 import io from 'socket.io-client';
 import toast from 'react-hot-toast';
 
-// Connexion au serveur
-const socket = io('https://kevyspace-backend.onrender.com');
-
 const Certificates = () => {
   const { user } = useContext(AuthContext);
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Utilisation d'une Ref pour que le socket ait TOUJOURS le bon ID, même sans re-render
+  // Ref pour stocker l'ID utilisateur et éviter les problèmes de closure dans le Socket
   const userIdRef = useRef(null);
 
+  // 1. Mise à jour de la Ref quand l'user change
   useEffect(() => {
-    if (user && user._id) {
-      userIdRef.current = String(user._id);
+    if (user) {
+      // On gère les deux cas : _id (Mongo) ou id (transformé)
+      userIdRef.current = String(user._id || user.id);
     }
   }, [user]);
 
+  // 2. Chargement initial + Gestion Socket
   useEffect(() => {
     fetchCertificates();
 
+    // --- CONNEXION SOCKET ---
+    // Création locale : garantit une connexion fraiche au montage du composant
+    const socket = io('https://kevyspace-backend.onrender.com');
+
     const handleCertificateAction = (payload) => {
-      // RÉCUPÉRATION DE L'ID DEPUIS LA REF (POUR ÉVITER LE UNDEFINED)
       const myCurrentId = userIdRef.current;
       const targetId = String(payload.targetUserId || '').trim();
 
-      console.log("🔔 Socket Reçu pour:", targetId);
-      console.log("👤 Mon ID actuel:", myCurrentId);
-
-      // Comparaison
+      // VÉRIFICATION STRICTE
       if (myCurrentId && targetId === myCurrentId) {
-        console.log("✅ Match ! Mise à jour de la liste...");
         
         if (payload.type === 'add') {
           setCertificates(prev => [payload.data, ...prev]);
-          toast.success("Nouveau certificat reçu ! 🎓");
+          toast.success("Nouveau certificat reçu ! 🎓", {
+             duration: 5000,
+             icon: '🏆'
+          });
         } 
         
         if (payload.type === 'delete') {
           setCertificates(prev => prev.filter(c => String(c._id) !== String(payload.id)));
+          toast('Un certificat a été révoqué.', { icon: 'ℹ️' });
         }
-      } else {
-        console.log("❌ Pas pour moi ou ID non chargé.");
       }
     };
 
     socket.on('certificate_action', handleCertificateAction);
 
+    // --- NETTOYAGE (VACCIN) ---
     return () => {
       socket.off('certificate_action', handleCertificateAction);
+      socket.disconnect(); // Coupe la connexion en quittant la page
     };
-  }, []); // On laisse les brackets vides car la Ref gère la mise à jour de l'ID
+  }, []); 
 
   const fetchCertificates = async () => {
     try {

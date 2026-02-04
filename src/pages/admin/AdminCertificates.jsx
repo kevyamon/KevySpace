@@ -1,14 +1,11 @@
-// src/pages/admin/AdminCertificates.jsx
+// frontend/src/pages/admin/AdminCertificates.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Award, Plus, Trash2, Loader2, User } from 'lucide-react';
 import api from '../../services/api';
 import CertificateModal from '../../components/admin/CertificateModal';
 import toast from 'react-hot-toast';
-import io from 'socket.io-client'; // <--- 1. IMPORT SOCKET
-
-// 2. CONNEXION AU SERVEUR (Même URL que dans api.js)
-const socket = io('https://kevyspace-backend.onrender.com');
+import io from 'socket.io-client';
 
 const AdminCertificates = () => {
   const navigate = useNavigate();
@@ -30,10 +27,14 @@ const AdminCertificates = () => {
     // Chargement initial
     fetchCertificates(); 
 
-    // 3. ÉCOUTEUR D'ÉVÉNEMENTS (TEMPS RÉEL)
+    // --- CONNEXION SOCKET ---
+    // Création locale pour gestion propre du cycle de vie
+    const socket = io('https://kevyspace-backend.onrender.com');
+
+    // ÉCOUTEUR D'ÉVÉNEMENTS (TEMPS RÉEL)
     const handleCertificateAction = (payload) => {
         if (payload.type === 'add') {
-            // Option simple : on recharge tout pour avoir les données populées (nom, avatar...)
+            // L'admin recharge tout pour avoir les "populates" (nom, avatar) à jour
             fetchCertificates();
         }
         if (payload.type === 'delete') {
@@ -43,9 +44,10 @@ const AdminCertificates = () => {
 
     socket.on('certificate_action', handleCertificateAction);
 
-    // Nettoyage à la fermeture du composant
+    // Nettoyage à la fermeture du composant (ESSENTIEL)
     return () => {
         socket.off('certificate_action', handleCertificateAction);
+        socket.disconnect();
     };
   }, []);
 
@@ -55,13 +57,12 @@ const AdminCertificates = () => {
     try {
       await api.delete(`/api/certificates/${id}`);
       toast.success("Certificat révoqué");
-      // Note : Le socket s'occupera de la mise à jour visuelle, 
-      // mais on peut aussi le faire ici pour une réactivité immédiate locale
-      setCertificates(prev => prev.filter(c => c._id !== id));
+      // Note : Le socket s'occupera de la mise à jour visuelle (Admin reçoit aussi son propre event)
     } catch (err) {
       toast.error("Erreur suppression");
-    } finally {
       setDeletingId(null);
+    } finally {
+      if(deletingId) setDeletingId(null);
     }
   };
 
