@@ -7,7 +7,7 @@ import ContactModal from './ContactModal';
 import { 
   X, Home, User, LogOut, 
   Heart, FileText, Download, Clock,
-  LayoutDashboard, UploadCloud, HelpCircle, Users, Eye
+  LayoutDashboard, UploadCloud, HelpCircle, Users
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -26,9 +26,9 @@ const Sidebar = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  // --- 1. LOGIQUE DES MENUS SÉPARÉS ---
-
-  // Menu pour les ÉTUDIANTS
+  // --- 1. MENUS ---
+  
+  // Menu ÉTUDIANTS
   const userLinks = [
     { icon: <Home size={20} />, label: 'Accueil', path: '/' },
     { icon: <User size={20} />, label: 'Mon Profil', path: '/profile' },
@@ -38,20 +38,20 @@ const Sidebar = ({ isOpen, onClose }) => {
     { icon: <Download size={20} />, label: 'Ressources PDF', path: '/resources' },     
   ];
 
-  // Menu pour l'ADMINISTRATEUR
+  // Menu ADMIN
   const adminLinks = [
     { icon: <LayoutDashboard size={20} />, label: 'Dashboard Admin', path: '/admin/dashboard', isAdmin: true },
     { icon: <UploadCloud size={20} />, label: 'Publier un cours', path: '/admin/upload', isAdmin: true },
-    { icon: <Users size={20} />, label: 'Utilisateurs', path: '/admin/users', isAdmin: true },
+    // Si tu veux garder le lien Users dans le menu, décommente la ligne ci-dessous :
+    // { icon: <Users size={20} />, label: 'Utilisateurs', path: '/admin/users', isAdmin: true },
     
-    { isSeparator: true }, // Ligne de séparation
+    { isSeparator: true },
     
-    // 👇 LE FAMEUX BOUTON QUE TU VEUX 👇
-    { icon: <Home size={20} />, label: 'Vue Site (Accueil)', path: '/', isHighlight: true },
+    // 👇 CORRECTION ICI : On pointe vers '/home' pour forcer l'affichage User 👇
+    { icon: <Home size={20} />, label: 'Vue Site (Accueil)', path: '/home', isHighlight: true },
     { icon: <User size={20} />, label: 'Mon Profil', path: '/profile' },
   ];
 
-  // On décide quel menu afficher
   const menuItems = user?.role === 'admin' ? adminLinks : userLinks;
 
   return (
@@ -73,7 +73,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               }}
             />
 
-            {/* DRAWER VENANT DE LA DROITE */}
+            {/* DRAWER À DROITE */}
             <motion.div
               initial={{ x: '100%' }} 
               animate={{ x: 0 }}      
@@ -91,7 +91,6 @@ const Sidebar = ({ isOpen, onClose }) => {
                 borderLeft: '1px solid rgba(255,255,255,0.5)'
               }}
             >
-              
               {/* BOUTON FERMER */}
               <button 
                 onClick={onClose} 
@@ -104,7 +103,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 <X size={20} color="#1D1D1F" />
               </button>
 
-              {/* PROFIL HEADER */}
+              {/* PROFIL */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '10px', marginBottom: '32px' }}>
                 <div style={{ 
                   width: '80px', height: '80px', borderRadius: '50%', 
@@ -125,10 +124,10 @@ const Sidebar = ({ isOpen, onClose }) => {
                 </p>
               </div>
 
-              {/* LISTE DES LIENS */}
+              {/* LIENS */}
               <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
                 
-                {/* Bouton Contact (Seulement pour les Users) */}
+                {/* Contact (User Only) */}
                 {user?.role !== 'admin' && (
                   <>
                     <button
@@ -136,11 +135,9 @@ const Sidebar = ({ isOpen, onClose }) => {
                       style={{
                         display: 'flex', alignItems: 'center', gap: '14px',
                         padding: '14px 16px', borderRadius: '16px', border: 'none',
-                        backgroundColor: '#FFF', 
-                        color: '#1D1D1F', fontWeight: '600',
+                        backgroundColor: '#FFF', color: '#1D1D1F', fontWeight: '600',
                         cursor: 'pointer', textAlign: 'left', fontSize: '15px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-                        marginBottom: '12px'
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.03)', marginBottom: '12px'
                       }}
                     >
                       <HelpCircle size={20} color="var(--color-gold)" />
@@ -150,17 +147,14 @@ const Sidebar = ({ isOpen, onClose }) => {
                   </>
                 )}
 
-                {/* Génération Automatique du Menu */}
                 {menuItems.map((item, index) => {
                   if (item.isSeparator) return <div key={index} style={{ height: '1px', background: 'rgba(0,0,0,0.05)', margin: '8px 0' }}></div>;
                   
                   const isActive = location.pathname === item.path;
                   
-                  // Style spécial pour "Vue Site" (optionnel, pour le faire ressortir comme sur ta capture)
+                  // Style spécial "Vue Site"
                   const specialStyle = item.isHighlight ? {
-                    backgroundColor: '#FFD700', // Jaune Or
-                    color: '#000',
-                    fontWeight: '800',
+                    backgroundColor: '#FFD700', color: '#000', fontWeight: '800',
                     boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
                   } : {};
 
@@ -176,7 +170,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                         fontWeight: isActive ? '700' : '500',
                         cursor: 'pointer', transition: 'all 0.2s',
                         textAlign: 'left', fontSize: '15px',
-                        ...specialStyle // Applique le style spécial si c'est le bouton Vue Site
+                        ...specialStyle
                       }}
                     >
                       {item.icon}
@@ -186,7 +180,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 })}
               </div>
 
-              {/* FOOTER LOGOUT */}
+              {/* FOOTER */}
               <div style={{ marginTop: '24px' }}>
                 <button
                   onClick={handleLogout}
@@ -200,7 +194,6 @@ const Sidebar = ({ isOpen, onClose }) => {
                   <LogOut size={18} />
                   Se déconnecter
                 </button>
-                
                 <p style={{ textAlign: 'center', fontSize: '11px', color: '#AAA', marginTop: '16px', fontWeight: '500' }}>
                   KevySpace v1.0.2
                 </p>
