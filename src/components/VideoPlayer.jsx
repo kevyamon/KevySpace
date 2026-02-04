@@ -1,8 +1,9 @@
+// src/components/VideoPlayer.jsx
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const VideoPlayer = ({ videoUrl, thumbnailUrl }) => {
+const VideoPlayer = ({ videoUrl, thumbnailUrl, onPlay }) => {
   const navigate = useNavigate();
 
   return (
@@ -34,6 +35,7 @@ const VideoPlayer = ({ videoUrl, thumbnailUrl }) => {
         controlsList="nodownload" 
         style={{ width: '100%', height: '100%', objectFit: 'contain' }}
         poster={thumbnailUrl}
+        onPlay={onPlay} // <--- C'est ici que la magie opère
       />
     </div>
   );

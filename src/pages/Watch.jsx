@@ -6,7 +6,7 @@ import { AuthContext } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 
-// Tes composants modulaires (ne changent pas)
+// Composants
 import VideoPlayer from '../components/VideoPlayer';
 import VideoInfo from '../components/VideoInfo';
 import CommentsSection from '../components/CommentsSection';
@@ -20,84 +20,84 @@ const Watch = () => {
   const [video, setVideo] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // Ces états servent à l'affichage instantané, mais sont synchronisés avec le backend
+  // États d'interface
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [viewsCount, setViewsCount] = useState(0);
 
-  // 1. CHARGEMENT & INCREMENTATION VUE
+  // Ref pour éviter le double comptage de vue dans la même session
+  const hasViewedRef = useRef(false);
+
+  // 1. CHARGEMENT INITIAL (SANS COMPTER LA VUE)
   useEffect(() => {
     let isMounted = true;
+    // Reset du flag de vue quand on change de vidéo
+    hasViewedRef.current = false; 
 
-    const initPage = async () => {
+    const fetchVideo = async () => {
       try {
-        // A. On incrémente la vue CÔTÉ SERVEUR (+1 en DB)
-        // C'est ça qui manquait !
-        await api.put(`/api/videos/${id}/view`);
-
-        // B. On récupère les données FRAÎCHES (incluant la nouvelle vue et les vrais likes)
         const res = await api.get(`/api/videos/${id}`);
         const data = res.data.data || res.data;
         
         if (isMounted) {
           setVideo(data);
-          
-          // On initialise l'affichage avec les VRAIES valeurs de la DB
           setViewsCount(data.views || 0);
           setLikesCount(data.likes ? data.likes.length : 0);
           
           if (user && data.likes) {
             setIsLiked(data.likes.includes(user._id));
           }
+          setLoading(false);
         }
       } catch (err) {
-        console.error("Erreur init", err);
-        // Si l'incrémentation vue échoue, on essaie quand même de charger la vidéo
-        try {
-            const resFallback = await api.get(`/api/videos/${id}`);
-            if (isMounted) {
-                const data = resFallback.data.data;
-                setVideo(data);
-                setViewsCount(data.views || 0);
-                setLikesCount(data.likes ? data.likes.length : 0);
-            }
-        } catch (e) {
-            toast.error("Impossible de charger la vidéo");
-            navigate('/');
-        }
-      } finally {
-        if (isMounted) setLoading(false);
+        console.error("Erreur chargement", err);
+        toast.error("Impossible de charger la vidéo");
+        navigate('/');
       }
     };
 
-    if (user) initPage();
+    if (user) fetchVideo();
 
     return () => { isMounted = false; };
   }, [id, user, navigate]);
 
-  // -- HANDLERS (Connectés au Backend) --
+  // -- HANDLERS --
 
-  const handleLike = async () => {
-    // 1. Optimistic UI (On change l'interface tout de suite)
-    const previousLiked = isLiked;
-    const previousCount = likesCount;
+  // A. GESTION DES VUES (1 Clic Play = 1 Vue)
+  const handleViewTrigger = async () => {
+    if (hasViewedRef.current) return; // Déjà compté pour cette session
     
-    setIsLiked(!isLiked);
-    setLikesCount(prev => !previousLiked ? prev + 1 : prev - 1);
+    try {
+        hasViewedRef.current = true; // On verrouille immédiatement
+        // On envoie la requête
+        const res = await api.put(`/api/videos/${id}/view`);
+        // On met à jour l'affichage avec la vraie valeur retournée par le serveur
+        if(res.data.data) {
+             setViewsCount(res.data.data.views);
+        }
+    } catch (err) {
+        console.error("Erreur compteur vue", err);
+    }
+  };
+
+  // B. GESTION DES LIKES (Stabilisée)
+  const handleLike = async () => {
+    // Optimistic UI : On change l'état visuel tout de suite pour la réactivité
+    const wasLiked = isLiked;
+    setIsLiked(!wasLiked);
+    setLikesCount(prev => wasLiked ? prev - 1 : prev + 1);
 
     try {
-      // 2. On envoie la requête au Backend qui va sauvegarder en DB
       const res = await api.put(`/api/videos/${id}/like`);
-      
-      // 3. On synchronise avec la réponse officielle du Backend
-      const updatedLikes = res.data.data; // Le tableau d'IDs mis à jour
-      setLikesCount(updatedLikes.length);
-      setIsLiked(updatedLikes.includes(user._id));
-      
+      // VÉRITÉ ABSOLUE : On écrase nos valeurs avec celles du serveur
+      // Le serveur renvoie le tableau des likes mis à jour
+      const updatedLikesList = res.data.data;
+      setLikesCount(updatedLikesList.length);
+      setIsLiked(updatedLikesList.includes(user._id));
     } catch (err) {
-      // 4. Si ça plante, on annule
-      setIsLiked(previousLiked);
-      setLikesCount(previousCount);
+      // Si erreur, on remet comme avant
+      setIsLiked(wasLiked);
+      setLikesCount(prev => wasLiked ? prev : prev - 1); // Correction simple
       toast.error("Erreur lors du like");
     }
   };
@@ -107,10 +107,10 @@ const Watch = () => {
     toast.success("Lien copié !");
   };
 
+  // C. COMMENTAIRES (Vrai CRUD)
   const handlePostComment = async (text) => {
     try {
       const res = await api.post(`/api/videos/${id}/comment`, { text });
-      // Le backend renvoie le tableau complet des commentaires à jour
       setVideo(prev => ({ ...prev, comments: res.data.data }));
       toast.success("Publié !");
     } catch (err) {
@@ -118,17 +118,25 @@ const Watch = () => {
     }
   };
 
-  // Actions Simulées (En attendant les routes DELETE/PUT backend pour commentaires)
-  const handleDeleteComment = (commentId) => {
-    if(window.confirm("Supprimer ce commentaire (Simulation) ?")) {
-      setVideo(prev => ({ ...prev, comments: prev.comments.filter(c => c._id !== commentId) }));
-      toast.success("Supprimé");
+  const handleDeleteComment = async (commentId) => {
+    if(!window.confirm("Voulez-vous vraiment supprimer ce commentaire ?")) return;
+    try {
+        const res = await api.delete(`/api/videos/${id}/comment/${commentId}`);
+        setVideo(prev => ({ ...prev, comments: res.data.data }));
+        toast.success("Supprimé");
+    } catch (err) {
+        toast.error("Impossible de supprimer");
     }
   };
 
-  const handleEditComment = (commentId, newText) => {
-    setVideo(prev => ({ ...prev, comments: prev.comments.map(c => c._id === commentId ? { ...c, text: newText } : c) }));
-    toast.success("Modifié");
+  const handleEditComment = async (commentId, newText) => {
+    try {
+        const res = await api.put(`/api/videos/${id}/comment/${commentId}`, { text: newText });
+        setVideo(prev => ({ ...prev, comments: res.data.data }));
+        toast.success("Modifié");
+    } catch (err) {
+        toast.error("Impossible de modifier");
+    }
   };
 
   if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loader2 className="animate-spin" color="var(--color-gold)" size={32} /></div>;
@@ -142,30 +150,31 @@ const Watch = () => {
       display: 'flex', flexDirection: 'column'
     }}>
       
-      {/* 1. LECTEUR */}
+      {/* 1. LECTEUR (Avec Trigger Vue) */}
       <VideoPlayer 
         videoUrl={video.videoUrl} 
-        thumbnailUrl={video.thumbnailUrl} 
+        thumbnailUrl={video.thumbnailUrl}
+        onPlay={handleViewTrigger} // <--- C'est ici qu'on branche le compteur
       />
 
-      {/* 2. INFOS (Avec les compteurs réels) */}
+      {/* 2. INFOS */}
       <VideoInfo 
         video={video}
-        viewsCount={viewsCount} // Vient du state sync avec DB
-        likesCount={likesCount} // Vient du state sync avec DB
-        isLiked={isLiked}       // Vient du state sync avec DB
+        viewsCount={viewsCount} 
+        likesCount={likesCount} 
+        isLiked={isLiked}       
         onLike={handleLike}
         onShare={handleShare}
       />
 
-      {/* 3. COMMENTAIRES (Liste réelle) */}
+      {/* 3. COMMENTAIRES (Connectés) */}
       <div style={{ padding: '0 20px' }}>
         <CommentsSection 
-          comments={video.comments} // Vient de la DB
+          comments={video.comments} 
           currentUser={user}
           onPostComment={handlePostComment}
-          onDeleteComment={handleDeleteComment}
-          onEditComment={handleEditComment}
+          onDeleteComment={handleDeleteComment} // Vraie fonction
+          onEditComment={handleEditComment}     // Vraie fonction
         />
       </div>
       
