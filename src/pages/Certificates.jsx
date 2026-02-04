@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useContext } from 'react';
+// src/pages/Certificates.jsx
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import { Award, Lock, Download, Loader2, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
@@ -6,21 +7,37 @@ import { AuthContext } from '../context/AuthContext';
 import io from 'socket.io-client';
 import toast from 'react-hot-toast';
 
-// 1. Connexion simple au serveur Render
+// Connexion au serveur
 const socket = io('https://kevyspace-backend.onrender.com');
 
 const Certificates = () => {
   const { user } = useContext(AuthContext);
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Utilisation d'une Ref pour que le socket ait TOUJOURS le bon ID, même sans re-render
+  const userIdRef = useRef(null);
+
+  useEffect(() => {
+    if (user && user._id) {
+      userIdRef.current = String(user._id);
+    }
+  }, [user]);
 
   useEffect(() => {
     fetchCertificates();
 
-    // 2. Écoute simple (comme Resources)
-    socket.on('certificate_action', (payload) => {
-      // On vérifie juste si c'est pour moi
-      if (payload.targetUserId === user._id) {
+    const handleCertificateAction = (payload) => {
+      // RÉCUPÉRATION DE L'ID DEPUIS LA REF (POUR ÉVITER LE UNDEFINED)
+      const myCurrentId = userIdRef.current;
+      const targetId = String(payload.targetUserId || '').trim();
+
+      console.log("🔔 Socket Reçu pour:", targetId);
+      console.log("👤 Mon ID actuel:", myCurrentId);
+
+      // Comparaison
+      if (myCurrentId && targetId === myCurrentId) {
+        console.log("✅ Match ! Mise à jour de la liste...");
         
         if (payload.type === 'add') {
           setCertificates(prev => [payload.data, ...prev]);
@@ -28,15 +45,19 @@ const Certificates = () => {
         } 
         
         if (payload.type === 'delete') {
-          setCertificates(prev => prev.filter(c => c._id !== payload.id));
+          setCertificates(prev => prev.filter(c => String(c._id) !== String(payload.id)));
         }
+      } else {
+        console.log("❌ Pas pour moi ou ID non chargé.");
       }
-    });
+    };
+
+    socket.on('certificate_action', handleCertificateAction);
 
     return () => {
-      socket.off('certificate_action');
+      socket.off('certificate_action', handleCertificateAction);
     };
-  }, [user._id]);
+  }, []); // On laisse les brackets vides car la Ref gère la mise à jour de l'ID
 
   const fetchCertificates = async () => {
     try {
@@ -84,7 +105,7 @@ const Certificates = () => {
                 style={{ backgroundColor: '#FFF', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.02)' }}
               >
                 <div style={{ height: '160px', backgroundColor: '#F5F5F7', position: 'relative', overflow:'hidden' }}>
-                  {cert.fileUrl.endsWith('.pdf') ? (
+                  {cert.fileUrl?.endsWith('.pdf') ? (
                      <div style={{height:'100%', display:'flex', alignItems:'center', justifyContent:'center', background:'#FFF9E6'}}><FileText size={50} color="#DAA520"/></div>
                   ) : (
                      <img src={cert.fileUrl} alt={cert.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -106,4 +127,5 @@ const Certificates = () => {
     </div>
   );
 };
+
 export default Certificates;
