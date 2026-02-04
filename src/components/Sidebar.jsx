@@ -7,7 +7,7 @@ import ContactModal from './ContactModal';
 import { 
   X, Home, User, LogOut, 
   Heart, FileText, Download, Clock,
-  LayoutDashboard, UploadCloud, HelpCircle
+  LayoutDashboard, UploadCloud, HelpCircle, Users, Eye
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -26,7 +26,10 @@ const Sidebar = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  const menuItems = [
+  // --- 1. LOGIQUE DES MENUS SÉPARÉS ---
+
+  // Menu pour les ÉTUDIANTS
+  const userLinks = [
     { icon: <Home size={20} />, label: 'Accueil', path: '/' },
     { icon: <User size={20} />, label: 'Mon Profil', path: '/profile' },
     { icon: <Heart size={20} />, label: 'Mes Favoris', path: '/favorites' }, 
@@ -35,11 +38,21 @@ const Sidebar = ({ isOpen, onClose }) => {
     { icon: <Download size={20} />, label: 'Ressources PDF', path: '/resources' },     
   ];
 
-  if (user?.role === 'admin') {
-    menuItems.push({ isSeparator: true });
-    menuItems.push({ icon: <LayoutDashboard size={20} />, label: 'Dashboard Admin', path: '/admin/dashboard', isAdmin: true });
-    menuItems.push({ icon: <UploadCloud size={20} />, label: 'Publier un cours', path: '/admin/upload', isAdmin: true });
-  }
+  // Menu pour l'ADMINISTRATEUR
+  const adminLinks = [
+    { icon: <LayoutDashboard size={20} />, label: 'Dashboard Admin', path: '/admin/dashboard', isAdmin: true },
+    { icon: <UploadCloud size={20} />, label: 'Publier un cours', path: '/admin/upload', isAdmin: true },
+    { icon: <Users size={20} />, label: 'Utilisateurs', path: '/admin/users', isAdmin: true },
+    
+    { isSeparator: true }, // Ligne de séparation
+    
+    // 👇 LE FAMEUX BOUTON QUE TU VEUX 👇
+    { icon: <Home size={20} />, label: 'Vue Site (Accueil)', path: '/', isHighlight: true },
+    { icon: <User size={20} />, label: 'Mon Profil', path: '/profile' },
+  ];
+
+  // On décide quel menu afficher
+  const menuItems = user?.role === 'admin' ? adminLinks : userLinks;
 
   return (
     <>
@@ -91,7 +104,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 <X size={20} color="#1D1D1F" />
               </button>
 
-              {/* PROFIL */}
+              {/* PROFIL HEADER */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '10px', marginBottom: '32px' }}>
                 <div style={{ 
                   width: '80px', height: '80px', borderRadius: '50%', 
@@ -108,35 +121,49 @@ const Sidebar = ({ isOpen, onClose }) => {
                   {user?.name}
                 </h3>
                 <p style={{ fontSize: '13px', color: '#888', margin: 0 }}>
-                  {user?.email}
+                  {user?.role === 'admin' ? 'Administrateur' : user?.email}
                 </p>
               </div>
 
-              {/* NAVIGATION */}
+              {/* LISTE DES LIENS */}
               <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
                 
-                <button
-                  onClick={() => setIsContactOpen(true)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '14px',
-                    padding: '14px 16px', borderRadius: '16px', border: 'none',
-                    backgroundColor: '#FFF', 
-                    color: '#1D1D1F', fontWeight: '600',
-                    cursor: 'pointer', textAlign: 'left', fontSize: '15px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-                    marginBottom: '12px'
-                  }}
-                >
-                  <HelpCircle size={20} color="var(--color-gold)" />
-                  Contacter le formateur
-                </button>
+                {/* Bouton Contact (Seulement pour les Users) */}
+                {user?.role !== 'admin' && (
+                  <>
+                    <button
+                      onClick={() => setIsContactOpen(true)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '14px',
+                        padding: '14px 16px', borderRadius: '16px', border: 'none',
+                        backgroundColor: '#FFF', 
+                        color: '#1D1D1F', fontWeight: '600',
+                        cursor: 'pointer', textAlign: 'left', fontSize: '15px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                        marginBottom: '12px'
+                      }}
+                    >
+                      <HelpCircle size={20} color="var(--color-gold)" />
+                      Contacter le formateur
+                    </button>
+                    <div style={{ height: '1px', background: 'rgba(0,0,0,0.05)', margin: '8px 0' }}></div>
+                  </>
+                )}
 
-                <div style={{ height: '1px', background: 'rgba(0,0,0,0.05)', margin: '8px 0' }}></div>
-
+                {/* Génération Automatique du Menu */}
                 {menuItems.map((item, index) => {
                   if (item.isSeparator) return <div key={index} style={{ height: '1px', background: 'rgba(0,0,0,0.05)', margin: '8px 0' }}></div>;
                   
                   const isActive = location.pathname === item.path;
+                  
+                  // Style spécial pour "Vue Site" (optionnel, pour le faire ressortir comme sur ta capture)
+                  const specialStyle = item.isHighlight ? {
+                    backgroundColor: '#FFD700', // Jaune Or
+                    color: '#000',
+                    fontWeight: '800',
+                    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
+                  } : {};
+
                   return (
                     <button
                       key={index}
@@ -144,11 +171,12 @@ const Sidebar = ({ isOpen, onClose }) => {
                       style={{
                         display: 'flex', alignItems: 'center', gap: '14px',
                         padding: '12px 16px', borderRadius: '14px', border: 'none',
-                        backgroundColor: isActive ? 'var(--color-gold)' : 'transparent',
+                        backgroundColor: isActive ? 'rgba(0,0,0,0.05)' : 'transparent',
                         color: isActive ? '#000' : (item.isAdmin ? '#FF3B30' : '#1D1D1F'),
                         fontWeight: isActive ? '700' : '500',
                         cursor: 'pointer', transition: 'all 0.2s',
-                        textAlign: 'left', fontSize: '15px'
+                        textAlign: 'left', fontSize: '15px',
+                        ...specialStyle // Applique le style spécial si c'est le bouton Vue Site
                       }}
                     >
                       {item.icon}
@@ -158,7 +186,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 })}
               </div>
 
-              {/* FOOTER */}
+              {/* FOOTER LOGOUT */}
               <div style={{ marginTop: '24px' }}>
                 <button
                   onClick={handleLogout}
@@ -183,7 +211,6 @@ const Sidebar = ({ isOpen, onClose }) => {
         )}
       </AnimatePresence>
 
-      {/* LA MODALE EST APPELÉE ICI MAIS S'AFFICHERA EN PORTAL */}
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
     </>
   );
