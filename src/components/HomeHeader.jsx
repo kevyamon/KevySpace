@@ -1,9 +1,14 @@
 // src/components/HomeHeader.jsx
-import React from 'react';
+import React, { useContext } from 'react';
 import { Search, Bell } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { NotificationContext } from '../context/NotificationContext'; // <--- ON SE BRANCHE AU CERVEAU
 
 const HomeHeader = ({ user, searchQuery, setSearchQuery }) => {
+  const navigate = useNavigate();
+  // On récupère le nombre de non-lus depuis le Context
+  const { unreadCount } = useContext(NotificationContext); 
+
   return (
     <div style={{ marginBottom: '24px', paddingTop: '20px' }}>
       
@@ -23,27 +28,32 @@ const HomeHeader = ({ user, searchQuery, setSearchQuery }) => {
           </p>
         </div>
 
-        {/* BOUTON NOTIFICATION (Avec point rouge) */}
-        <button style={{ 
-          position: 'relative',
-          background: '#FFF', 
-          border: '1px solid rgba(0,0,0,0.05)', 
-          borderRadius: '50%', 
-          width: '44px', height: '44px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-          cursor: 'pointer'
-        }}>
+        {/* BOUTON NOTIFICATION */}
+        <button 
+          onClick={() => navigate('/notifications')}
+          style={{ 
+            position: 'relative',
+            background: '#FFF', 
+            border: '1px solid rgba(0,0,0,0.05)', 
+            borderRadius: '50%', 
+            width: '44px', height: '44px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+            cursor: 'pointer'
+          }}
+        >
           <Bell size={20} color="#1D1D1F" />
           
-          {/* LE POINT ROUGE (Hardcodé pour l'instant, dynamique plus tard) */}
-          <span style={{
-            position: 'absolute', top: '10px', right: '12px',
-            width: '8px', height: '8px',
-            backgroundColor: '#FF3B30',
-            borderRadius: '50%',
-            border: '1px solid #FFF'
-          }}></span>
+          {/* LE POINT ROUGE INTELLIGENT */}
+          {unreadCount > 0 && (
+            <span style={{
+              position: 'absolute', top: '10px', right: '12px',
+              width: '8px', height: '8px',
+              backgroundColor: '#FF3B30',
+              borderRadius: '50%',
+              border: '1px solid #FFF'
+            }}></span>
+          )}
         </button>
       </div>
 
@@ -63,11 +73,11 @@ const HomeHeader = ({ user, searchQuery, setSearchQuery }) => {
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{
             width: '100%',
-            padding: '14px 16px 14px 48px', // Espace pour l'icône
+            padding: '14px 16px 14px 48px', 
             borderRadius: '16px',
             border: 'none',
-            backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent
-            backdropFilter: 'blur(10px)', // Effet flou arrière plan
+            backgroundColor: 'rgba(255, 255, 255, 0.8)', 
+            backdropFilter: 'blur(10px)', 
             boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
             fontSize: '15px',
             color: '#1D1D1F',
