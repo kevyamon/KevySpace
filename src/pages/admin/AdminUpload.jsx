@@ -6,29 +6,35 @@ import { ArrowLeft, UploadCloud, FileVideo } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
-import axios from 'axios';
+import toast from 'react-hot-toast'; // On utilise les jolis toasts
+import api from '../../services/api'; // <--- LA CLÉ EST ICI (Notre service intelligent)
 
 const AdminUpload = () => {
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext); // Vérification sécu si besoin
+  const { user } = useContext(AuthContext);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [error, setError] = useState(null);
+
+  // Redirection si pas Admin
+  if (user?.role !== 'admin') {
+    navigate('/');
+    return null;
+  }
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
-    setError(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) return setError("Veuillez choisir une vidéo");
+    if (!file) return toast.error("Veuillez choisir une vidéo");
 
     setLoading(true);
+    const loadingToast = toast.loading("Upload en cours... Ne quittez pas.");
     
     const formData = new FormData();
     formData.append('title', title);
@@ -36,19 +42,27 @@ const AdminUpload = () => {
     formData.append('video', file);
 
     try {
-      await axios.post('https://kevyspace-backend.onrender.com/api/videos', formData, {
-        withCredentials: true,
-        headers: { 'Content-Type': 'multipart/form-data' },
+      // ON UTILISE 'api' AU LIEU DE 'axios'
+      // Plus besoin de mettre l'URL complète, ni les headers d'auth manuelles
+      await api.post('/api/videos', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data', // Seul header nécessaire ici pour les fichiers
+        },
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percentCompleted);
         },
       });
-      // Retour au dashboard Admin après succès
-      navigate('/admin/dashboard'); 
+
+      toast.dismiss(loadingToast);
+      toast.success("Cours publié avec succès ! 🚀");
+      navigate('/admin/dashboard');
+
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || "Erreur lors de l'upload");
+      toast.dismiss(loadingToast);
+      const msg = err.response?.data?.error || "Erreur lors de l'upload";
+      toast.error(msg);
       setLoading(false);
     }
   };
@@ -63,15 +77,15 @@ const AdminUpload = () => {
         <h1 style={{ fontSize: '24px' }}>Nouveau Cours</h1>
       </div>
 
-      {error && (
-        <div style={{ padding: '12px', background: '#FFE5E5', color: '#D00', borderRadius: '12px', marginBottom: '20px' }}>
-          {error}
-        </div>
-      )}
-
       {!loading ? (
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <Input placeholder="Titre de la leçon" value={title} onChange={(e) => setTitle(e.target.value)} required />
+          
+          <Input 
+            placeholder="Titre de la leçon" 
+            value={title} 
+            onChange={(e) => setTitle(e.target.value)} 
+            required 
+          />
           
           <textarea
             placeholder="Description du cours..."
@@ -86,22 +100,33 @@ const AdminUpload = () => {
             }}
           />
 
-          <input type="file" id="video-upload" accept="video/*" onChange={handleFileChange} style={{ display: 'none' }} />
-          <label htmlFor="video-upload" style={{
+          <input 
+            type="file" 
+            id="video-upload" 
+            accept="video/*" 
+            onChange={handleFileChange} 
+            style={{ display: 'none' }} 
+          />
+          
+          <label 
+            htmlFor="video-upload" 
+            style={{
               border: '2px dashed #E5E5EA', borderRadius: '20px', padding: '32px',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px',
               cursor: 'pointer', backgroundColor: file ? '#F2F2F7' : 'transparent',
               transition: 'all 0.2s ease'
-            }}>
+            }}
+          >
             {file ? (
               <>
                 <FileVideo size={40} color="var(--color-gold)" />
                 <span style={{ fontWeight: '600' }}>{file.name}</span>
+                <span style={{ fontSize: '12px', color: '#888' }}>Cliquez pour changer</span>
               </>
             ) : (
               <>
                 <UploadCloud size={40} color="#8E8E93" />
-                <span style={{ color: '#8E8E93' }}>Choisir une vidéo</span>
+                <span style={{ color: '#8E8E93' }}>Touchez pour choisir une vidéo</span>
               </>
             )}
           </label>
@@ -109,21 +134,34 @@ const AdminUpload = () => {
           <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
             <Button type="submit" fullWidth>Publier la leçon</Button>
           </div>
+
         </form>
       ) : (
+        // UI DE CHARGEMENT
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '24px' }}>
-          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}>
+          <motion.div 
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+          >
             <UploadCloud size={64} color="var(--color-gold)" />
           </motion.div>
+          
           <div style={{ width: '100%', textAlign: 'center' }}>
-            <h3 style={{ marginBottom: '8px' }}>Envoi en cours...</h3>
+            <h3 style={{ marginBottom: '8px' }}>Envoi vers le Cloud...</h3>
+            <p style={{ color: '#888', marginBottom: '24px' }}>Ne quittez pas cette page.</p>
+            
             <div style={{ width: '100%', height: '8px', backgroundColor: '#E5E5EA', borderRadius: '4px', overflow: 'hidden' }}>
-              <motion.div initial={{ width: 0 }} animate={{ width: `${uploadProgress}%` }} style={{ height: '100%', backgroundColor: 'var(--color-gold)' }} />
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${uploadProgress}%` }}
+                style={{ height: '100%', backgroundColor: 'var(--color-gold)' }}
+              />
             </div>
             <p style={{ marginTop: '8px', fontWeight: 'bold' }}>{uploadProgress}%</p>
           </div>
         </div>
       )}
+
     </div>
   );
 };

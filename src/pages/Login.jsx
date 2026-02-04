@@ -9,12 +9,12 @@ import Input from '../components/Input';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, error, setError, user } = useContext(AuthContext);
+  // ON NE RÉCUPÈRE PLUS 'error' NI 'setError' ICI 👇
+  const { login, user, loading } = useContext(AuthContext);
 
   useEffect(() => {
     if (user) navigate('/');
-    setError(null);
-  }, [user, navigate, setError]);
+  }, [user, navigate]);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -25,12 +25,13 @@ const Login = () => {
     e.preventDefault();
     const res = await login(formData.email, formData.password);
     if (res.success) {
-      navigate('/'); 
+      navigate('/');
     }
+    // Plus besoin de gérer l'erreur ici, le Toast s'en charge dans le Context !
   };
 
   return (
-    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
+    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', minHeight: '100%', justifyContent: 'center' }}>
       
       <button 
         onClick={() => navigate('/')} 
@@ -47,21 +48,15 @@ const Login = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <h1 style={{ fontSize: '32px', marginBottom: '8px' }}>Bon retour !</h1>
+        <h1 style={{ fontSize: '32px', marginBottom: '8px' }}>Se connecter</h1>
         <p style={{ color: 'var(--color-text-secondary)', marginBottom: '32px' }}>
-          Connectez-vous pour accéder à vos cours.
+          Bon retour parmi nous.
         </p>
 
-        {error && (
-          <div style={{ 
-            padding: '12px', background: '#FFE5E5', color: '#D00', 
-            borderRadius: '12px', marginBottom: '20px', fontSize: '14px' 
-          }}>
-            {error}
-          </div>
-        )}
+        {/* ON A SUPPRIMÉ LE BLOC ROUGE D'ERREUR ICI */}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          
           <Input 
             type="email"
             icon={<Mail size={20} />} 
@@ -70,6 +65,7 @@ const Login = () => {
             onChange={(e) => setFormData({...formData, email: e.target.value})}
             required
           />
+
           <Input 
             type="password"
             icon={<Lock size={20} />} 
@@ -80,7 +76,7 @@ const Login = () => {
           />
 
           <div style={{ marginTop: '16px' }}>
-            <Button type="submit" fullWidth>
+            <Button type="submit" fullWidth isLoading={loading}>
               Se connecter
             </Button>
           </div>
@@ -89,7 +85,7 @@ const Login = () => {
         <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#888' }}>
           Pas encore de compte ?{' '}
           <Link to="/register" style={{ color: 'var(--color-gold-hover)', fontWeight: '600', textDecoration: 'none' }}>
-            S'inscrire
+            Créer un compte
           </Link>
         </p>
       </motion.div>

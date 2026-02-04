@@ -1,87 +1,71 @@
-import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
-import Cookies from 'js-cookie';
+import React, { createContext, useState } from 'react';
+import api from '../services/api';
+import toast from 'react-hot-toast'; // <--- IMPORT
 
-// Création du contexte
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // On récupère l'utilisateur stocké localement
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('kevy_user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
   
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
-  // CONFIGURATION AXIOS GLOBALE
-  // URL en dur pour garantir la connexion immédiate
-  const api = axios.create({
-    baseURL: "https://kevyspace-backend.onrender.com",
-    withCredentials: true, // Important pour les cookies
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  const saveSession = (userData, token) => {
+    setUser(userData);
+    localStorage.setItem('kevy_user', JSON.stringify(userData));
+    localStorage.setItem('kevy_token', token);
+  };
 
-  // Fonction d'inscription
+  // Inscription
   const register = async (userData) => {
     setLoading(true);
-    setError(null);
+    const loadingToast = toast.loading('Création du compte...'); // Petit loading sympa
     try {
       const res = await api.post('/api/auth/register', userData);
-      setUser(res.data.user);
-      localStorage.setItem('kevy_user', JSON.stringify(res.data.user));
+      saveSession(res.data.user, res.data.token);
+      toast.dismiss(loadingToast); // On vire le loading
+      toast.success(`Bienvenue ${res.data.user.name} ! 🎉`); // Succès !
       return { success: true };
     } catch (err) {
-      const msg = err.response?.data?.error || 'Erreur lors de l\'inscription';
-      setError(msg);
+      toast.dismiss(loadingToast);
+      const msg = err.response?.data?.error || "Erreur d'inscription";
+      toast.error(msg); // Erreur rouge
       return { success: false, error: msg };
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
-  // Fonction de connexion
+  // Connexion
   const login = async (email, password) => {
     setLoading(true);
-    setError(null);
+    const loadingToast = toast.loading('Connexion...');
     try {
       const res = await api.post('/api/auth/login', { email, password });
-      setUser(res.data.user);
-      localStorage.setItem('kevy_user', JSON.stringify(res.data.user));
+      saveSession(res.data.user, res.data.token);
+      toast.dismiss(loadingToast);
+      toast.success('Ravi de vous revoir ! 👋');
       return { success: true };
     } catch (err) {
-      const msg = err.response?.data?.error || 'Erreur de connexion';
-      setError(msg);
+      toast.dismiss(loadingToast);
+      const msg = err.response?.data?.error || "Erreur de connexion";
+      toast.error(msg);
       return { success: false, error: msg };
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
-  // Fonction de déconnexion
-  const logout = async () => {
-    try {
-      await api.get('/api/auth/logout');
-    } catch (err) {
-      console.error("Erreur logout", err);
-    }
+  // Déconnexion
+  const logout = () => {
     setUser(null);
     localStorage.removeItem('kevy_user');
+    localStorage.removeItem('kevy_token');
+    try { api.get('/api/auth/logout'); } catch (e) {}
+    toast.success('Déconnecté avec succès');
+    window.location.href = '/';
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      error, 
-      register, 
-      login, 
-      logout,
-      setError 
-    }}>
+    <AuthContext.Provider value={{ user, loading, register, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

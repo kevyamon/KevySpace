@@ -2,24 +2,24 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, ArrowLeft, Phone } from 'lucide-react'; // Ajout icône Phone
+import { User, Mail, Lock, ArrowLeft, Phone } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import Button from '../components/Button';
 import Input from '../components/Input';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register, error, setError, user, loading } = useContext(AuthContext);
+  // ON NE RÉCUPÈRE PLUS 'error' NI 'setError' ICI 👇
+  const { register, user, loading } = useContext(AuthContext);
 
   useEffect(() => {
     if (user) navigate('/');
-    setError(null);
-  }, [user, navigate, setError]);
+  }, [user, navigate]);
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '', // Nouveau champ
+    phone: '',
     password: ''
   });
 
@@ -29,6 +29,7 @@ const Register = () => {
     if (res.success) {
       navigate('/');
     }
+    // Le Toast gère l'affichage succès/erreur
   };
 
   return (
@@ -54,18 +55,10 @@ const Register = () => {
           Rejoignez KevySpace pour commencer.
         </p>
 
-        {error && (
-          <div style={{ 
-            padding: '12px', background: '#FFE5E5', color: '#D00', 
-            borderRadius: '12px', marginBottom: '20px', fontSize: '14px' 
-          }}>
-            {error}
-          </div>
-        )}
+        {/* ON A SUPPRIMÉ LE BLOC ROUGE D'ERREUR ICI */}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
-          {/* NOM */}
           <Input 
             icon={<User size={20} />} 
             placeholder="Votre nom complet" 
@@ -74,7 +67,6 @@ const Register = () => {
             required
           />
 
-          {/* EMAIL */}
           <Input 
             type="email"
             icon={<Mail size={20} />} 
@@ -84,7 +76,6 @@ const Register = () => {
             required
           />
 
-          {/* TÉLÉPHONE (NOUVEAU) */}
           <Input 
             type="tel"
             icon={<Phone size={20} />} 
@@ -94,7 +85,6 @@ const Register = () => {
             required
           />
 
-          {/* MOT DE PASSE (Avec œil auto) */}
           <Input 
             type="password"
             icon={<Lock size={20} />} 
