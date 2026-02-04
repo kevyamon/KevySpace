@@ -1,92 +1,75 @@
-// src/pages/Resources.jsx
-import React from 'react';
-import { Download, FileText, Search } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Download, FileText, Search, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import api from '../services/api';
 
 const Resources = () => {
-  // DONNÉES SIMULÉES
-  // Quand on aura le backend, on pourra ajouter un champ 'resources' aux vidéos
-  const resources = [
-    { id: 1, title: "Guide complet du débutant React", type: "PDF", size: "2.4 MB", date: "Il y a 2 jours" },
-    { id: 2, title: "Cheatsheet JavaScript ES6+", type: "PDF", size: "1.1 MB", date: "Il y a 1 semaine" },
-    { id: 3, title: "Architecture MERN - Schéma", type: "PNG", size: "450 KB", date: "Il y a 3 semaines" },
-  ];
+  const [resources, setResources] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        const res = await api.get('/api/resources');
+        setResources(res.data.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchResources();
+  }, []);
+
+  const filtered = resources.filter(r => 
+    r.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) return <div style={{height:'80vh', display:'flex', alignItems:'center', justifyContent:'center'}}><Loader2 className="animate-spin" /></div>;
 
   return (
     <div style={{ padding: '24px 24px 100px 24px', minHeight: '100%' }}>
-      
-      {/* EN-TÊTE */}
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#1D1D1F', marginBottom: '8px' }}>Ressources</h1>
         <p style={{ fontSize: '14px', color: '#86868B' }}>Fichiers complémentaires à vos cours.</p>
       </div>
 
-      {/* BARRE DE RECHERCHE (Visuelle) */}
-      <div style={{ 
-        display: 'flex', alignItems: 'center', gap: '12px',
-        backgroundColor: '#FFF', padding: '12px 16px', borderRadius: '16px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.03)', marginBottom: '24px', border: '1px solid #F2F2F7'
-      }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', backgroundColor: '#FFF', padding: '12px 16px', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', marginBottom: '24px', border: '1px solid #F2F2F7' }}>
         <Search size={20} color="#CCC" />
         <input 
-          type="text" placeholder="Rechercher un fichier..." 
+          type="text" placeholder="Rechercher..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
           style={{ border: 'none', outline: 'none', width: '100%', fontSize: '14px', color: '#1D1D1F' }}
         />
       </div>
 
-      {/* LISTE DES FICHIERS */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {resources.map((file, index) => (
+        {filtered.length === 0 ? <p style={{textAlign:'center', color:'#999'}}>Aucune ressource trouvée.</p> : filtered.map((file, index) => (
           <motion.div
-            key={file.id}
+            key={file._id}
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
-            style={{ 
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              backgroundColor: '#FFF', padding: '16px', borderRadius: '18px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.02)', border: '1px solid #F9F9F9'
-            }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFF', padding: '16px', borderRadius: '18px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', border: '1px solid #F9F9F9' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              {/* Icône Fichier */}
-              <div style={{ 
-                width: '48px', height: '48px', borderRadius: '14px', 
-                backgroundColor: '#F5F5F7', display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: '#F5F5F7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <FileText size={24} color="#1D1D1F" />
               </div>
-              
-              {/* Infos Fichier */}
               <div>
-                <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#1D1D1F', marginBottom: '4px' }}>
-                  {file.title}
-                </h4>
+                <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#1D1D1F', marginBottom: '4px' }}>{file.title}</h4>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#86868B' }}>
-                  <span style={{ fontWeight: '600', backgroundColor: '#EFEFEF', padding: '2px 6px', borderRadius: '6px' }}>{file.type}</span>
+                  <span style={{ fontWeight: '600', backgroundColor: '#EFEFEF', padding: '2px 6px', borderRadius: '6px' }}>{file.type || 'FILE'}</span>
                   <span>•</span>
                   <span>{file.size}</span>
                 </div>
               </div>
             </div>
-
-            {/* Bouton Download */}
-            <button style={{ 
-              width: '40px', height: '40px', borderRadius: '50%', border: '1px solid #E5E5EA',
-              backgroundColor: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: '#1D1D1F'
-            }}>
+            <a href={file.fileUrl} target="_blank" rel="noopener noreferrer" style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid #E5E5EA', backgroundColor: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1D1D1F' }}>
               <Download size={20} />
-            </button>
+            </a>
           </motion.div>
         ))}
-        
-        {/* FOOTER LISTE */}
-        <p style={{ textAlign: 'center', fontSize: '12px', color: '#CCC', marginTop: '20px' }}>
-          Fin de la liste
-        </p>
       </div>
-
     </div>
   );
 };
-
 export default Resources;
