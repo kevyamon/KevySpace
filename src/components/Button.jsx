@@ -6,17 +6,18 @@ import { Loader2 } from 'lucide-react';
 const Button = ({ 
   children, 
   onClick, 
-  variant = 'primary', // 'primary' (Jaune) ou 'secondary' (Gris) ou 'danger' (Rouge)
+  variant = 'primary', // 'primary', 'secondary', 'outline', 'danger'
   isLoading = false, 
   type = 'button',
-  fullWidth = false 
+  fullWidth = false,
+  pulse = false // NOUVELLE PROP : Active l'effet respiration
 }) => {
   
-  // Styles dynamiques selon la variante
+  // Styles dynamiques
   const getStyle = () => {
     const base = {
       padding: '16px 24px',
-      borderRadius: 'var(--radius-l)', // Arrondi iOS
+      borderRadius: 'var(--radius-l)',
       fontSize: '16px',
       fontWeight: '600',
       border: 'none',
@@ -26,14 +27,14 @@ const Button = ({
       justifyContent: 'center',
       gap: '8px',
       width: fullWidth ? '100%' : 'auto',
-      transition: 'all 0.2s ease',
+      transition: 'background-color 0.2s ease, color 0.2s ease', // On laisse Framer gérer le scale
     };
 
     switch (variant) {
       case 'primary':
         return { ...base, backgroundColor: 'var(--color-gold)', color: '#000' };
       case 'secondary':
-        return { ...base, backgroundColor: '#E5E5EA', color: '#000' }; // Gris Apple
+        return { ...base, backgroundColor: '#E5E5EA', color: '#000' };
       case 'outline':
         return { ...base, backgroundColor: 'transparent', border: '2px solid var(--color-gold)', color: 'var(--color-text-main)' };
       case 'danger':
@@ -43,15 +44,50 @@ const Button = ({
     }
   };
 
+  // Configuration de l'animation de respiration
+  const breathingAnimation = {
+    scale: [1, 1.03, 1], // Zoom très léger (3%)
+    boxShadow: [
+      "0px 0px 0px rgba(0,0,0,0)",
+      "0px 4px 12px rgba(255, 215, 0, 0.4)", // Lueur dorée subtile au pic
+      "0px 0px 0px rgba(0,0,0,0)"
+    ]
+  };
+
   return (
     <motion.button
       type={type}
       onClick={onClick}
       style={getStyle()}
       disabled={isLoading}
-      whileTap={{ scale: 0.96 }} // Effet "presse" iOS quand on clique
+      
+      // ANIMATION D'ENTRÉE + RESPIRATION (Si demandée)
       initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      animate={
+        pulse && !isLoading
+          ? { opacity: 1, y: 0, ...breathingAnimation } // Entrée + Respiration
+          : { opacity: 1, y: 0 } // Juste l'entrée
+      }
+      transition={
+        pulse && !isLoading
+          ? { 
+              opacity: { duration: 0.3 }, 
+              y: { duration: 0.3 },
+              scale: { 
+                duration: 2, // Cycle lent de 2 secondes
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              },
+              boxShadow: {
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }
+            }
+          : { duration: 0.3 }
+      }
+      
+      whileTap={{ scale: 0.96 }} // Le "clic" reste prioritaire
     >
       {isLoading && <Loader2 className="animate-spin" size={20} />}
       {children}

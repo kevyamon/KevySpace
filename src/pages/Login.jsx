@@ -9,7 +9,6 @@ import Input from '../components/Input';
 
 const Login = () => {
   const navigate = useNavigate();
-  // ON NE RÉCUPÈRE PLUS 'error' NI 'setError' ICI 👇
   const { login, user, loading } = useContext(AuthContext);
 
   useEffect(() => {
@@ -27,11 +26,18 @@ const Login = () => {
     if (res.success) {
       navigate('/');
     }
-    // Plus besoin de gérer l'erreur ici, le Toast s'en charge dans le Context !
   };
 
   return (
-    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', minHeight: '100%', justifyContent: 'center' }}>
+    <div style={{ 
+      padding: '24px', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      /* CORRECTION: minHeight 100% suffit car le parent est déjà fixé */
+      minHeight: '100%', 
+      width: '100%',
+      justifyContent: 'center' 
+    }}>
       
       <button 
         onClick={() => navigate('/')} 
@@ -52,8 +58,6 @@ const Login = () => {
         <p style={{ color: 'var(--color-text-secondary)', marginBottom: '32px' }}>
           Bon retour parmi nous.
         </p>
-
-        {/* ON A SUPPRIMÉ LE BLOC ROUGE D'ERREUR ICI */}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
@@ -76,7 +80,7 @@ const Login = () => {
           />
 
           <div style={{ marginTop: '16px' }}>
-            <Button type="submit" fullWidth isLoading={loading}>
+            <Button type="submit" fullWidth isLoading={loading} pulse={true}>
               Se connecter
             </Button>
           </div>

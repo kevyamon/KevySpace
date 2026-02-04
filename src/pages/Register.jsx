@@ -9,7 +9,6 @@ import Input from '../components/Input';
 
 const Register = () => {
   const navigate = useNavigate();
-  // ON NE RÉCUPÈRE PLUS 'error' NI 'setError' ICI 👇
   const { register, user, loading } = useContext(AuthContext);
 
   useEffect(() => {
@@ -29,11 +28,16 @@ const Register = () => {
     if (res.success) {
       navigate('/');
     }
-    // Le Toast gère l'affichage succès/erreur
   };
 
   return (
-    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
+    <div style={{ 
+      padding: '24px', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      minHeight: '100%', 
+      width: '100%' 
+    }}>
       
       <button 
         onClick={() => navigate('/')} 
@@ -49,13 +53,12 @@ const Register = () => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
+        style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
       >
         <h1 style={{ fontSize: '32px', marginBottom: '8px' }}>Créer un compte</h1>
         <p style={{ color: 'var(--color-text-secondary)', marginBottom: '32px' }}>
           Rejoignez KevySpace pour commencer.
         </p>
-
-        {/* ON A SUPPRIMÉ LE BLOC ROUGE D'ERREUR ICI */}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
@@ -95,13 +98,14 @@ const Register = () => {
           />
 
           <div style={{ marginTop: '16px' }}>
-            <Button type="submit" fullWidth isLoading={loading}>
+            {/* BOUTON RESPIRANT 👇 */}
+            <Button type="submit" fullWidth isLoading={loading} pulse={true}>
               S'inscrire
             </Button>
           </div>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#888' }}>
+        <p style={{ textAlign: 'center', marginTop: '24px', marginBottom: '24px', fontSize: '14px', color: '#888' }}>
           Déjà un compte ?{' '}
           <Link to="/login" style={{ color: 'var(--color-gold-hover)', fontWeight: '600', textDecoration: 'none' }}>
             Se connecter
