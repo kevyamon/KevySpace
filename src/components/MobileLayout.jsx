@@ -1,74 +1,112 @@
-// frontend/src/components/MobileLayout.jsx
-import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+// src/components/MobileLayout.jsx
+import React, { useState, useContext, useEffect } from 'react';
+import { Menu } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { AuthContext } from '../context/AuthContext';
+import logoImg from '../assets/logo.png'; // <--- IMPORT DU LOGO
 
-// IMPORT DU LOGO
-import logoImg from '../assets/logo.png';
-
-// Hook pour détecter si on est sur mobile (simple check width)
+// HOOK POUR LA DÉTECTION D'ÉCRAN (Seuil Tablette/PC : 768px)
 const useIsMobile = () => {
-  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 1024);
-  React.useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   return isMobile;
 };
 
-const MobileLayout = () => {
-  const isMobile = useIsMobile();
+const MobileLayout = ({ children }) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { user } = useContext(AuthContext);
   const location = useLocation();
+  const isMobile = useIsMobile(); // <--- ON ACTIVE LA DÉTECTION
 
-  // Si on est sur PC, on affiche le layout classique avec Sidebar
+  // FILTRES D'AFFICHAGE
+  const hideForAuth = ['/login', '/register', '/landing'].includes(location.pathname);
+  const isPublicPage = !user && location.pathname === '/';
+  
+  // Mobile : Navbar visible ?
+  const showNavbar = user && !hideForAuth && !isPublicPage;
+  
+  // Desktop : Sidebar visible ?
+  const showSidebarDesktop = user && !hideForAuth && !isPublicPage;
+
+  // --- VERSION DESKTOP (Split Screen - Classique) ---
   if (!isMobile) {
+    // Si on est sur Login/Register/Landing, on affiche juste le contenu centré
+    if (!showSidebarDesktop) {
+        return <>{children}</>;
+    }
+    // Sinon, on affiche la Sidebar à gauche et le contenu à droite
     return (
       <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#FAFAFA' }}>
-        <Sidebar />
-        <main style={{ flex: 1, marginLeft: '280px', padding: '0' }}>
-          <Outlet />
-        </main>
+        <Sidebar /> 
+        <div style={{ flex: 1, marginLeft: '280px', position: 'relative' }}>
+          {children}
+        </div>
       </div>
     );
   }
 
-  // --- VERSION MOBILE ---
-  
-  // On cache le Header sur certaines pages (Login/Register/Lecture vidéo plein écran)
-  const hideHeader = ['/login', '/register'].includes(location.pathname) || location.pathname.includes('/watch/');
-
+  // --- VERSION MOBILE (Ta version propre + Logo) ---
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#FAFAFA', paddingBottom: '80px' }}> {/* Padding pour la nav bar du bas éventuelle */}
+    <div style={{
+      width: '100%',
+      height: '100dvh',
+      display: 'flex',
+      flexDirection: 'column',
+      backgroundColor: '#FAFAFA',
+      overflow: 'hidden',
+      position: 'relative'
+    }}>
       
-      {/* HEADER MOBILE (Sauf si caché) */}
-      {!hideHeader && (
-        <header 
-          style={{ 
-            position: 'sticky', top: 0, zIndex: 50, 
-            backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)',
-            borderBottom: '1px solid rgba(0,0,0,0.05)',
-            padding: '16px 20px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}
-        >
+      {/* Sidebar Mobile (Mode Drawer) */}
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
+      {/* NAVBAR FIXE */}
+      {showNavbar && (
+        <div style={{
+          flexShrink: 0, 
+          height: '60px',
+          display: 'flex', alignItems: 'center', 
+          justifyContent: 'space-between', 
+          padding: '0 20px', backgroundColor: '#FFF', borderBottom: '1px solid #EEE',
+          zIndex: 10 
+        }}>
+          
+          {/* 1. ÉQUILIBRE À GAUCHE (Invisible) */}
+          <div style={{ width: '24px' }}></div> 
+
+          {/* 2. LOGO + TEXTE CENTRÉ */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-             <div style={{ width: '32px', height: '32px', borderRadius: '8px', overflow: 'hidden' }}>
-                <img src={logoImg} alt="K" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+             <img src={logoImg} alt="Logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+             <div style={{ fontWeight: '800', fontSize: '18px', color: '#1D1D1F' }}>
+               Kevy<span style={{ color: 'var(--color-gold)' }}>Space</span>
              </div>
-             <span style={{ fontSize: '18px', fontWeight: '800', color: '#1D1D1F' }}>KevySpace</span>
           </div>
-        </header>
+
+          {/* 3. HAMBURGER À DROITE */}
+          <button onClick={() => setIsSidebarOpen(true)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+            <Menu size={24} color="#1D1D1F" />
+          </button>
+
+        </div>
       )}
 
-      {/* CONTENU PRINCIPAL */}
-      <main style={{ padding: '0' }}>
-        <Outlet />
-      </main>
-
-      {/* NOTE : Ici tu pourrais ajouter une "Bottom Navigation Bar" fixe 
-         si tu veux une navigation style appli mobile (Accueil, Recherche, Profil...) 
-      */}
+      {/* ZONE DE CONTENU */}
+      <div style={{ 
+        flex: 1, 
+        overflowY: 'auto', 
+        overflowX: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        WebkitOverflowScrolling: 'touch' 
+      }}>
+        {children}
+      </div>
     </div>
   );
 };
