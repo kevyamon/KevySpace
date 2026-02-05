@@ -1,72 +1,74 @@
-// src/components/MobileLayout.jsx
-import React, { useState, useContext } from 'react';
-import { Menu } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+// frontend/src/components/MobileLayout.jsx
+import React from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { AuthContext } from '../context/AuthContext';
 
-const MobileLayout = ({ children }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { user } = useContext(AuthContext);
+// IMPORT DU LOGO
+import logoImg from '../assets/logo.png';
+
+// Hook pour détecter si on est sur mobile (simple check width)
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 1024);
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  return isMobile;
+};
+
+const MobileLayout = () => {
+  const isMobile = useIsMobile();
   const location = useLocation();
 
-  const hideNavbar = ['/login', '/register', '/landing'].includes(location.pathname);
-  const isPublicPage = !user && location.pathname === '/';
-  const showNavbar = user && !hideNavbar && !isPublicPage;
+  // Si on est sur PC, on affiche le layout classique avec Sidebar
+  if (!isMobile) {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#FAFAFA' }}>
+        <Sidebar />
+        <main style={{ flex: 1, marginLeft: '280px', padding: '0' }}>
+          <Outlet />
+        </main>
+      </div>
+    );
+  }
+
+  // --- VERSION MOBILE ---
+  
+  // On cache le Header sur certaines pages (Login/Register/Lecture vidéo plein écran)
+  const hideHeader = ['/login', '/register'].includes(location.pathname) || location.pathname.includes('/watch/');
 
   return (
-    <div style={{
-      width: '100%',
-      height: '100dvh',
-      display: 'flex',
-      flexDirection: 'column',
-      backgroundColor: '#FAFAFA',
-      overflow: 'hidden',
-      position: 'relative'
-    }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#FAFAFA', paddingBottom: '80px' }}> {/* Padding pour la nav bar du bas éventuelle */}
       
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-
-      {/* NAVBAR FIXE */}
-      {showNavbar && (
-        <div style={{
-          flexShrink: 0, 
-          height: '60px',
-          display: 'flex', alignItems: 'center', 
-          // On utilise 'space-between' pour placer les éléments
-          justifyContent: 'space-between', 
-          padding: '0 20px', backgroundColor: '#FFF', borderBottom: '1px solid #EEE',
-          zIndex: 10 
-        }}>
-          
-          {/* 1. ELEMENT INVISIBLE À GAUCHE (Pour équilibrer et centrer le logo) */}
-          <div style={{ width: '24px' }}></div> 
-
-          {/* 2. LOGO CENTRÉ */}
-          <div style={{ fontWeight: '800', fontSize: '18px' }}>
-            Kevy<span style={{ color: 'var(--color-gold)' }}>Space</span>
+      {/* HEADER MOBILE (Sauf si caché) */}
+      {!hideHeader && (
+        <header 
+          style={{ 
+            position: 'sticky', top: 0, zIndex: 50, 
+            backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)',
+            borderBottom: '1px solid rgba(0,0,0,0.05)',
+            padding: '16px 20px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+             <div style={{ width: '32px', height: '32px', borderRadius: '8px', overflow: 'hidden' }}>
+                <img src={logoImg} alt="K" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+             </div>
+             <span style={{ fontSize: '18px', fontWeight: '800', color: '#1D1D1F' }}>KevySpace</span>
           </div>
-
-          {/* 3. HAMBURGER À DROITE (Enfin !) */}
-          <button onClick={() => setIsSidebarOpen(true)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-            <Menu size={24} color="#1D1D1F" />
-          </button>
-
-        </div>
+        </header>
       )}
 
-      {/* ZONE DE CONTENU */}
-      <div style={{ 
-        flex: 1, 
-        overflowY: 'auto', 
-        overflowX: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        WebkitOverflowScrolling: 'touch' 
-      }}>
-        {children}
-      </div>
+      {/* CONTENU PRINCIPAL */}
+      <main style={{ padding: '0' }}>
+        <Outlet />
+      </main>
+
+      {/* NOTE : Ici tu pourrais ajouter une "Bottom Navigation Bar" fixe 
+         si tu veux une navigation style appli mobile (Accueil, Recherche, Profil...) 
+      */}
     </div>
   );
 };
