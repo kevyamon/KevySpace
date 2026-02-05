@@ -5,7 +5,8 @@ import { AuthContext } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { Toaster } from 'react-hot-toast';
 import MobileLayout from './components/MobileLayout';
-import UpdateNotification from './components/UpdateNotification'; // <--- LE SYSTÈME AUTO-UPDATE
+import UpdateNotification from './components/UpdateNotification';
+import GlobalLoader from './components/GlobalLoader'; // <--- 1. IMPORT DU NOUVEAU LOADER
 
 // --- PAGES PUBLIQUES ---
 import Landing from './pages/Landing';
@@ -33,13 +34,9 @@ import AdminCertificates from './pages/admin/AdminCertificates';
 function App() {
   const { user, loading } = useContext(AuthContext);
 
+  // 2. LE CHANGEMENT EST ICI : On utilise ton super composant
   if (loading) {
-    return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FAFAFA' }}>
-        <div style={{ width: '40px', height: '40px', border: '3px solid #EEE', borderTopColor: '#000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-      </div>
-    );
+    return <GlobalLoader text="Initialisation de KevySpace..." />;
   }
 
   // Redirection intelligente si on arrive sur la racine "/"
@@ -67,7 +64,7 @@ function App() {
           }}
         />
 
-        {/* 2. SYSTÈME DE MISE À JOUR AUTOMATIQUE (Apparaît si nouvelle version détectée) */}
+        {/* 2. SYSTÈME DE MISE À JOUR AUTOMATIQUE */}
         <UpdateNotification />
         
         {/* 3. ROUTING */}

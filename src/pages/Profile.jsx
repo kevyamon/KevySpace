@@ -15,7 +15,6 @@ const Profile = () => {
   const [imgError, setImgError] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Reset de l'erreur quand la photo change
   useEffect(() => {
     setImgError(false);
   }, [user?.profilePicture]);
@@ -29,17 +28,10 @@ const Profile = () => {
     window.location.reload();
   };
 
-  // --- FONCTION DE SÉCURITÉ URL (CORRIGÉE) ---
   const getSecureUrl = (url) => {
     if (!url) return null;
-    
-    // 1. Si c'est le texte par défaut "no-photo.jpg", on le rejette (retourne null)
     if (url === 'no-photo.jpg') return null;
-
-    // 2. Si ça ne ressemble pas à un lien web, on rejette
     if (!url.startsWith('http')) return null;
-
-    // 3. Force HTTPS
     if (url.startsWith('http://')) {
       return url.replace('http://', 'https://');
     }
@@ -92,7 +84,6 @@ const Profile = () => {
   };
 
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : '?';
-  // On nettoie l'URL avant de l'utiliser
   const secureProfilePic = getSecureUrl(user?.profilePicture);
 
   return (
@@ -109,11 +100,9 @@ const Profile = () => {
         marginBottom: '24px'
       }}>
         
-        {/* PHOTO / AVATAR */}
-        <div 
-          style={{ position: 'relative', cursor: 'pointer', marginBottom: '16px' }}
-          onClick={() => !uploading && fileInputRef.current.click()}
-        >
+        {/* CONTAINER PHOTO (Non cliquable désormais) */}
+        <div style={{ position: 'relative', marginBottom: '16px' }}>
+          
           <div style={{ 
             width: '100px', height: '100px', borderRadius: '50%', 
             backgroundColor: (secureProfilePic && !imgError) ? '#F5F5F7' : '#FFD700', 
@@ -142,19 +131,30 @@ const Profile = () => {
             )}
           </div>
 
-          <div style={{
-             position: 'absolute', inset: 0, borderRadius: '50%',
-             backgroundColor: 'rgba(0,0,0,0.4)',
-             display: 'flex', alignItems: 'center', justifyContent: 'center',
-             opacity: uploading ? 1 : 0, 
-             transition: 'opacity 0.2s',
-          }}
-          className="avatar-overlay"
-          onMouseEnter={(e) => { if(!uploading) e.currentTarget.style.opacity = 1 }}
-          onMouseLeave={(e) => { if(!uploading) e.currentTarget.style.opacity = 0 }}
+          {/* NOUVEAU : BOUTON CAMÉRA FLOTTANT */}
+          <button 
+            onClick={() => !uploading && fileInputRef.current.click()}
+            style={{
+              position: 'absolute',
+              bottom: '0',
+              right: '0',
+              backgroundColor: '#1D1D1F', // Noir élégant
+              width: '36px', height: '36px',
+              borderRadius: '50%',
+              border: '3px solid #FFF', // Bordure blanche pour séparer de l'image
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              zIndex: 10,
+              padding: 0
+            }}
           >
-             {uploading ? <Loader className="spin" color="#FFF" /> : <Camera color="#FFF" size={24} />}
-          </div>
+             {uploading ? (
+               <Loader size={16} color="#FFF" className="spin" />
+             ) : (
+               <Camera size={18} color="#FFF" />
+             )}
+          </button>
 
           <input 
             type="file" 

@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Button from '../components/Button';
 import { Rocket, ShieldCheck, Zap } from 'lucide-react';
+import packageJson from '../../package.json'; // <--- 1. IMPORT DE LA VERSION
 
 const Landing = () => {
   const navigate = useNavigate();
+  const currentYear = new Date().getFullYear(); // <--- 2. ANNÉE AUTOMATIQUE
 
   return (
     <div style={{
@@ -122,7 +124,6 @@ const Landing = () => {
           width: '100%'
         }}
       >
-        {/* C'EST ICI : J'ai ajouté pulse={true} */}
         <Button fullWidth onClick={() => navigate('/login')} pulse={true}>
           Se connecter
         </Button>
@@ -130,15 +131,19 @@ const Landing = () => {
           Créer un compte
         </Button>
         
-        <p style={{ 
+        {/* FOOTER : VERSION DYNAMIQUE + COPYRIGHT */}
+        <div style={{ 
           textAlign: 'center', 
           fontSize: '11px', 
           color: '#999', 
           marginTop: '12px',
           fontWeight: '500',
+          lineHeight: '1.5' // Un peu d'air entre les lignes
         }}>
-          v1.0.0 • Mobile Experience
-        </p>
+          <p style={{ margin: 0 }}>Par Kevin Amon@{currentYear} Tout droit réservé</p>
+          <p style={{ margin: 0 }}>v{packageJson.version} • Mobile Experience</p>
+        </div>
+
       </motion.div>
     </div>
   );
