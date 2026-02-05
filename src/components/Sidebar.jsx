@@ -63,21 +63,32 @@ const Sidebar = ({ isOpen, onClose }) => {
   const renderMenuContent = () => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       
-      {/* HEADER : COMPACTÉ POUR GAGNER DE LA PLACE */}
+      {/* HEADER : COMPACTÉ ET DYNAMIQUE */}
       <div style={{ marginBottom: '20px', textAlign: 'center', display:'flex', flexDirection:'column', alignItems:'center' }}>
         {isMobile ? (
-           // MODE MOBILE : Avatar COMPACT
+           // MODE MOBILE : Avatar COMPACT (Photo ou Initiale)
            <>
               <div style={{ 
                 // Réduction de 80px à 64px
                 width: '64px', height: '64px', borderRadius: '50%', 
-                backgroundColor: 'var(--color-gold)', color: '#FFF',
+                // Fond transparent si image, sinon Gold
+                backgroundColor: user?.profilePicture ? 'transparent' : 'var(--color-gold)', 
+                color: '#FFF',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: '800', fontSize: '26px', // Police réduite
+                fontWeight: '800', fontSize: '26px', 
                 boxShadow: '0 8px 24px rgba(255, 215, 0, 0.4)',
-                border: '3px solid #FFF', marginBottom: '8px' // Marge réduite
+                border: '3px solid #FFF', marginBottom: '8px',
+                overflow: 'hidden' // Important pour que l'image ne dépasse pas
               }}>
-                {user?.name?.charAt(0).toUpperCase()}
+                {user?.profilePicture ? (
+                  <img 
+                    src={user.profilePicture} 
+                    alt="Avatar" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                  />
+                ) : (
+                  user?.name?.charAt(0).toUpperCase()
+                )}
               </div>
               <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1D1D1F', marginBottom: '2px' }}>{user?.name}</h3>
               <p style={{ fontSize: '12px', color: '#888', margin: 0 }}>
@@ -85,7 +96,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               </p>
            </>
         ) : (
-           // MODE DESKTOP
+           // MODE DESKTOP : LOGO (On garde le logo pour l'identité visuelle sur PC)
            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '12px', width: '100%', marginBottom: '4px' }}>
               <div style={{ 
                   width: '40px', height: '40px', 
@@ -117,7 +128,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               onClick={() => setIsContactOpen(true)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '14px',
-                padding: '12px 16px', // Padding réduit légèrement
+                padding: '12px 16px', 
                 borderRadius: '16px', border: 'none',
                 backgroundColor: isMobile ? '#FFF' : '#F5F5F7', 
                 color: '#1D1D1F', fontWeight: '600',
@@ -148,13 +159,13 @@ const Sidebar = ({ isOpen, onClose }) => {
               onClick={() => handleNavigate(item.path)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '14px',
-                padding: '10px 16px', // Padding optimisé
+                padding: '10px 16px', 
                 borderRadius: '14px', border: 'none',
                 backgroundColor: isActive ? (isMobile ? 'rgba(0,0,0,0.05)' : '#1D1D1F') : 'transparent',
                 color: isActive ? (isMobile ? '#000' : '#FFF') : (item.isAdmin ? '#FF3B30' : '#1D1D1F'),
                 fontWeight: isActive ? '700' : '500',
                 cursor: 'pointer', transition: 'all 0.2s',
-                textAlign: 'left', fontSize: '14px', // Police optimisée
+                textAlign: 'left', fontSize: '14px', 
                 ...specialStyle
               }}
             >
@@ -223,7 +234,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 backgroundColor: 'rgba(255, 255, 255, 0.85)',
                 backdropFilter: 'blur(20px)', zIndex: 9999,
                 boxShadow: '-10px 0 30px rgba(0,0,0,0.1)',
-                display: 'flex', flexDirection: 'column', padding: '20px', // Padding global réduit
+                display: 'flex', flexDirection: 'column', padding: '20px', 
                 borderLeft: '1px solid rgba(255,255,255,0.5)'
               }}
             >
