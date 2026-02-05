@@ -1,15 +1,17 @@
-// src/pages/Register.jsx
+// frontend/src/pages/Register.jsx
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, ArrowLeft, Phone } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import { NotificationContext } from '../context/NotificationContext'; // <--- IMPORT
 import Button from '../components/Button';
 import Input from '../components/Input';
 
 const Register = () => {
   const navigate = useNavigate();
   const { register, user, loading } = useContext(AuthContext);
+  const { addNotification } = useContext(NotificationContext); // <--- RECUPERATION
 
   useEffect(() => {
     if (user) navigate('/');
@@ -25,7 +27,16 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const res = await register(formData);
+    
+    // SI L'INSCRIPTION RÉUSSIT
     if (res.success) {
+      // ON ENVOIE LA NOTIFICATION DE BIENVENUE
+      addNotification({
+        type: 'info',
+        title: 'Bienvenue sur KevySpace ! 🚀',
+        description: `Ravi de vous compter parmi nous ${formData.name}. Votre aventure commence maintenant.`
+      });
+
       navigate('/');
     }
   };

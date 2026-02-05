@@ -1,41 +1,15 @@
-// src/context/NotificationContext.jsx
+// frontend/src/context/NotificationContext.jsx
 import React, { createContext, useState, useEffect } from 'react';
 
 export const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
   
-  // 1. INITIALISATION INTELLIGENTE
-  // Au démarrage, on regarde si on a déjà des données sauvegardées
+  // 1. INITIALISATION (VIDE PAR DÉFAUT)
+  // On ne charge que ce qu'il y a dans le localStorage, sinon liste vide []
   const [notifications, setNotifications] = useState(() => {
     const savedData = localStorage.getItem('kevy_notifications');
-    return savedData ? JSON.parse(savedData) : [
-      // DONNÉES PAR DÉFAUT (Si c'est la première visite)
-      {
-        id: 1,
-        type: 'info',
-        title: 'Bienvenue sur KevySpace !',
-        description: 'Nous sommes ravis de vous compter parmi nous. N\'oubliez pas de compléter votre profil.',
-        time: 'Il y a 2 heures',
-        read: false 
-      },
-      {
-        id: 2,
-        type: 'success',
-        title: 'Module 1 validé',
-        description: 'Félicitations ! Vous avez terminé le premier module avec succès.',
-        time: 'Hier',
-        read: true 
-      },
-      {
-        id: 3,
-        type: 'warning',
-        title: 'Maintenance prévue',
-        description: 'Une maintenance des serveurs aura lieu ce soir à minuit.',
-        time: 'Il y a 3 jours',
-        read: false 
-      }
-    ];
+    return savedData ? JSON.parse(savedData) : []; 
   });
 
   // 2. SAUVEGARDE AUTOMATIQUE
@@ -47,7 +21,20 @@ export const NotificationProvider = ({ children }) => {
   // CALCUL DYNAMIQUE
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  // ACTIONS
+  // --- ACTIONS ---
+
+  // NOUVELLE FONCTION : Ajouter une notification
+  const addNotification = (notif) => {
+    const newNotif = {
+        id: Date.now(), // ID unique basé sur le temps
+        time: "À l'instant", // Par défaut
+        read: false,
+        ...notif // On écrase avec les données fournies (title, description, type)
+    };
+    // On ajoute au début de la liste (le plus récent en haut)
+    setNotifications(prev => [newNotif, ...prev]);
+  };
+
   const markAsRead = (id) => {
     setNotifications(prev => prev.map(n => 
       n.id === id ? { ...n, read: true } : n
@@ -66,16 +53,17 @@ export const NotificationProvider = ({ children }) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
-  // Fonction bonus pour réinitialiser (utile pour tes tests)
+  // Fonction bonus pour réinitialiser
   const resetNotifications = () => {
     localStorage.removeItem('kevy_notifications');
-    window.location.reload();
+    setNotifications([]); // On vide l'état local aussi
   };
 
   return (
     <NotificationContext.Provider value={{ 
       notifications, 
       unreadCount, 
+      addNotification, // <--- On expose la nouvelle fonction
       markAsRead, 
       markAllAsRead, 
       deleteNotification,
