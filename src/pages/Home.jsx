@@ -1,23 +1,30 @@
 // src/pages/Home.jsx
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { Loader2, SearchX } from 'lucide-react'; 
+import { SearchX } from 'lucide-react'; // Plus besoin de Loader2
 import api from '../services/api';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom'; // <--- IMPORT
+import { useNavigate } from 'react-router-dom';
 
 import HomeHeader from '../components/HomeHeader';
 import VideoCard from '../components/VideoCard';
 
 const Home = () => {
-  const { user } = useContext(AuthContext);
+  // On récupère la commande setGlobalLoading
+  const { user, setGlobalLoading } = useContext(AuthContext);
+  
   const [videos, setVideos] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const navigate = useNavigate(); // <--- HOOK
+  const navigate = useNavigate();
 
   useEffect(() => {
+    // 1. ON VERROUILLE L'ÉCRAN IMMÉDIATEMENT
+    setGlobalLoading(true);
+    
     fetchVideos();
+    
+    // Cleanup : sécurité pour être sûr que le loader part si on quitte la page vite
+    return () => setGlobalLoading(false);
   }, []);
 
   const fetchVideos = async () => {
@@ -27,13 +34,14 @@ const Home = () => {
     } catch (err) {
       console.error("Erreur chargement vidéos", err);
     } finally {
-      setLoading(false);
+      // 2. ON LIBÈRE L'ÉCRAN (avec un petit délai pour la fluidité)
+      setTimeout(() => {
+        setGlobalLoading(false);
+      }, 300);
     }
   };
 
-  // MODIFICATION CRITIQUE ICI 👇
   const handleWatchVideo = (videoId) => {
-    // On navigue vers notre page Watch interne au lieu d'ouvrir un onglet
     navigate(`/watch/${videoId}`);
   };
 
@@ -51,11 +59,9 @@ const Home = () => {
         {searchQuery ? `Résultats pour "${searchQuery}"` : 'Récemment ajoutés'}
       </h2>
 
-      {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>
-          <Loader2 className="animate-spin" color="var(--color-gold)" size={32} />
-        </div>
-      ) : filteredVideos.length === 0 ? (
+      {/* PLUS DE CHARGEMENT LOCAL ICI (Le GlobalLoader s'en occupe) */}
+      
+      {filteredVideos.length === 0 ? (
         <motion.div 
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', marginTop: '40px' }}
@@ -78,7 +84,6 @@ const Home = () => {
             >
               <VideoCard 
                 video={video} 
-                // On passe l'ID et non l'URL brute
                 onClick={() => handleWatchVideo(video._id)} 
               />
             </motion.div>

@@ -1,66 +1,135 @@
+// src/components/UpdateNotification.jsx
 import React from 'react';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, Download } from 'lucide-react';
-import { useAutoUpdate } from '../hooks/useAutoUpdate';
+import { RefreshCw, Zap } from 'lucide-react';
 
 const UpdateNotification = () => {
-  // On branche le cerveau (Le Hook)
-  const { updateAvailable, reloadPage } = useAutoUpdate();
+  // --- LOGIQUE PWA (On garde la logique standard Vite) ---
+  const {
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
+    onRegisterError(error) {
+      console.log('SW registration error', error);
+    },
+  });
+
+  // Fonction pour déclencher la mise à jour
+  const handleUpdate = () => {
+    updateServiceWorker(true);
+  };
 
   return (
     <AnimatePresence>
-      {updateAvailable && (
-        <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          style={{
-            position: 'fixed',
-            bottom: '24px',
-            right: '24px', // En bas à droite (discret mais visible)
-            zIndex: 99999, // Au-dessus de TOUT (y compris Sidebar/Modal)
-            backgroundColor: '#1D1D1F',
-            color: '#FFF',
-            padding: '16px 20px',
-            borderRadius: '16px',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '16px',
-            maxWidth: '90vw'
-          }}
-        >
-          <div style={{
-            width: '40px', height: '40px', borderRadius: '50%',
-            backgroundColor: 'rgba(255,255,255,0.1)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>
-            <Download size={20} color="var(--color-gold)" />
-          </div>
-
-          <div style={{ flex: 1 }}>
-            <p style={{ margin: 0, fontWeight: '700', fontSize: '14px' }}>Mise à jour disponible</p>
-            <p style={{ margin: 0, fontSize: '12px', color: '#86868B' }}>Une nouvelle version est prête.</p>
-          </div>
-
-          <button
-            onClick={reloadPage}
+      {needRefresh && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 99999999, // Au-dessus du Toaster et du Loader
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          
+          {/* 1. L'OVERLAY (FOND FLOU) */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             style={{
-              backgroundColor: 'var(--color-gold)',
-              color: '#FFF',
-              border: 'none',
-              padding: '10px 16px',
-              borderRadius: '10px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: '8px',
-              fontSize: '13px'
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.6)', // Noir semi-transparent
+              backdropFilter: 'blur(8px)', // Effet de flou "Glassmorphism"
+            }}
+          />
+
+          {/* 2. LA CARTE (MODALE) */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            style={{
+              position: 'relative',
+              backgroundColor: '#FFF',
+              width: '100%',
+              maxWidth: '400px',
+              borderRadius: '24px', // Coins bien arrondis
+              padding: '32px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', // Ombre profonde
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '20px'
             }}
           >
-            <RefreshCw size={14} />
-            Rafraîchir
-          </button>
-        </motion.div>
+            
+            {/* HÉROS : ICÔNE ANIMÉE */}
+            <div style={{
+              width: '64px', height: '64px',
+              backgroundColor: '#FFF8E1', // Fond jaune très pâle
+              borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              marginBottom: '4px'
+            }}>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              >
+                <RefreshCw size={32} color="#FFD700" strokeWidth={2.5} />
+              </motion.div>
+            </div>
+
+            {/* TEXTES */}
+            <div>
+              <h2 style={{ 
+                fontSize: '22px', 
+                fontWeight: '800', 
+                color: '#1D1D1F',
+                marginBottom: '8px',
+                lineHeight: '1.2'
+              }}>
+                Mise à jour disponible
+              </h2>
+              <p style={{ 
+                fontSize: '15px', 
+                color: '#86868B', 
+                lineHeight: '1.5' 
+              }}>
+                Une nouvelle version de KevySpace a été déployée. Installez-la pour profiter des dernières fonctionnalités.
+              </p>
+            </div>
+
+            {/* BOUTON D'ACTION */}
+            <motion.button
+              onClick={handleUpdate}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
+              style={{
+                marginTop: '12px',
+                width: '100%',
+                backgroundColor: '#1D1D1F',
+                color: '#FFF',
+                border: 'none',
+                padding: '16px',
+                borderRadius: '16px',
+                fontSize: '16px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              }}
+            >
+              <Zap size={20} fill="#FFF" />
+              Installer maintenant
+            </motion.button>
+
+          </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );

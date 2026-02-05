@@ -6,7 +6,7 @@ import { NotificationProvider } from './context/NotificationContext';
 import { Toaster } from 'react-hot-toast';
 import MobileLayout from './components/MobileLayout';
 import UpdateNotification from './components/UpdateNotification';
-import GlobalLoader from './components/GlobalLoader'; // <--- 1. IMPORT DU NOUVEAU LOADER
+import GlobalLoader from './components/GlobalLoader';
 
 // --- PAGES PUBLIQUES ---
 import Landing from './pages/Landing';
@@ -32,14 +32,10 @@ import AdminResources from './pages/admin/AdminResources';
 import AdminCertificates from './pages/admin/AdminCertificates'; 
 
 function App() {
+  // On récupère uniquement le 'loading' maître du Context
   const { user, loading } = useContext(AuthContext);
 
-  // 2. LE CHANGEMENT EST ICI : On utilise ton super composant
-  if (loading) {
-    return <GlobalLoader text="Initialisation de KevySpace..." />;
-  }
-
-  // Redirection intelligente si on arrive sur la racine "/"
+  // Redirection intelligente
   const getHomeRoute = () => {
     if (!user) return <Landing />;
     if (user.role === 'admin') return <AdminDashboard />;
@@ -48,55 +44,62 @@ function App() {
 
   return (
     <NotificationProvider>
-      {/* MobileLayout gère la Sidebar (PC) et le Header/Nav (Mobile) */}
-      <MobileLayout>
-        
-        {/* 1. GESTION DES NOTIFICATIONS TOAST (Z-Index Extrême) */}
-        <Toaster 
-          position="top-center"
-          containerStyle={{
-            zIndex: 9999999 // LE SECRET : On passe au-dessus de toutes les modales
-          }}
-          toastOptions={{
-            style: { borderRadius: '16px', background: '#333', color: '#fff', fontSize: '14px', fontWeight: '500' },
-            success: { style: { background: '#E5F9E5', color: '#1D1D1F', border: '1px solid #34C759' }, iconTheme: { primary: '#34C759', secondary: '#E5F9E5' } },
-            error: { style: { background: '#FFE5E5', color: '#1D1D1F', border: '1px solid #FF3B30' }, iconTheme: { primary: '#FF3B30', secondary: '#FFE5E5' } },
-          }}
-        />
+      
+      {/* 1. LE LOADER GLOBAL EN "OVERLAY" */}
+      {/* Il obéit directement au Context (piloté par les pages) */}
+      {loading && (
+        <GlobalLoader text="Chargement..." />
+      )}
 
-        {/* 2. SYSTÈME DE MISE À JOUR AUTOMATIQUE */}
-        <UpdateNotification />
-        
-        {/* 3. ROUTING */}
-        <Routes>
-          {/* ROUTES PUBLIQUES */}
-          <Route path="/" element={getHomeRoute()} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-
-          {/* ROUTES COMMUNES PROTÉGÉES */}
-          <Route path="/home" element={user ? <Home /> : <Navigate to="/login" />} />
-          <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
-          <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
-          <Route path="/watch/:id" element={user ? <Watch /> : <Navigate to="/login" />} />
-
-          {/* ROUTES ÉTUDIANT */}
-          <Route path="/favorites" element={user ? <Favorites /> : <Navigate to="/login" />} />
-          <Route path="/history" element={user ? <History /> : <Navigate to="/login" />} />
-          <Route path="/certificates" element={user ? <Certificates /> : <Navigate to="/login" />} />
-          <Route path="/resources" element={user ? <Resources /> : <Navigate to="/login" />} />
+      {/* 2. L'APPLICATION */}
+      {/* On cache visuellement l'app tant que ça charge pour éviter les flashs */}
+      <div style={{ 
+        opacity: loading ? 0 : 1, 
+        transition: 'opacity 0.3s' 
+      }}>
+        <MobileLayout>
           
-          {/* ROUTES ADMIN (Sécurisées par rôle) */}
-          <Route path="/admin/dashboard" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />
-          <Route path="/admin/upload" element={user?.role === 'admin' ? <AdminUpload /> : <Navigate to="/" />} />
-          <Route path="/admin/resources" element={user?.role === 'admin' ? <AdminResources /> : <Navigate to="/" />} />
-          <Route path="/admin/certificates" element={user?.role === 'admin' ? <AdminCertificates /> : <Navigate to="/" />} />
+          <Toaster 
+            position="top-center"
+            containerStyle={{ zIndex: 9999999 }}
+            toastOptions={{
+              style: { borderRadius: '16px', background: '#333', color: '#fff', fontSize: '14px', fontWeight: '500' },
+              success: { style: { background: '#E5F9E5', color: '#1D1D1F', border: '1px solid #34C759' }, iconTheme: { primary: '#34C759', secondary: '#E5F9E5' } },
+              error: { style: { background: '#FFE5E5', color: '#1D1D1F', border: '1px solid #FF3B30' }, iconTheme: { primary: '#FF3B30', secondary: '#FFE5E5' } },
+            }}
+          />
 
-          {/* FALLBACK (404) */}
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
+          <UpdateNotification />
+          
+          <Routes>
+            {/* ROUTES PUBLIQUES */}
+            <Route path="/" element={getHomeRoute()} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-      </MobileLayout>
+            {/* ROUTES COMMUNES PROTÉGÉES */}
+            <Route path="/home" element={user ? <Home /> : <Navigate to="/login" />} />
+            <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
+            <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
+            <Route path="/watch/:id" element={user ? <Watch /> : <Navigate to="/login" />} />
+
+            {/* ROUTES ÉTUDIANT */}
+            <Route path="/favorites" element={user ? <Favorites /> : <Navigate to="/login" />} />
+            <Route path="/history" element={user ? <History /> : <Navigate to="/login" />} />
+            <Route path="/certificates" element={user ? <Certificates /> : <Navigate to="/login" />} />
+            <Route path="/resources" element={user ? <Resources /> : <Navigate to="/login" />} />
+            
+            {/* ROUTES ADMIN */}
+            <Route path="/admin/dashboard" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />
+            <Route path="/admin/upload" element={user?.role === 'admin' ? <AdminUpload /> : <Navigate to="/" />} />
+            <Route path="/admin/resources" element={user?.role === 'admin' ? <AdminResources /> : <Navigate to="/" />} />
+            <Route path="/admin/certificates" element={user?.role === 'admin' ? <AdminCertificates /> : <Navigate to="/" />} />
+
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+
+        </MobileLayout>
+      </div>
     </NotificationProvider>
   );
 }
