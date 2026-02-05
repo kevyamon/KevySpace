@@ -5,9 +5,8 @@ import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AuthContext } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-
-// IMPORT DU LOGO
 import logoImg from '../assets/logo.png';
+import packageJson from '../../package.json'; // <--- IMPORT VERSION
 
 const Login = () => {
   const { login } = useContext(AuthContext);
@@ -15,6 +14,9 @@ const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Année dynamique
+  const currentYear = new Date().getFullYear();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,7 +40,6 @@ const Login = () => {
           animate={{ opacity: 1, y: 0 }}
           style={{ width: '100%', maxWidth: '400px', backgroundColor: '#FFF', borderRadius: '32px', padding: '40px 32px', boxShadow: '0 20px 40px rgba(0,0,0,0.08)' }}
         >
-          {/* LOGO SECTION */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '32px' }}>
             <div style={{ width: '64px', height: '64px', borderRadius: '50%', marginBottom: '16px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <img src={logoImg} alt="KevySpace Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
@@ -48,7 +49,6 @@ const Login = () => {
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* EMAIL */}
             <div style={{ position: 'relative' }}>
               <Mail size={20} color="#86868B" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
               <input
@@ -61,7 +61,6 @@ const Login = () => {
               />
             </div>
 
-            {/* PASSWORD */}
             <div style={{ position: 'relative' }}>
               <Lock size={20} color="#86868B" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
               <input
@@ -103,8 +102,11 @@ const Login = () => {
         </motion.div>
       </div>
       
+      {/* COPYRIGHT DYNAMIQUE ET PROPRE */}
       <div style={{ padding: '24px', textAlign: 'center' }}>
-        <p style={{ fontSize: '12px', color: '#C7C7CC' }}>&copy; 2026 KevySpace. Tous droits réservés.</p>
+        <p style={{ fontSize: '12px', color: '#C7C7CC' }}>
+            &copy; {currentYear} KevySpace v{packageJson.version}. Tous droits réservés.
+        </p>
       </div>
     </div>
   );

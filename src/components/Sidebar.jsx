@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import ContactModal from './ContactModal'; 
 import logoImg from '../assets/logo.png'; 
+import packageJson from '../../package.json'; // <--- 1. IMPORT DIRECT DE LA VERSION
 
 import { 
   X, Home, User, LogOut, 
@@ -63,22 +64,19 @@ const Sidebar = ({ isOpen, onClose }) => {
   const renderMenuContent = () => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       
-      {/* HEADER : COMPACTÉ ET DYNAMIQUE */}
+      {/* HEADER */}
       <div style={{ marginBottom: '20px', textAlign: 'center', display:'flex', flexDirection:'column', alignItems:'center' }}>
         {isMobile ? (
-           // MODE MOBILE : Avatar COMPACT (Photo ou Initiale)
            <>
               <div style={{ 
-                // Réduction de 80px à 64px
                 width: '64px', height: '64px', borderRadius: '50%', 
-                // Fond transparent si image, sinon Gold
                 backgroundColor: user?.profilePicture ? 'transparent' : 'var(--color-gold)', 
                 color: '#FFF',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontWeight: '800', fontSize: '26px', 
                 boxShadow: '0 8px 24px rgba(255, 215, 0, 0.4)',
                 border: '3px solid #FFF', marginBottom: '8px',
-                overflow: 'hidden' // Important pour que l'image ne dépasse pas
+                overflow: 'hidden'
               }}>
                 {user?.profilePicture ? (
                   <img 
@@ -96,7 +94,6 @@ const Sidebar = ({ isOpen, onClose }) => {
               </p>
            </>
         ) : (
-           // MODE DESKTOP : LOGO (On garde le logo pour l'identité visuelle sur PC)
            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '12px', width: '100%', marginBottom: '4px' }}>
               <div style={{ 
                   width: '40px', height: '40px', 
@@ -121,6 +118,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         )}
       </div>
 
+      {/* LISTE DES LIENS */}
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '4px' }}>
         {user?.role !== 'admin' && (
           <>
@@ -176,6 +174,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         })}
       </div>
 
+      {/* FOOTER : VERSION & LOGOUT */}
       <div style={{ marginTop: '16px' }}>
         <button
           onClick={handleLogout}
@@ -198,13 +197,13 @@ const Sidebar = ({ isOpen, onClose }) => {
           opacity: 0.7, 
           letterSpacing: '0.5px'
         }}>
-          KevySpace v{typeof __APP_VERSION_DISPLAY__ !== 'undefined' ? __APP_VERSION_DISPLAY__ : '1.0.0'}
+          {/* 2. AFFICHAGE DE LA VERSION DU PACKAGE.JSON */}
+          KevySpace v{packageJson.version}
         </p>
       </div>
     </div>
   );
 
-  // Rendu Bureau
   if (!isMobile) {
     return (
       <div style={{ width: '280px', height: '100vh', backgroundColor: '#FFF', borderRight: '1px solid #F5F5F7', padding: '24px 20px', position: 'fixed', left: 0, top: 0, zIndex: 100 }}>
@@ -214,7 +213,6 @@ const Sidebar = ({ isOpen, onClose }) => {
     );
   }
 
-  // Rendu Mobile (Drawer)
   return (
     <>
       <AnimatePresence>
