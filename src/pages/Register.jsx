@@ -4,14 +4,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, ArrowLeft, Phone } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
-import { NotificationContext } from '../context/NotificationContext'; // <--- IMPORT
+import { NotificationContext } from '../context/NotificationContext'; // <--- IMPORT AJOUTÉ
 import Button from '../components/Button';
 import Input from '../components/Input';
 
 const Register = () => {
   const navigate = useNavigate();
   const { register, user, loading } = useContext(AuthContext);
-  const { addNotification } = useContext(NotificationContext); // <--- RECUPERATION
+  const { addNotification } = useContext(NotificationContext); // <--- RÉCUPÉRATION FONCTION
 
   useEffect(() => {
     if (user) navigate('/');
@@ -109,7 +109,7 @@ const Register = () => {
           />
 
           <div style={{ marginTop: '16px' }}>
-            {/* BOUTON RESPIRANT 👇 */}
+            {/* BOUTON RESPIRANT */}
             <Button type="submit" fullWidth isLoading={loading} pulse={true}>
               S'inscrire
             </Button>
