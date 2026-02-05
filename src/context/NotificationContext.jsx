@@ -5,17 +5,23 @@ export const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
   
-  // 1. INITIALISATION (VIDE PAR DÉFAUT)
-  // On ne charge que ce qu'il y a dans le localStorage, sinon liste vide []
+  // CLE DE SAUVEGARDE (J'ai changé le nom pour forcer le nettoyage des vieilles données)
+  const STORAGE_KEY = 'kevy_notifications_live';
+
+  // 1. INITIALISATION PROPRE
   const [notifications, setNotifications] = useState(() => {
-    const savedData = localStorage.getItem('kevy_notifications');
-    return savedData ? JSON.parse(savedData) : []; 
+    try {
+      const savedData = localStorage.getItem(STORAGE_KEY);
+      return savedData ? JSON.parse(savedData) : []; // Si rien, tableau vide !
+    } catch (error) {
+      console.error("Erreur lecture notifs", error);
+      return [];
+    }
   });
 
   // 2. SAUVEGARDE AUTOMATIQUE
-  // À chaque fois que 'notifications' change (lu, supprimé...), on sauvegarde dans le navigateur
   useEffect(() => {
-    localStorage.setItem('kevy_notifications', JSON.stringify(notifications));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
   }, [notifications]);
 
   // CALCUL DYNAMIQUE
@@ -23,15 +29,13 @@ export const NotificationProvider = ({ children }) => {
 
   // --- ACTIONS ---
 
-  // NOUVELLE FONCTION : Ajouter une notification
   const addNotification = (notif) => {
     const newNotif = {
-        id: Date.now(), // ID unique basé sur le temps
-        time: "À l'instant", // Par défaut
+        id: Date.now(), 
+        time: "À l'instant",
         read: false,
-        ...notif // On écrase avec les données fournies (title, description, type)
+        ...notif 
     };
-    // On ajoute au début de la liste (le plus récent en haut)
     setNotifications(prev => [newNotif, ...prev]);
   };
 
@@ -53,17 +57,16 @@ export const NotificationProvider = ({ children }) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
-  // Fonction bonus pour réinitialiser
   const resetNotifications = () => {
-    localStorage.removeItem('kevy_notifications');
-    setNotifications([]); // On vide l'état local aussi
+    localStorage.removeItem(STORAGE_KEY);
+    setNotifications([]);
   };
 
   return (
     <NotificationContext.Provider value={{ 
       notifications, 
       unreadCount, 
-      addNotification, // <--- On expose la nouvelle fonction
+      addNotification, 
       markAsRead, 
       markAllAsRead, 
       deleteNotification,

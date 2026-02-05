@@ -40,7 +40,7 @@ const Login = () => {
         >
           {/* LOGO SECTION */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '32px' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '18px', marginBottom: '16px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', marginBottom: '16px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <img src={logoImg} alt="KevySpace Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
             <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#1D1D1F', marginBottom: '8px' }}>Bon retour</h1>
