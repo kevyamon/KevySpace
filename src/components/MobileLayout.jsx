@@ -4,9 +4,10 @@ import { Menu } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { AuthContext } from '../context/AuthContext';
-import logoImg from '../assets/logo.png'; // <--- IMPORT DU LOGO
+import HeaderHomeButton from './HeaderHomeButton'; // <--- 1. IMPORT DU COMPOSANT
+import logoImg from '../assets/logo.png'; 
 
-// HOOK POUR LA DÉTECTION D'ÉCRAN (Seuil Tablette/PC : 768px)
+// HOOK POUR LA DÉTECTION D'ÉCRAN
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
@@ -21,25 +22,20 @@ const MobileLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user } = useContext(AuthContext);
   const location = useLocation();
-  const isMobile = useIsMobile(); // <--- ON ACTIVE LA DÉTECTION
+  const isMobile = useIsMobile();
 
   // FILTRES D'AFFICHAGE
   const hideForAuth = ['/login', '/register', '/landing'].includes(location.pathname);
   const isPublicPage = !user && location.pathname === '/';
   
-  // Mobile : Navbar visible ?
   const showNavbar = user && !hideForAuth && !isPublicPage;
-  
-  // Desktop : Sidebar visible ?
   const showSidebarDesktop = user && !hideForAuth && !isPublicPage;
 
-  // --- VERSION DESKTOP (Split Screen - Classique) ---
+  // --- VERSION DESKTOP ---
   if (!isMobile) {
-    // Si on est sur Login/Register/Landing, on affiche juste le contenu centré
     if (!showSidebarDesktop) {
         return <>{children}</>;
     }
-    // Sinon, on affiche la Sidebar à gauche et le contenu à droite
     return (
       <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#FAFAFA' }}>
         <Sidebar /> 
@@ -50,7 +46,7 @@ const MobileLayout = ({ children }) => {
     );
   }
 
-  // --- VERSION MOBILE (Ta version propre + Logo) ---
+  // --- VERSION MOBILE ---
   return (
     <div style={{
       width: '100%',
@@ -62,7 +58,6 @@ const MobileLayout = ({ children }) => {
       position: 'relative'
     }}>
       
-      {/* Sidebar Mobile (Mode Drawer) */}
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       {/* NAVBAR FIXE */}
@@ -76,21 +71,25 @@ const MobileLayout = ({ children }) => {
           zIndex: 10 
         }}>
           
-          {/* 1. ÉQUILIBRE À GAUCHE (Invisible) */}
-          <div style={{ width: '24px' }}></div> 
+          {/* 1. BOUTON HOME À GAUCHE (Remplace le vide) */}
+          <div style={{ width: '32px' }}> {/* Conteneur pour assurer l'alignement */}
+             <HeaderHomeButton size={24} />
+          </div>
 
           {/* 2. LOGO + TEXTE CENTRÉ */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-             <img src={logoImg} alt="Logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+             <img src={logoImg} alt="Logo" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '50%' }} />
              <div style={{ fontWeight: '800', fontSize: '18px', color: '#1D1D1F' }}>
                Kevy<span style={{ color: 'var(--color-gold)' }}>Space</span>
              </div>
           </div>
 
           {/* 3. HAMBURGER À DROITE */}
-          <button onClick={() => setIsSidebarOpen(true)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-            <Menu size={24} color="#1D1D1F" />
-          </button>
+          <div style={{ width: '32px', display: 'flex', justifyContent: 'flex-end' }}>
+            <button onClick={() => setIsSidebarOpen(true)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+              <Menu size={24} color="#1D1D1F" />
+            </button>
+          </div>
 
         </div>
       )}

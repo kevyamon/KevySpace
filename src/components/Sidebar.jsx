@@ -63,29 +63,30 @@ const Sidebar = ({ isOpen, onClose }) => {
   const renderMenuContent = () => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       
-      {/* HEADER */}
-      <div style={{ marginBottom: '32px', textAlign: 'center', display:'flex', flexDirection:'column', alignItems:'center' }}>
+      {/* HEADER : COMPACTÉ POUR GAGNER DE LA PLACE */}
+      <div style={{ marginBottom: '20px', textAlign: 'center', display:'flex', flexDirection:'column', alignItems:'center' }}>
         {isMobile ? (
-           // MODE MOBILE : Avatar
+           // MODE MOBILE : Avatar COMPACT
            <>
               <div style={{ 
-                width: '80px', height: '80px', borderRadius: '50%', 
+                // Réduction de 80px à 64px
+                width: '64px', height: '64px', borderRadius: '50%', 
                 backgroundColor: 'var(--color-gold)', color: '#FFF',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: '800', fontSize: '32px', 
+                fontWeight: '800', fontSize: '26px', // Police réduite
                 boxShadow: '0 8px 24px rgba(255, 215, 0, 0.4)',
-                border: '4px solid #FFF', marginBottom: '12px'
+                border: '3px solid #FFF', marginBottom: '8px' // Marge réduite
               }}>
                 {user?.name?.charAt(0).toUpperCase()}
               </div>
-              <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#1D1D1F' }}>{user?.name}</h3>
-              <p style={{ fontSize: '13px', color: '#888', margin: 0 }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1D1D1F', marginBottom: '2px' }}>{user?.name}</h3>
+              <p style={{ fontSize: '12px', color: '#888', margin: 0 }}>
                 {user?.role === 'admin' ? 'Administrateur' : user?.email}
               </p>
            </>
         ) : (
-           // MODE DESKTOP : LOGO ROND FORCE (Clip-Path)
-           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '12px', width: '100%', marginBottom: '12px' }}>
+           // MODE DESKTOP
+           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '12px', width: '100%', marginBottom: '4px' }}>
               <div style={{ 
                   width: '40px', height: '40px', 
                   minWidth: '40px', minHeight: '40px',
@@ -109,30 +110,31 @@ const Sidebar = ({ isOpen, onClose }) => {
         )}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '4px' }}>
         {user?.role !== 'admin' && (
           <>
             <button
               onClick={() => setIsContactOpen(true)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '14px',
-                padding: '14px 16px', borderRadius: '16px', border: 'none',
+                padding: '12px 16px', // Padding réduit légèrement
+                borderRadius: '16px', border: 'none',
                 backgroundColor: isMobile ? '#FFF' : '#F5F5F7', 
                 color: '#1D1D1F', fontWeight: '600',
-                cursor: 'pointer', textAlign: 'left', fontSize: '15px',
+                cursor: 'pointer', textAlign: 'left', fontSize: '14px',
                 boxShadow: isMobile ? '0 2px 8px rgba(0,0,0,0.03)' : 'none', 
-                marginBottom: '12px'
+                marginBottom: '8px'
               }}
             >
-              <HelpCircle size={20} color="var(--color-gold)" />
+              <HelpCircle size={18} color="var(--color-gold)" />
               Contacter le formateur
             </button>
-            <div style={{ height: '1px', background: 'rgba(0,0,0,0.05)', margin: '8px 0' }}></div>
+            <div style={{ height: '1px', background: 'rgba(0,0,0,0.05)', margin: '4px 0' }}></div>
           </>
         )}
 
         {menuItems.map((item, index) => {
-          if (item.isSeparator) return <div key={index} style={{ height: '1px', background: 'rgba(0,0,0,0.05)', margin: '8px 0' }}></div>;
+          if (item.isSeparator) return <div key={index} style={{ height: '1px', background: 'rgba(0,0,0,0.05)', margin: '4px 0' }}></div>;
           
           const isActive = location.pathname === item.path;
           const specialStyle = item.isHighlight ? {
@@ -146,12 +148,13 @@ const Sidebar = ({ isOpen, onClose }) => {
               onClick={() => handleNavigate(item.path)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '14px',
-                padding: '12px 16px', borderRadius: '14px', border: 'none',
+                padding: '10px 16px', // Padding optimisé
+                borderRadius: '14px', border: 'none',
                 backgroundColor: isActive ? (isMobile ? 'rgba(0,0,0,0.05)' : '#1D1D1F') : 'transparent',
                 color: isActive ? (isMobile ? '#000' : '#FFF') : (item.isAdmin ? '#FF3B30' : '#1D1D1F'),
                 fontWeight: isActive ? '700' : '500',
                 cursor: 'pointer', transition: 'all 0.2s',
-                textAlign: 'left', fontSize: '15px',
+                textAlign: 'left', fontSize: '14px', // Police optimisée
                 ...specialStyle
               }}
             >
@@ -162,22 +165,29 @@ const Sidebar = ({ isOpen, onClose }) => {
         })}
       </div>
 
-      <div style={{ marginTop: '24px' }}>
+      <div style={{ marginTop: '16px' }}>
         <button
           onClick={handleLogout}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-            width: '100%', padding: '14px', borderRadius: '16px',
+            width: '100%', padding: '12px', borderRadius: '16px',
             border: '1px solid #FF3B30', background: 'transparent', 
-            color: '#FF3B30', fontWeight: '600', cursor: 'pointer', fontSize: '15px'
+            color: '#FF3B30', fontWeight: '600', cursor: 'pointer', fontSize: '14px'
           }}
         >
           <LogOut size={18} />
           Se déconnecter
         </button>
-        <p style={{ textAlign: 'center', fontSize: '11px', color: '#AAA', marginTop: '16px', fontWeight: '500' }}>
-          {/* 👇 C'EST ICI QUE LA MAGIE OPÈRE */}
-          KevySpace v{__APP_VERSION_DISPLAY__}
+        <p style={{ 
+          textAlign: 'center', 
+          fontSize: '10px', 
+          color: '#AAA', 
+          marginTop: '8px',
+          fontWeight: '500',
+          opacity: 0.7, 
+          letterSpacing: '0.5px'
+        }}>
+          KevySpace v{typeof __APP_VERSION_DISPLAY__ !== 'undefined' ? __APP_VERSION_DISPLAY__ : '1.0.0'}
         </p>
       </div>
     </div>
@@ -186,7 +196,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   // Rendu Bureau
   if (!isMobile) {
     return (
-      <div style={{ width: '280px', height: '100vh', backgroundColor: '#FFF', borderRight: '1px solid #F5F5F7', padding: '32px 24px', position: 'fixed', left: 0, top: 0, zIndex: 100 }}>
+      <div style={{ width: '280px', height: '100vh', backgroundColor: '#FFF', borderRight: '1px solid #F5F5F7', padding: '24px 20px', position: 'fixed', left: 0, top: 0, zIndex: 100 }}>
         {renderMenuContent()}
         <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
       </div>
@@ -213,14 +223,14 @@ const Sidebar = ({ isOpen, onClose }) => {
                 backgroundColor: 'rgba(255, 255, 255, 0.85)',
                 backdropFilter: 'blur(20px)', zIndex: 9999,
                 boxShadow: '-10px 0 30px rgba(0,0,0,0.1)',
-                display: 'flex', flexDirection: 'column', padding: '24px',
+                display: 'flex', flexDirection: 'column', padding: '20px', // Padding global réduit
                 borderLeft: '1px solid rgba(255,255,255,0.5)'
               }}
             >
-              <button onClick={onClose} style={{ position: 'absolute', top: '24px', left: '24px', background: 'rgba(255,255,255,0.5)', border: 'none', borderRadius: '50%', padding: '8px', cursor: 'pointer' }}>
+              <button onClick={onClose} style={{ position: 'absolute', top: '20px', left: '20px', background: 'rgba(255,255,255,0.5)', border: 'none', borderRadius: '50%', padding: '6px', cursor: 'pointer' }}>
                 <X size={20} color="#1D1D1F" />
               </button>
-              <div style={{ marginTop: '40px', height: '100%' }}>
+              <div style={{ marginTop: '30px', height: '100%' }}>
                  {renderMenuContent()}
               </div>
             </motion.div>
