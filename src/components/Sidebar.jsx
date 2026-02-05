@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import ContactModal from './ContactModal'; 
-import logoImg from '../assets/logo.png'; 
+import logoImg from '../assets/logo.png'; // On récupère le logo pour le mode PC
 
 import { 
   X, Home, User, LogOut, 
@@ -12,6 +12,7 @@ import {
   LayoutDashboard, UploadCloud, HelpCircle, Award
 } from 'lucide-react';
 
+// Hook pour détecter si on est sur mobile (Même logique que MobileLayout)
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
@@ -27,11 +28,11 @@ const Sidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isContactOpen, setIsContactOpen] = useState(false);
-  const isMobile = useIsMobile(); 
+  const isMobile = useIsMobile(); // Détection automatique
 
   const handleNavigate = (path) => {
     navigate(path);
-    if (onClose) onClose(); 
+    if (onClose) onClose(); // On ferme seulement si on est en mode mobile
   };
 
   const handleLogout = () => {
@@ -39,6 +40,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     if (onClose) onClose();
   };
 
+  // --- 1. MENUS ---
   const userLinks = [
     { icon: <Home size={20} />, label: 'Accueil', path: '/' },
     { icon: <User size={20} />, label: 'Mon Profil', path: '/profile' },
@@ -60,13 +62,14 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const menuItems = user?.role === 'admin' ? adminLinks : userLinks;
 
+  // --- CONTENU COMMUN DU MENU ---
   const renderMenuContent = () => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       
-      {/* HEADER */}
+      {/* HEADER : Mobile = Avatar / Desktop = Logo */}
       <div style={{ marginBottom: '32px', textAlign: 'center', display:'flex', flexDirection:'column', alignItems:'center' }}>
         {isMobile ? (
-           // MODE MOBILE : Avatar
+           // MODE MOBILE : TON DESIGN AVEC AVATAR
            <>
               <div style={{ 
                 width: '80px', height: '80px', borderRadius: '50%', 
@@ -84,35 +87,19 @@ const Sidebar = ({ isOpen, onClose }) => {
               </p>
            </>
         ) : (
-           // MODE DESKTOP : LOGO ROND FORCE (Clip-Path)
+           // MODE DESKTOP : LOGO ROND
            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '12px', width: '100%', marginBottom: '12px' }}>
-              
-              <div style={{ 
-                  width: '40px', height: '40px', 
-                  minWidth: '40px', minHeight: '40px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>
-                <img 
-                  src={logoImg} 
-                  alt="Logo" 
-                  style={{ 
-                    width: '40px', 
-                    height: '40px', 
-                    objectFit: 'cover',
-                    // 👇 LA SOLUTION NUCLÉAIRE : Découpage au ciseau CSS
-                    borderRadius: '50%',
-                    clipPath: 'circle(50% at 50% 50%)',
-                    WebkitClipPath: 'circle(50% at 50% 50%)' 
-                  }} 
-                />
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                <img src={logoImg} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
-
               <span style={{ fontSize: '20px', fontWeight: '800', color: '#1D1D1F' }}>KevySpace</span>
            </div>
         )}
       </div>
 
+      {/* LISTE DES LIENS */}
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
+        {/* BOUTON CONTACT (User Only) */}
         {user?.role !== 'admin' && (
           <>
             <button
@@ -120,7 +107,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               style={{
                 display: 'flex', alignItems: 'center', gap: '14px',
                 padding: '14px 16px', borderRadius: '16px', border: 'none',
-                backgroundColor: isMobile ? '#FFF' : '#F5F5F7', 
+                backgroundColor: isMobile ? '#FFF' : '#F5F5F7', // Nuance légère sur Desktop
                 color: '#1D1D1F', fontWeight: '600',
                 cursor: 'pointer', textAlign: 'left', fontSize: '15px',
                 boxShadow: isMobile ? '0 2px 8px rgba(0,0,0,0.03)' : 'none', 
@@ -165,6 +152,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         })}
       </div>
 
+      {/* FOOTER */}
       <div style={{ marginTop: '24px' }}>
         <button
           onClick={handleLogout}
@@ -185,7 +173,9 @@ const Sidebar = ({ isOpen, onClose }) => {
     </div>
   );
 
-  // Rendu Bureau
+  // --- RENDU FINAL ---
+  
+  // 1. MODE BUREAU : Colonne Fixe
   if (!isMobile) {
     return (
       <div style={{ width: '280px', height: '100vh', backgroundColor: '#FFF', borderRight: '1px solid #F5F5F7', padding: '32px 24px', position: 'fixed', left: 0, top: 0, zIndex: 100 }}>
@@ -195,17 +185,19 @@ const Sidebar = ({ isOpen, onClose }) => {
     );
   }
 
-  // Rendu Mobile (Drawer)
+  // 2. MODE MOBILE : Drawer (Ton code original)
   return (
     <>
       <AnimatePresence>
         {isOpen && (
           <>
+            {/* OVERLAY */}
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={onClose}
               style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(4px)', zIndex: 9998 }}
             />
+            {/* DRAWER */}
             <motion.div
               initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
@@ -222,6 +214,8 @@ const Sidebar = ({ isOpen, onClose }) => {
               <button onClick={onClose} style={{ position: 'absolute', top: '24px', left: '24px', background: 'rgba(255,255,255,0.5)', border: 'none', borderRadius: '50%', padding: '8px', cursor: 'pointer' }}>
                 <X size={20} color="#1D1D1F" />
               </button>
+              
+              {/* Contenu avec marge pour le bouton croix */}
               <div style={{ marginTop: '40px', height: '100%' }}>
                  {renderMenuContent()}
               </div>
