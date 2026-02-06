@@ -4,7 +4,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { UpdateProvider } from './context/UpdateContext';
-import { ThemeProvider } from './context/ThemeContext';
 import { Toaster } from 'react-hot-toast';
 import MobileLayout from './components/MobileLayout';
 import UpdateNotification from './components/UpdateNotification';
@@ -52,54 +51,52 @@ function App() {
 
   return (
     <NotificationProvider>
-      <ThemeProvider>
-        <UpdateProvider>
-          
-          {loading && <GlobalLoader text="Chargement..." />}
-          
-          <OfflineModal isOffline={isOffline} />
+      <UpdateProvider>
+        
+        {loading && <GlobalLoader text="Chargement..." />}
+        
+        <OfflineModal isOffline={isOffline} />
 
-          <div style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.3s' }}>
-            <MobileLayout>
-              <Toaster 
-                position="top-center"
-                containerStyle={{ zIndex: 9999999 }}
-                toastOptions={{
-                  style: { borderRadius: '16px', background: '#333', color: '#fff', fontSize: '14px', fontWeight: '500' },
-                  success: { style: { background: '#E5F9E5', color: '#1D1D1F', border: '1px solid #34C759' }, iconTheme: { primary: '#34C759', secondary: '#E5F9E5' } },
-                  error: { style: { background: '#FFE5E5', color: '#1D1D1F', border: '1px solid #FF3B30' }, iconTheme: { primary: '#FF3B30', secondary: '#FFE5E5' } },
-                }}
-              />
+        <div style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.3s' }}>
+          <MobileLayout>
+            <Toaster 
+              position="top-center"
+              containerStyle={{ zIndex: 9999999 }}
+              toastOptions={{
+                style: { borderRadius: '16px', background: '#333', color: '#fff', fontSize: '14px', fontWeight: '500' },
+                success: { style: { background: '#E5F9E5', color: '#1D1D1F', border: '1px solid #34C759' }, iconTheme: { primary: '#34C759', secondary: '#E5F9E5' } },
+                error: { style: { background: '#FFE5E5', color: '#1D1D1F', border: '1px solid #FF3B30' }, iconTheme: { primary: '#FF3B30', secondary: '#FFE5E5' } },
+              }}
+            />
 
-              <UpdateNotification />
+            <UpdateNotification />
+            
+            <Routes>
+              <Route path="/" element={getHomeRoute()} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+
+              <Route path="/home" element={user ? <Home /> : <Navigate to="/login" />} />
+              <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
+              <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
+              <Route path="/watch/:id" element={user ? <Watch /> : <Navigate to="/login" />} />
+
+              <Route path="/favorites" element={user ? <Favorites /> : <Navigate to="/login" />} />
+              <Route path="/history" element={user ? <History /> : <Navigate to="/login" />} />
+              <Route path="/certificates" element={user ? <Certificates /> : <Navigate to="/login" />} />
+              <Route path="/resources" element={user ? <Resources /> : <Navigate to="/login" />} />
               
-              <Routes>
-                <Route path="/" element={getHomeRoute()} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+              <Route path="/admin/dashboard" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />
+              <Route path="/admin/upload" element={user?.role === 'admin' ? <AdminUpload /> : <Navigate to="/" />} />
+              <Route path="/admin/resources" element={user?.role === 'admin' ? <AdminResources /> : <Navigate to="/" />} />
+              <Route path="/admin/certificates" element={user?.role === 'admin' ? <AdminCertificates /> : <Navigate to="/" />} />
 
-                <Route path="/home" element={user ? <Home /> : <Navigate to="/login" />} />
-                <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
-                <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
-                <Route path="/watch/:id" element={user ? <Watch /> : <Navigate to="/login" />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
 
-                <Route path="/favorites" element={user ? <Favorites /> : <Navigate to="/login" />} />
-                <Route path="/history" element={user ? <History /> : <Navigate to="/login" />} />
-                <Route path="/certificates" element={user ? <Certificates /> : <Navigate to="/login" />} />
-                <Route path="/resources" element={user ? <Resources /> : <Navigate to="/login" />} />
-                
-                <Route path="/admin/dashboard" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />
-                <Route path="/admin/upload" element={user?.role === 'admin' ? <AdminUpload /> : <Navigate to="/" />} />
-                <Route path="/admin/resources" element={user?.role === 'admin' ? <AdminResources /> : <Navigate to="/" />} />
-                <Route path="/admin/certificates" element={user?.role === 'admin' ? <AdminCertificates /> : <Navigate to="/" />} />
-
-                <Route path="*" element={<Navigate to="/" />} />
-              </Routes>
-
-            </MobileLayout>
-          </div>
-        </UpdateProvider>
-      </ThemeProvider>
+          </MobileLayout>
+        </div>
+      </UpdateProvider>
     </NotificationProvider>
   );
 }

@@ -18,41 +18,26 @@
   --spacing-l: 24px;
   --spacing-xl: 32px;
 
-  /* --- PALETTE JOUR (Light Mode par défaut) --- */
-  --color-bg: #F5F5F7;              /* Fond principal */
-  --bg-main: #F5F5F7;               /* Alias pour compatibilité */
-  --bg-surface: #FFFFFF;            /* Cartes, Modales */
-  --bg-input: #F5F5F7;              /* Champs de saisie */
-  --bg-glass: rgba(255, 255, 255, 0.8); /* Effet flou */
+  /* --- FOND D'APPLICATION --- */
+  --color-bg: #2A241B;              /* Fond principal beige foncé */
+  --bg-main: #2A241B;               /* Alias pour compatibilité */
   
-  --color-text-main: #1D1D1F;       /* Texte principal */
-  --color-text-secondary: #86868B;  /* Texte secondaire */
+  /* --- SURFACES (composants) --- */
+  --bg-surface: #FFFFFF;            /* Cartes, Modales, Sidebar - BLANC PUR */
+  --bg-input: #F8F8F8;              /* Champs de saisie - gris très clair */
+  --bg-glass: rgba(255, 255, 255, 0.9); /* Effet flou sur blanc */
+  
+  /* --- TEXTES SUR SURFACES BLANCHES --- */
+  --color-text-main: #1D1D1F;       /* Texte principal foncé (sur blanc) */
+  --color-text-secondary: #86868B;  /* Texte secondaire gris (sur blanc) */
   
   /* Alias pour compatibilité ancienne syntaxe */
   --text-primary: #1D1D1F;
   --text-secondary: #86868B;
   
-  --border-color: rgba(0, 0, 0, 0.05);
+  /* Bordures et ombres adaptées */
+  --border-color: rgba(0, 0, 0, 0.08);
   --shadow-color: rgba(0, 0, 0, 0.1);
-}
-
-/* --- PALETTE NUIT (Dark Mode) --- */
-[data-theme='dark'] {
-  --color-bg: #000000;              /* Noir profond */
-  --bg-main: #000000;               /* Alias pour compatibilité */
-  --bg-surface: #1C1C1E;            /* Gris anthracite pour les cartes */
-  --bg-input: #2C2C2E;              /* Gris plus clair pour inputs */
-  --bg-glass: rgba(28, 28, 30, 0.8); /* Verre sombre */
-  
-  --color-text-main: #F5F5F7;       /* Blanc cassé (plus doux) */
-  --color-text-secondary: #A1A1A6;  /* Gris argenté */
-  
-  /* Alias pour compatibilité ancienne syntaxe */
-  --text-primary: #F5F5F7;
-  --text-secondary: #A1A1A6;
-  
-  --border-color: rgba(255, 255, 255, 0.1);
-  --shadow-color: rgba(0, 0, 0, 0.5);
 }
 
 /* ===========================
@@ -66,26 +51,21 @@
 }
 
 /* ===========================
-   3. BASE MOBILE (FENÊTRE FIXE)
+   3. BASE RESPONSIVE NATURELLE
    =========================== */
 html, body {
   height: 100%;
   width: 100%;
   
-  /* Utilisation des variables dynamiques */
+  /* Fond beige foncé pour l'application */
   background-color: var(--color-bg);
-  color: var(--color-text-main);
-  
-  /* Transition fluide lors du changement de thème */
-  transition: background-color 0.3s ease, color 0.3s ease;
+  color: #F5F3F0; /* Texte clair pour fond foncé */
   
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Roboto, sans-serif;
-  
-  /* 🛑 STOP SCROLL GLOBAL */
-  overflow: hidden; 
-  position: fixed; 
-  -webkit-overflow-scrolling: touch;
   font-size: 16px;
+  
+  /* SUPPRESSION DU STOP SCROLL GLOBAL POUR DESKTOP */
+  overflow: auto; /* Changé de hidden à auto */
 }
 
 #root {
@@ -93,8 +73,6 @@ html, body {
   width: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden; 
-  position: relative;
 }
 
 img, video {
@@ -104,34 +82,10 @@ img, video {
 }
 
 /* ===========================
-   4. MODE DESKTOP (SIMULATEUR)
+   4. MODE DESKTOP - SUPPRESSION DU SIMULATEUR
    =========================== */
-@media (min-width: 500px) {
-  body {
-    /* Fond du simulateur (hors téléphone) - Reste sombre pour le contraste */
-    background-color: #111111; 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    overflow: hidden; 
-  }
-
-  #root {
-    max-width: 420px;
-    height: 90vh; 
-    max-height: 850px;
-    
-    background-color: var(--color-bg); /* Le téléphone prend la couleur du thème */
-    border-radius: 40px;
-    overflow: hidden; 
-    
-    box-shadow: 
-      0 0 0 10px #333,
-      0 20px 50px rgba(0, 0, 0, 0.5);
-    position: relative;
-  }
-}
+/* PLUS DE CONTENEUR TÉLÉPHONE FORCÉ ! */
+/* L'application occupe maintenant toute la largeur naturellement */
 
 /* ===========================
    5. UTILITAIRES
@@ -153,15 +107,31 @@ input, textarea, select {
   font-size: 16px !important;
 }
 
-/* Scrollbar adaptée au thème */
+/* Scrollbar adaptée */
 ::-webkit-scrollbar {
-  width: 5px;
+  width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--bg-surface);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-text-secondary); /* Couleur dynamique */
+  background: var(--color-text-secondary);
   border-radius: 10px;
   opacity: 0.5;
+}
+
+/* ===========================
+   6. RESPONSIVE MOBILE (POUR MOBILE SEULEMENT)
+   =========================== */
+@media (max-width: 767px) {
+  html, body {
+    /* Sur mobile seulement, on empêche le scroll global */
+    overflow: hidden;
+    position: fixed;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  #root {
+    overflow: hidden;
+  }
 }
