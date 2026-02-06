@@ -7,7 +7,6 @@ import { useUpdate } from '../context/UpdateContext';
 import ContactModal from './ContactModal'; 
 import logoImg from '../assets/logo.png'; 
 import packageJson from '../../package.json'; 
-import ThemeToggle from './ThemeToggle'; 
 
 import { 
   X, Home, User, LogOut, Heart, FileText, Download, Clock,
@@ -101,10 +100,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)' }}>KevySpace</span>
            </div>
         )}
-        
-        <div style={{ marginTop: '12px' }}>
-           <ThemeToggle />
-        </div>
+        {/* SUPPRESSION DU THEMETOGGLE - PLUS DE BOUTON MODE NUIT */}
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '4px' }}>
@@ -238,10 +234,10 @@ const Sidebar = ({ isOpen, onClose }) => {
                   background: 'var(--bg-input)', 
                   border: '1px solid var(--border-color)', 
                   borderRadius: '50%', 
-                  width: '40px', height: '40px', // Taille fixe pour un rond parfait
+                  width: '40px', height: '40px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer',
-                  boxShadow: '0 4px 12px var(--shadow-color)', // Ombre pour le détacher
+                  boxShadow: '0 4px 12px var(--shadow-color)',
                   zIndex: 20
                 }}
               >
