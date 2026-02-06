@@ -1,5 +1,5 @@
 // src/components/VideoPlayer.jsx
-import React from 'react';
+import React, { memo } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -29,10 +29,14 @@ const VideoPlayer = ({ videoUrl, thumbnailUrl, onPlay }) => {
         </button>
       </div>
 
-      {/* FIX FULLSCREEN: Retrait de controlsList qui bloquait parfois */}
+      {/* FIX FULLSCREEN: 
+          1. playsInline : Stabilise la transition sur mobile
+          2. Memoization (export) : Empêche le re-render au resize
+      */}
       <video 
         src={videoUrl} 
         controls 
+        playsInline
         style={{ width: '100%', height: '100%', objectFit: 'contain' }}
         poster={thumbnailUrl}
         onPlay={onPlay}
@@ -41,4 +45,5 @@ const VideoPlayer = ({ videoUrl, thumbnailUrl, onPlay }) => {
   );
 };
 
-export default VideoPlayer;
+// VACCIN : React.memo empêche le rechargement de la vidéo quand le parent re-render (ex: changement de taille d'écran)
+export default memo(VideoPlayer);
