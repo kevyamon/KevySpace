@@ -1,13 +1,12 @@
 // src/components/UpdateNotification.jsx
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, DownloadCloud, X, Code2 } from 'lucide-react';
-import { useUpdate } from '../context/UpdateContext'; // On utilise le Context
+import { DownloadCloud, X, Code2 } from 'lucide-react';
+import { useUpdate } from '../context/UpdateContext';
 
 const UpdateNotification = () => {
   const { updateStatus, progress, currentVersion, installUpdate, dismissUpdate } = useUpdate();
 
-  // On affiche SI 'available' OU 'installing'
   const isVisible = updateStatus === 'available' || updateStatus === 'installing';
 
   return (
@@ -45,17 +44,68 @@ const UpdateNotification = () => {
             {/* HEADER DESIGN */}
             <div style={{ padding: '32px 32px 20px 32px', textAlign: 'center' }}>
               <div style={{
-                width: '72px', height: '72px', backgroundColor: '#F5F5F7',
-                borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 20px auto', boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)'
+                position: 'relative',
+                width: '72px', height: '72px',
+                margin: '0 auto 20px auto',
               }}>
-                {updateStatus === 'installing' ? (
-                   <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
-                      <RefreshCw size={32} color="#1D1D1F" />
-                   </motion.div>
-                ) : (
-                   <DownloadCloud size={32} color="#1D1D1F" />
+                {/* JAUGE CIRCULAIRE DE PROGRESSION */}
+                {updateStatus === 'installing' && (
+                  <svg
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '72px',
+                      height: '72px',
+                      transform: 'rotate(-90deg)'
+                    }}
+                  >
+                    {/* Cercle de fond */}
+                    <circle
+                      cx="36"
+                      cy="36"
+                      r="34"
+                      fill="none"
+                      stroke="#F0F0F0"
+                      strokeWidth="2"
+                    />
+                    {/* Cercle de progression */}
+                    <circle
+                      cx="36"
+                      cy="36"
+                      r="34"
+                      fill="none"
+                      stroke="#1D1D1F"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeDasharray={`${2 * Math.PI * 34}`}
+                      strokeDashoffset={`${2 * Math.PI * 34 * (1 - progress / 100)}`}
+                    />
+                  </svg>
                 )}
+                
+                {/* ICÔNE AU CENTRE */}
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '60px',
+                  height: '60px',
+                  backgroundColor: '#F5F5F7',
+                  borderRadius: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
+                  zIndex: 1
+                }}>
+                  <DownloadCloud 
+                    size={32} 
+                    color="#1D1D1F" 
+                    style={{ opacity: updateStatus === 'installing' ? 0.7 : 1 }}
+                  />
+                </div>
               </div>
 
               <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#1D1D1F', marginBottom: '8px' }}>
@@ -79,18 +129,49 @@ const UpdateNotification = () => {
               </div>
             </div>
 
-            {/* JAUGE DE PROGRESSION (Visible uniquement si installing) */}
+            {/* JAUGE DE PROGRESSION LINÉAIRE (Visible uniquement si installing) */}
             {updateStatus === 'installing' && (
               <div style={{ padding: '0 32px 40px 32px' }}>
-                <div style={{ height: '6px', background: '#F0F0F0', borderRadius: '10px', overflow: 'hidden' }}>
+                <div style={{ 
+                  position: 'relative',
+                  height: '6px', 
+                  background: '#F0F0F0', 
+                  borderRadius: '10px', 
+                  overflow: 'hidden' 
+                }}>
                   <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
-                    style={{ height: '100%', background: '#1D1D1F' }}
+                    transition={{ duration: 0.3 }}
+                    style={{ 
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
+                      height: '100%', 
+                      background: '#1D1D1F',
+                      borderRadius: '10px'
+                    }}
                   />
                 </div>
-                <p style={{ textAlign: 'center', fontSize: '12px', color: '#AAA', marginTop: '10px', fontWeight: '600' }}>
-                  {progress}%
+                <p style={{ 
+                  textAlign: 'center', 
+                  fontSize: '12px', 
+                  color: '#1D1D1F', 
+                  marginTop: '10px', 
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}>
+                  <span style={{ 
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: '#1D1D1F',
+                    animation: 'pulse 1.5s infinite'
+                  }}></span>
+                  {progress}% complété
                 </p>
               </div>
             )}
@@ -125,6 +206,14 @@ const UpdateNotification = () => {
             )}
 
           </motion.div>
+
+          {/* Style CSS pour l'animation de pulse */}
+          <style>{`
+            @keyframes pulse {
+              0%, 100% { opacity: 0.3; }
+              50% { opacity: 1; }
+            }
+          `}</style>
         </div>
       )}
     </AnimatePresence>
