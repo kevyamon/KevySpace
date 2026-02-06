@@ -4,241 +4,232 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { useUpdate } from '../context/UpdateContext'; 
+import ThemeToggle from './ThemeToggle';
 import ContactModal from './ContactModal'; 
-import logoImg from '../assets/logo.png'; 
 import packageJson from '../../package.json'; 
-import ThemeToggle from './ThemeToggle'; // <--- AJOUT DU TOGGLE
 
-import { 
-  X, Home, User, LogOut, Heart, FileText, Download, Clock,
-  LayoutDashboard, UploadCloud, HelpCircle, Award,
-  RefreshCw 
-} from 'lucide-react';
-
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-  return isMobile;
-};
+// Note: On n'utilise plus trop les icônes dans ce style "Editorial", 
+// on mise tout sur la typographie. Mais je garde la logique.
 
 const Sidebar = ({ isOpen, onClose }) => {
   const { user, logout } = useContext(AuthContext);
-  const { triggerManualCheck, updateStatus } = useUpdate(); 
+  const { triggerManualCheck, updateStatus } = useUpdate();
   const navigate = useNavigate();
   const location = useLocation();
   const [isContactOpen, setIsContactOpen] = useState(false);
-  const isMobile = useIsMobile(); 
 
-  const handleNavigate = (path) => {
-    navigate(path);
-    if (onClose) onClose(); 
-  };
-
-  const handleLogout = () => {
-    logout();
-    if (onClose) onClose();
-  };
-
+  // --- CONFIGURATION DES MENUS ---
   const userLinks = [
-    { icon: <Home size={20} />, label: 'Accueil', path: '/' },
-    { icon: <User size={20} />, label: 'Mon Profil', path: '/profile' },
-    { icon: <Heart size={20} />, label: 'Mes Favoris', path: '/favorites' }, 
-    { icon: <Clock size={20} />, label: 'Historique', path: '/history' },   
-    { icon: <Award size={20} />, label: 'Mes Certificats', path: '/certificates' },
-    { icon: <Download size={20} />, label: 'Ressources PDF', path: '/resources' },     
+    { label: 'Accueil', path: '/' },
+    { label: 'Profil', path: '/profile' },
+    { label: 'Favoris', path: '/favorites' }, 
+    { label: 'Historique', path: '/history' },   
+    { label: 'Certificats', path: '/certificates' },
+    { label: 'Ressources', path: '/resources' },     
   ];
 
   const adminLinks = [
-    { icon: <LayoutDashboard size={20} />, label: 'Dashboard Admin', path: '/admin/dashboard', isAdmin: true },
-    { icon: <UploadCloud size={20} />, label: 'Publier un cours', path: '/admin/upload', isAdmin: true },
-    { icon: <Download size={20} />, label: 'Gérer Ressources', path: '/admin/resources', isAdmin: true },
-    { icon: <Award size={20} />, label: 'Gérer Certificats', path: '/admin/certificates', isAdmin: true },
+    { label: 'Dashboard', path: '/admin/dashboard', isAdmin: true },
+    { label: 'Publier', path: '/admin/upload', isAdmin: true },
+    { label: 'Ressources', path: '/admin/resources', isAdmin: true },
+    { label: 'Certificats', path: '/admin/certificates', isAdmin: true },
     { isSeparator: true },
-    { icon: <Home size={20} />, label: 'Vue Site (Accueil)', path: '/home', isHighlight: true },
-    { icon: <User size={20} />, label: 'Mon Profil', path: '/profile' },
+    { label: 'Site Public', path: '/home' },
+    { label: 'Mon Profil', path: '/profile' },
   ];
 
   const menuItems = user?.role === 'admin' ? adminLinks : userLinks;
 
-  const renderMenuContent = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      
-      {/* HEADER */}
-      <div style={{ marginBottom: '20px', textAlign: 'center', display:'flex', flexDirection:'column', alignItems:'center' }}>
-        {isMobile ? (
-           <>
-              <div style={{ 
-                width: '64px', height: '64px', borderRadius: '50%', 
-                backgroundColor: user?.profilePicture ? 'transparent' : 'var(--color-gold)', 
-                color: '#FFF',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: '800', fontSize: '26px', 
-                boxShadow: '0 8px 24px rgba(255, 215, 0, 0.4)',
-                border: '3px solid var(--bg-surface)', // Bordure dynamique
-                marginBottom: '8px',
-                overflow: 'hidden'
-              }}>
-                {user?.profilePicture ? (
-                  <img src={user.profilePicture} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  user?.name?.charAt(0).toUpperCase()
-                )}
-              </div>
-              <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '2px' }}>{user?.name}</h3>
-              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
-                {user?.role === 'admin' ? 'Administrateur' : user?.email}
-              </p>
-           </>
-        ) : (
-           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '12px', width: '100%', marginBottom: '4px' }}>
-              <div style={{ width: '40px', height: '40px', minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src={logoImg} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '50%', clipPath: 'circle(50% at 50% 50%)', WebkitClipPath: 'circle(50% at 50% 50%)' }} />
-              </div>
-              <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)' }}>KevySpace</span>
-           </div>
-        )}
-        
-        {/* AJOUT DU TOGGLE JOUR/NUIT ICI */}
-        <div style={{ marginTop: '12px' }}>
-           <ThemeToggle />
-        </div>
-      </div>
+  const handleNavigate = (path) => {
+    navigate(path);
+    onClose(); 
+  };
 
-      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '4px' }}>
-        {user?.role !== 'admin' && (
-          <>
-            <button
-              onClick={() => setIsContactOpen(true)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '14px',
-                padding: '12px 16px', borderRadius: '16px', border: 'none',
-                backgroundColor: isMobile ? 'var(--bg-input)' : 'var(--bg-main)', // Fond dynamique
-                color: 'var(--text-primary)', fontWeight: '600',
-                cursor: 'pointer', textAlign: 'left', fontSize: '14px',
-                boxShadow: isMobile ? '0 2px 8px var(--shadow-color)' : 'none', 
-                marginBottom: '8px'
-              }}
-            >
-              <HelpCircle size={18} color="var(--color-gold)" />
-              Contacter le formateur
-            </button>
-            <div style={{ height: '1px', background: 'var(--border-color)', margin: '4px 0' }}></div>
-          </>
-        )}
+  const handleLogout = () => {
+    logout();
+    onClose();
+  };
 
-        {menuItems.map((item, index) => {
-          if (item.isSeparator) return <div key={index} style={{ height: '1px', background: 'var(--border-color)', margin: '4px 0' }}></div>;
-          
-          const isActive = location.pathname === item.path;
-          const specialStyle = item.isHighlight ? {
-            backgroundColor: '#FFD700', color: '#000', fontWeight: '800',
-            boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
-          } : {};
+  // --- VARIANTS FRAMER MOTION (L'EFFET VAGUE) ---
+  const sidebarVariants = {
+    open: { 
+      x: 0,
+      transition: { type: "spring", stiffness: 300, damping: 30 }
+    },
+    closed: { 
+      x: "100%",
+      transition: { type: "spring", stiffness: 300, damping: 30 }
+    }
+  };
 
-          return (
-            <button
-              key={index}
-              onClick={() => handleNavigate(item.path)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '14px',
-                padding: '10px 16px', borderRadius: '14px', border: 'none',
-                backgroundColor: isActive ? (isMobile ? 'var(--border-color)' : 'var(--bg-input)') : 'transparent',
-                color: isActive ? 'var(--text-primary)' : (item.isAdmin ? '#FF3B30' : 'var(--text-primary)'),
-                fontWeight: isActive ? '700' : '500',
-                cursor: 'pointer', transition: 'all 0.2s',
-                textAlign: 'left', fontSize: '14px', 
-                ...specialStyle
-              }}
-            >
-              {item.icon}
-              {item.label}
-            </button>
-          );
-        })}
-        
-        {/* BOUTON MISE À JOUR */}
-        <div style={{ height: '1px', background: 'var(--border-color)', margin: '4px 0' }}></div>
-        <button
-          onClick={() => { triggerManualCheck(); if(onClose) onClose(); }}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '14px',
-            padding: '10px 16px', borderRadius: '14px', border: 'none',
-            backgroundColor: 'transparent',
-            color: updateStatus === 'waiting' ? '#FF9500' : 'var(--text-secondary)',
-            fontWeight: '600',
-            cursor: 'pointer', transition: 'all 0.2s',
-            textAlign: 'left', fontSize: '14px', 
-          }}
-        >
-          <RefreshCw size={18} />
-          {updateStatus === 'waiting' ? 'Mise à jour (En attente)' : 'Vérifier mise à jour'}
-        </button>
+  const listVariants = {
+    open: {
+      transition: { staggerChildren: 0.1, delayChildren: 0.2 } // Effet cascade
+    },
+    closed: {
+      transition: { staggerChildren: 0.05, staggerDirection: -1 }
+    }
+  };
 
-      </div>
+  const itemVariants = {
+    open: {
+      y: 0, opacity: 1,
+      transition: { y: { stiffness: 1000, velocity: -100 } }
+    },
+    closed: {
+      y: 50, opacity: 0,
+      transition: { y: { stiffness: 1000 } }
+    }
+  };
 
-      <div style={{ marginTop: '16px' }}>
-        <button
-          onClick={handleLogout}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-            width: '100%', padding: '12px', borderRadius: '16px',
-            border: '1px solid #FF3B30', background: 'transparent', 
-            color: '#FF3B30', fontWeight: '600', cursor: 'pointer', fontSize: '14px'
-          }}
-        >
-          <LogOut size={18} />
-          Se déconnecter
-        </button>
-        <p style={{ textAlign: 'center', fontSize: '10px', color: 'var(--text-secondary)', marginTop: '8px', fontWeight: '500', opacity: 0.7, letterSpacing: '0.5px' }}>
-          KevySpace v{packageJson.version}
-        </p>
-      </div>
-    </div>
-  );
-
-  if (!isMobile) {
-    return (
-      <div style={{ width: '280px', height: '100vh', backgroundColor: 'var(--bg-surface)', borderRight: '1px solid var(--border-color)', padding: '24px 20px', position: 'fixed', left: 0, top: 0, zIndex: 100 }}>
-        {renderMenuContent()}
-        <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
-      </div>
-    );
-  }
-
-  // Rendu Mobile
   return (
     <>
       <AnimatePresence>
         {isOpen && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 9998 }} />
-            <motion.div
-              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            {/* 1. OVERLAY (Fond sombre) */}
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={onClose} 
               style={{
-                position: 'fixed', top: 0, right: 0, bottom: 0, 
-                width: '80%', maxWidth: '320px',
-                backgroundColor: 'var(--bg-surface)', // Couleur de fond dynamique (Important!)
-                backdropFilter: 'blur(20px)', zIndex: 9999,
-                boxShadow: '-10px 0 30px rgba(0,0,0,0.3)',
-                display: 'flex', flexDirection: 'column', padding: '20px', 
-                borderLeft: '1px solid var(--border-color)'
+                position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                background: 'rgba(0, 0, 0, 0.6)',
+                backdropFilter: 'blur(4px)', // Petit flou moderne en plus
+                zIndex: 1500
+              }} 
+            />
+
+            {/* 2. SIDEBAR PARTIELLE */}
+            <motion.div
+              variants={sidebarVariants}
+              initial="closed"
+              animate="open"
+              exit="closed"
+              style={{
+                position: 'fixed', top: 0, right: 0,
+                width: '300px', maxWidth: '85%', height: '100vh',
+                backgroundColor: 'var(--bg-surface)', // S'adapte au mode nuit
+                zIndex: 2000,
+                display: 'flex', flexDirection: 'column',
+                justifyContent: 'center', alignItems: 'center',
+                boxShadow: '-10px 0 40px rgba(0,0,0,0.2)'
               }}
             >
-              <button onClick={onClose} style={{ position: 'absolute', top: '20px', left: '20px', background: 'var(--bg-input)', border: 'none', borderRadius: '50%', padding: '6px', cursor: 'pointer' }}>
-                <X size={20} color="var(--text-primary)" />
-              </button>
-              <div style={{ marginTop: '30px', height: '100%' }}>
-                 {renderMenuContent()}
+              
+              {/* BOUTON FERMER "X" (Style CSS personnalisé) */}
+              <div 
+                onClick={onClose}
+                style={{
+                  position: 'absolute', top: '30px', right: '30px',
+                  width: '30px', height: '30px', cursor: 'pointer', zIndex: 2100
+                }}
+              >
+                <div style={{
+                  position: 'absolute', left: 0, top: '12px', width: '100%', height: '3px',
+                  backgroundColor: 'var(--text-primary)', borderRadius: '2px',
+                  transform: 'rotate(45deg)'
+                }}></div>
+                <div style={{
+                  position: 'absolute', left: 0, top: '12px', width: '100%', height: '3px',
+                  backgroundColor: 'var(--text-primary)', borderRadius: '2px',
+                  transform: 'rotate(-45deg)'
+                }}></div>
               </div>
+
+              {/* CONTENU NAVIGATION (EFFET VAGUE) */}
+              <motion.ul 
+                variants={listVariants}
+                style={{ 
+                  listStyle: 'none', padding: 0, margin: 0, textAlign: 'center',
+                  display: 'flex', flexDirection: 'column', gap: '20px' // Espacement vertical
+                }}
+              >
+                {/* HEADER UTILISATEUR */}
+                <motion.li variants={itemVariants} style={{ marginBottom: '20px' }}>
+                   <div style={{ 
+                      width: '60px', height: '60px', margin: '0 auto 10px auto', 
+                      borderRadius: '50%', overflow: 'hidden', 
+                      background: 'var(--bg-input)', border: '2px solid var(--color-gold)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                   }}>
+                      {user?.profilePicture ? (
+                        <img src={user.profilePicture} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{user?.name?.[0]}</span>
+                      )}
+                   </div>
+                   <p style={{ fontSize: '14px', color: 'var(--text-secondary)', fontFamily: 'serif', fontStyle: 'italic' }}>
+                      Bonjour, {user?.name}
+                   </p>
+                </motion.li>
+
+                {/* LIENS DE NAVIGATION */}
+                {menuItems.map((item, index) => {
+                  if (item.isSeparator) return <div key={index} style={{ width: '20px', height: '1px', background: 'var(--border-color)', margin: '10px auto' }}></div>;
+                  
+                  const isActive = location.pathname === item.path;
+                  
+                  return (
+                    <motion.li key={index} variants={itemVariants}>
+                      <span 
+                        onClick={() => handleNavigate(item.path)}
+                        style={{
+                          fontSize: '2rem', // GRANDE TAILLE (Style CSS fourni)
+                          fontFamily: 'serif', // POLICE SERIF
+                          fontWeight: isActive ? '700' : '400',
+                          color: isActive ? 'var(--color-gold)' : 'var(--text-primary)',
+                          cursor: 'pointer',
+                          textDecoration: isActive ? 'underline' : 'none',
+                          textUnderlineOffset: '8px',
+                          textDecorationColor: 'var(--color-gold)',
+                          transition: 'color 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.color = 'var(--color-gold)'}
+                        onMouseLeave={(e) => !isActive && (e.target.style.color = 'var(--text-primary)')}
+                      >
+                        {item.label}
+                      </span>
+                    </motion.li>
+                  );
+                })}
+
+                {/* OPTIONS SUPPLÉMENTAIRES */}
+                <motion.li variants={itemVariants} style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center' }}>
+                   
+                   {/* TOGGLE THEME */}
+                   <ThemeToggle />
+
+                   {/* MISE À JOUR */}
+                   <button 
+                      onClick={() => { triggerManualCheck(); }}
+                      style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '14px' }}
+                   >
+                      {updateStatus === 'waiting' ? 'Mise à jour dispo !' : 'Version ' + packageJson.version}
+                   </button>
+
+                   {/* DÉCONNEXION */}
+                   <button 
+                      onClick={handleLogout}
+                      style={{ 
+                        background: 'transparent', border: '1px solid var(--color-danger)', 
+                        padding: '10px 20px', borderRadius: '30px',
+                        color: 'var(--color-danger)', fontWeight: '600', cursor: 'pointer',
+                        marginTop: '10px'
+                      }}
+                   >
+                      Se déconnecter
+                   </button>
+                </motion.li>
+
+              </motion.ul>
+
             </motion.div>
           </>
         )}
       </AnimatePresence>
+      
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
     </>
   );
