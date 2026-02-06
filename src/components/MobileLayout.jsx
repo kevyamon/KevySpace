@@ -7,7 +7,6 @@ import { AuthContext } from '../context/AuthContext';
 import HeaderHomeButton from './HeaderHomeButton';
 import logoImg from '../assets/logo.png'; 
 
-// HOOK POUR LA DÉTECTION D'ÉCRAN AMÉLIORÉ
 const useScreenType = () => {
   const [screenType, setScreenType] = useState(() => {
     const width = window.innerWidth;
@@ -37,7 +36,6 @@ const MobileLayout = ({ children }) => {
   const location = useLocation();
   const screenType = useScreenType();
 
-  // FILTRES D'AFFICHAGE
   const hideForAuth = ['/login', '/register', '/landing'].includes(location.pathname);
   const isPublicPage = !user && location.pathname === '/';
   
@@ -71,7 +69,6 @@ const MobileLayout = ({ children }) => {
             boxShadow: '0 2px 10px var(--shadow-color)',
             flexShrink: 0
           }}>
-            {/* LOGO */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <img 
                 src={logoImg} 
@@ -92,7 +89,6 @@ const MobileLayout = ({ children }) => {
               </div>
             </div>
 
-            {/* BOUTON HOME DESKTOP */}
             <div>
               <HeaderHomeButton size={24} />
             </div>
@@ -107,10 +103,9 @@ const MobileLayout = ({ children }) => {
           margin: '0 auto',
           width: '100%',
           padding: '24px',
-          gap: '24px',
-          overflow: 'hidden'
+          gap: '24px'
         }}>
-          {/* SIDEBAR DESKTOP (toujours visible si connecté) */}
+          {/* SIDEBAR DESKTOP — MODE EMBEDDED */}
           {showSidebar && (
             <div style={{
               width: '280px',
@@ -125,7 +120,7 @@ const MobileLayout = ({ children }) => {
               border: '1px solid var(--border-color)',
               boxShadow: '0 4px 20px var(--shadow-color)'
             }}>
-              <Sidebar />
+              <Sidebar embedded />
             </div>
           )}
 
@@ -159,7 +154,6 @@ const MobileLayout = ({ children }) => {
       }}>
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-        {/* NAVBAR TABLETTE */}
         {showNavbar && (
           <div style={{
             flexShrink: 0,
@@ -172,12 +166,10 @@ const MobileLayout = ({ children }) => {
             borderBottom: '1px solid var(--border-color)',
             zIndex: 10
           }}>
-            {/* BOUTON HOME */}
             <div style={{ width: '40px' }}>
               <HeaderHomeButton size={24} />
             </div>
 
-            {/* LOGO */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <img 
                 src={logoImg} 
@@ -198,7 +190,6 @@ const MobileLayout = ({ children }) => {
               </div>
             </div>
 
-            {/* HAMBURGER */}
             <div style={{ width: '40px', display: 'flex', justifyContent: 'flex-end' }}>
               <button 
                 onClick={() => setIsSidebarOpen(true)}
@@ -220,7 +211,6 @@ const MobileLayout = ({ children }) => {
           </div>
         )}
 
-        {/* CONTENU TABLETTE */}
         <div style={{ 
           flex: 1,
           padding: '20px',
@@ -245,8 +235,9 @@ const MobileLayout = ({ children }) => {
   // =========================================
   return (
     <div style={{
-      width: '100vw',
+      width: '100%',
       height: '100dvh',
+      maxWidth: '100%',
       display: 'flex',
       flexDirection: 'column',
       backgroundColor: 'var(--color-bg)',
@@ -270,12 +261,10 @@ const MobileLayout = ({ children }) => {
           zIndex: 10
         }}>
           
-          {/* BOUTON HOME */}
           <div style={{ width: '32px' }}>
             <HeaderHomeButton size={22} />
           </div>
 
-          {/* LOGO */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <img 
               src={logoImg} 
@@ -296,7 +285,6 @@ const MobileLayout = ({ children }) => {
             </div>
           </div>
 
-          {/* HAMBURGER */}
           <div style={{ width: '32px', display: 'flex', justifyContent: 'flex-end' }}>
             <button 
               onClick={() => setIsSidebarOpen(true)}
@@ -319,7 +307,7 @@ const MobileLayout = ({ children }) => {
         overflowY: 'auto',
         overflowX: 'hidden',
         WebkitOverflowScrolling: 'touch',
-        padding: showNavbar ? '12px' : '0',
+        padding: showNavbar ? '8px' : '0',
         color: 'var(--color-text-on-bg)'
       }}>
         {children}

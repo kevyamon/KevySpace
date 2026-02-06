@@ -24,7 +24,7 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-const Sidebar = ({ isOpen, onClose }) => {
+const Sidebar = ({ isOpen, onClose, embedded = false }) => {
   const { user, logout } = useContext(AuthContext);
   const { triggerManualCheck, updateStatus } = useUpdate(); 
   const navigate = useNavigate();
@@ -63,7 +63,6 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const menuItems = user?.role === 'admin' ? adminLinks : userLinks;
 
-  // Style commun pour tous les boutons de navigation
   const getButtonStyle = (isActive, item) => {
     const baseStyle = {
       display: 'flex', 
@@ -79,7 +78,6 @@ const Sidebar = ({ isOpen, onClose }) => {
       boxSizing: 'border-box'
     };
 
-    // Bouton highlight (Vue Site)
     if (item?.isHighlight) {
       return {
         ...baseStyle,
@@ -91,7 +89,6 @@ const Sidebar = ({ isOpen, onClose }) => {
       };
     }
 
-    // Bouton actif
     if (isActive) {
       return {
         ...baseStyle,
@@ -102,7 +99,6 @@ const Sidebar = ({ isOpen, onClose }) => {
       };
     }
 
-    // Bouton normal
     return {
       ...baseStyle,
       backgroundColor: 'transparent',
@@ -117,7 +113,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       
       {/* HEADER */}
       <div style={{ marginBottom: '20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {isMobile ? (
+        {isMobile && !embedded ? (
            <>
               <div style={{ 
                 width: '64px', height: '64px', borderRadius: '50%', 
@@ -228,15 +224,32 @@ const Sidebar = ({ isOpen, onClose }) => {
     </div>
   );
 
-  if (!isMobile) {
+  // =====================
+  // MODE EMBEDDED (Desktop dans MobileLayout)
+  // =====================
+  if (embedded) {
     return (
-      <div style={{ width: '280px', height: '100vh', backgroundColor: 'var(--bg-surface)', borderRight: '1px solid var(--border-color)', padding: '24px 20px', position: 'fixed', left: 0, top: 0, zIndex: 100 }}>
+      <div style={{ padding: '20px 16px', height: '100%', boxSizing: 'border-box' }}>
         {renderMenuContent()}
         <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
       </div>
     );
   }
 
+  // =====================
+  // MODE DESKTOP AUTONOME (NON UTILISÉ MAINTENANT — GARDE POUR COMPATIBILITÉ)
+  // =====================
+  if (!isMobile && !embedded) {
+    return (
+      <>
+        <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
+      </>
+    );
+  }
+
+  // =====================
+  // MODE MOBILE (DRAWER)
+  // =====================
   return (
     <>
       <AnimatePresence>
