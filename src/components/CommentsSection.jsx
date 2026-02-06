@@ -107,7 +107,7 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
 
     try {
       await api.delete(`/api/comments/${selectedComment._id}`);
-      toast.success("Commentaire supprimé");
+      toast.success("Supprimé");
     } catch (err) {
       setComments(previousComments);
       toast.error("Impossible de supprimer");
@@ -239,8 +239,8 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
               style={{
                 width: '100%', padding: '16px 50px 16px 20px',
                 borderRadius: '24px', border: 'none',
-                backgroundColor: 'var(--bg-input)', // Fond dynamique
-                color: 'var(--text-primary)',       // Texte dynamique
+                backgroundColor: 'var(--bg-input)', 
+                color: 'var(--text-primary)',       
                 fontSize: '15px', outline: 'none',
                 boxShadow: editMode ? '0 0 0 2px var(--color-gold)' : 'none',
                 transition: 'box-shadow 0.2s'
@@ -251,7 +251,7 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
               style={{
                 position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
                 width: '36px', height: '36px', borderRadius: '50%',
-                backgroundColor: inputText.trim() ? 'var(--color-gold)' : 'var(--bg-surface)', // Fond dynamique
+                backgroundColor: inputText.trim() ? 'var(--color-gold)' : 'var(--bg-surface)', 
                 border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: inputText.trim() ? 'pointer' : 'default',
                 transition: 'background-color 0.2s'
@@ -262,61 +262,68 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
          </form>
       </div>
 
-      {/* --- MODALE FOCUS (Long Press) --- */}
+      {/* --- MODALE FOCUS (FIXÉE ET CENTRÉE) --- */}
       <AnimatePresence>
         {isModalOpen && selectedComment && (
-          <>
+          <div style={{ 
+            // LE FIX EST ICI : Container fixe qui prend tout l'écran et centre le contenu
+            position: 'fixed', inset: 0, zIndex: 99999,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '20px' // Marge de sécurité
+          }}>
+            
             {/* 1. FOND FLOU (BACKDROP) */}
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
               style={{ 
-                position: 'fixed', inset: 0, 
-                backgroundColor: 'rgba(0,0,0,0.6)', 
+                position: 'absolute', inset: 0, 
+                backgroundColor: 'rgba(0,0,0,0.7)', // Un peu plus sombre
                 backdropFilter: 'blur(8px)', 
-                zIndex: 99998,
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}
             />
 
-            {/* 2. CONTENU FLOTTANT */}
+            {/* 2. CONTENU FLOTTANT (TAILLE RÉDUITE 10%) */}
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               style={{
-                position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                width: '90%', maxWidth: '350px',
-                zIndex: 99999,
-                display: 'flex', flexDirection: 'column', gap: '20px'
+                position: 'relative', // Relative au container Flex
+                width: '100%', maxWidth: '300px', // Réduit (350 -> 300)
+                display: 'flex', flexDirection: 'column', gap: '14px' // Réduit (20 -> 14)
               }}
             >
               {/* CLONE DU COMMENTAIRE (Pour focus) */}
               <div style={{ 
-                background: 'var(--bg-surface)', padding: '16px', borderRadius: '20px',
+                background: 'var(--bg-surface)', 
+                padding: '14px', // Réduit (16 -> 14)
+                borderRadius: '18px', // Réduit (20 -> 18)
                 boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '1px solid var(--border-color)'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
-                   <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-input)', overflow:'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                   <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--bg-input)', overflow:'hidden' }}>
                       {selectedComment.user?.profilePicture ? (
                           <img src={selectedComment.user.profilePicture} style={{width:'100%', height:'100%', objectFit:'cover'}} />
                       ) : (
-                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--text-secondary)' }}>{selectedComment.user?.name?.[0]}</div>
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--text-secondary)', fontSize:'10px' }}>
+                            {selectedComment.user?.name?.[0]}
+                          </div>
                       )}
                    </div>
-                   <span style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-primary)' }}>{selectedComment.user?.name}</span>
+                   <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-primary)' }}>{selectedComment.user?.name}</span>
                 </div>
-                <p style={{ fontSize: '15px', color: 'var(--text-primary)', lineHeight: '1.5', maxHeight: '200px', overflowY: 'auto' }}>
+                <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.4', maxHeight: '180px', overflowY: 'auto' }}>
                     {selectedComment.text}
                 </p>
               </div>
 
-              {/* BOUTONS D'ACTIONS */}
+              {/* BOUTONS D'ACTIONS (PLUS PETITS) */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 
-                <ModalButton icon={<Reply size={20}/>} label="Répondre" onClick={handleReply} />
+                <ModalButton icon={<Reply size={18}/>} label="Répondre" onClick={handleReply} />
                 
-                <ModalButton icon={<Copy size={20}/>} label="Copier le texte" onClick={() => { 
+                <ModalButton icon={<Copy size={18}/>} label="Copier le texte" onClick={() => { 
                     navigator.clipboard.writeText(selectedComment.text); 
                     setIsModalOpen(false); 
                     toast.success("Copié !"); 
@@ -325,16 +332,16 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
                 {/* ACTIONS RÉSERVÉES À L'AUTEUR (OU ADMIN) */}
                 {user && (selectedComment.user?._id === user.id || selectedComment.user?._id === user._id) && (
                   <>
-                    <ModalButton icon={<Edit2 size={20}/>} label="Modifier" onClick={handleEditInit} />
-                    <ModalButton icon={<Trash2 size={20}/>} label="Supprimer" danger onClick={handleDelete} />
+                    <ModalButton icon={<Edit2 size={18}/>} label="Modifier" onClick={handleEditInit} />
+                    <ModalButton icon={<Trash2 size={18}/>} label="Supprimer" danger onClick={handleDelete} />
                   </>
                 )}
 
                 <button 
                   onClick={() => setIsModalOpen(false)}
                   style={{ 
-                    marginTop: '8px', background: 'rgba(255,255,255,0.2)', border: 'none', 
-                    color: '#FFF', padding: '14px', borderRadius: '16px', fontWeight: '600', cursor: 'pointer'
+                    marginTop: '4px', background: 'rgba(255,255,255,0.15)', border: 'none', 
+                    color: '#FFF', padding: '12px', borderRadius: '14px', fontWeight: '600', cursor: 'pointer', fontSize: '13px'
                   }}
                 >
                   Fermer
@@ -342,7 +349,7 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
               </div>
 
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
 
@@ -350,18 +357,18 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
   );
 };
 
-// Bouton interne pour la modale
+// Bouton interne pour la modale (Réduit)
 const ModalButton = ({ icon, label, onClick, danger }) => (
   <motion.button
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
     style={{
-      display: 'flex', alignItems: 'center', gap: '12px',
-      width: '100%', padding: '16px',
+      display: 'flex', alignItems: 'center', gap: '10px', // Réduit gap
+      width: '100%', padding: '12px', // Réduit padding (16 -> 12)
       backgroundColor: danger ? '#FF3B30' : 'var(--bg-surface)',
       color: danger ? '#FFF' : 'var(--text-primary)',
-      border: 'none', borderRadius: '16px',
-      fontSize: '15px', fontWeight: '600', cursor: 'pointer',
+      border: 'none', borderRadius: '14px', // Réduit radius
+      fontSize: '13px', fontWeight: '600', cursor: 'pointer', // Réduit font
       boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
     }}
   >

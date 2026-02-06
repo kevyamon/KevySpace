@@ -40,25 +40,28 @@ const VideoInfo = ({ video, viewsCount, likesCount, isLiked, onLike, onShare }) 
         </span>
       </div>
 
-      {/* BARRE D'ACTIONS (CORRIGÉE : VISIBILITÉ MAXIMALE) */}
+      {/* BARRE D'ACTIONS */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+        
+        {/* BOUTON LIKE (Cœur) */}
         <ActionButton 
           icon={<Heart size={20} fill={isLiked ? "#FF3B30" : "none"} color={isLiked ? "#FF3B30" : "var(--text-primary)"} />} 
           label={isLiked ? "Aimé" : "J'aime"} 
           onClick={handleLike} 
           active={isLiked} 
         />
+        
         <ActionButton icon={<Share2 size={20} />} label="Partager" onClick={handleShare} />
         <ActionButton icon={<MessageCircle size={20} />} label={`${video?.comments?.length || 0}`} onClick={() => {}} />
       </div>
 
       {/* DESCRIPTION ACCORDÉON */}
       <div style={{ 
-        backgroundColor: 'var(--bg-input)', // Fond légèrement grisé/sombre pour se détacher du fond de page
-        border: '1px solid var(--border-color)', // Bordure subtile
+        backgroundColor: 'var(--bg-input)', 
+        border: '1px solid var(--border-color)',
         borderRadius: '16px', padding: '16px',
         marginBottom: '32px',
-        maxHeight: isDescExpanded ? 'none' : '150px', // Plus compact par défaut
+        maxHeight: isDescExpanded ? 'none' : '150px', 
         overflow: 'hidden',
         transition: 'all 0.3s ease',
         position: 'relative'
@@ -92,7 +95,7 @@ const VideoInfo = ({ video, viewsCount, likesCount, isLiked, onLike, onShare }) 
   );
 };
 
-// --- LE BOUTON CORRIGÉ ---
+// --- LE BOUTON CORRIGÉ (Visible sur fond blanc et noir) ---
 const ActionButton = ({ icon, label, onClick, active }) => (
   <motion.button 
     whileTap={{ scale: 0.95 }}
@@ -103,16 +106,16 @@ const ActionButton = ({ icon, label, onClick, active }) => (
       padding: '12px', 
       borderRadius: '16px', 
       
-      // 1. FOND : Surface (Blanc/Gris Foncé) ou Rouge pâle si actif
+      // 1. FOND : Surface ou Rouge pâle si actif
       backgroundColor: active ? 'rgba(255, 59, 48, 0.1)' : 'var(--bg-surface)', 
       
-      // 2. BORDURE : Indispensable pour la visibilité sur fond blanc
+      // 2. BORDURE : Indispensable pour la visibilité
       border: active ? '1px solid #FF3B30' : '1px solid var(--border-color)', 
       
       // 3. COULEUR TEXTE
       color: active ? '#FF3B30' : 'var(--text-primary)', 
       
-      // 4. OMBRE : Pour le relief "Pop"
+      // 4. OMBRE
       boxShadow: '0 2px 6px var(--shadow-color)',
       
       fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' 
