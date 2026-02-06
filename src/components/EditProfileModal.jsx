@@ -1,4 +1,4 @@
-// frontend/src/components/EditProfileModal.jsx
+// src/components/EditProfileModal.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom'; 
@@ -38,13 +38,47 @@ const EditProfileModal = ({ isOpen, onClose, user }) => {
     onClose(); 
   };
 
+  // --- 🧠 C'EST ICI QUE TOUT SE JOUE (Smart Update) ---
   const handleInfoSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
     try {
-      await api.put('/api/auth/updatedetails', infoData);
+      // 1. On prépare un objet vide
+      const updates = {};
+
+      // 2. On compare chaque champ avec l'info actuelle de l'utilisateur
+      // On n'ajoute dans l'envoi QUE ce qui a réellement changé.
+      
+      // Comparaison Nom
+      if (infoData.name && infoData.name.trim() !== user.name) {
+        updates.name = infoData.name.trim();
+      }
+      
+      // Comparaison Email (C'est ça qui évite l'erreur !)
+      if (infoData.email && infoData.email.trim() !== user.email) {
+        updates.email = infoData.email.trim();
+      }
+      
+      // Comparaison Téléphone
+      if (infoData.phone && infoData.phone.trim() !== user.phone) {
+        updates.phone = infoData.phone.trim();
+      }
+
+      // 3. Si rien n'a changé, on annule tout gentiment
+      if (Object.keys(updates).length === 0) {
+        toast('Aucune modification détectée.', { icon: 'ℹ️' });
+        setLoading(false);
+        return;
+      }
+
+      // 4. On envoie UNIQUEMENT les différences au serveur
+      await api.put('/api/auth/updatedetails', updates);
+      
       setShowReconnect(true); 
+
     } catch (err) {
+      console.error(err);
       toast.error(err.response?.data?.error || "Erreur de mise à jour");
     } finally {
       setLoading(false);
@@ -66,7 +100,7 @@ const EditProfileModal = ({ isOpen, onClose, user }) => {
     }
   };
 
-  // Si on est en mode "Reconnect", on affiche ce contenu spécifique
+  // Rendu de l'écran de succès (Reconnexion)
   const renderReconnectContent = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '10px 0' }}>
       <motion.div 
@@ -108,17 +142,17 @@ const EditProfileModal = ({ isOpen, onClose, user }) => {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* FOND */}
+          {/* FOND GRISÉ */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
             style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 99998 }}
           />
 
-          {/* MODALE */}
+          {/* LA MODALE */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: '-40%', x: '-50%' }} // On commence un peu plus haut
-            animate={{ opacity: 1, scale: 1, y: '-50%', x: '-50%' }} // Centrage parfait
+            initial={{ opacity: 0, scale: 0.95, y: '-40%', x: '-50%' }}
+            animate={{ opacity: 1, scale: 1, y: '-50%', x: '-50%' }}
             exit={{ opacity: 0, scale: 0.95, y: '-40%', x: '-50%' }}
             style={{
               position: 'fixed', 
@@ -126,18 +160,16 @@ const EditProfileModal = ({ isOpen, onClose, user }) => {
               left: '50%', 
               width: '90%', 
               maxWidth: '400px',
-              maxHeight: '85vh', // IMPORTANT : Limite la hauteur à 85% de l'écran
-              overflowY: 'auto', // IMPORTANT : Active le scroll si ça dépasse (clavier ouvert)
+              maxHeight: '85vh', 
+              overflowY: 'auto', 
               backgroundColor: '#FFF', 
               borderRadius: '24px', 
               padding: '24px', 
               zIndex: 99999,
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              // Petit fix pour le scroll fluide sur iOS
               WebkitOverflowScrolling: 'touch' 
             }}
           >
-            {/* Si showReconnect est vrai, on affiche l'écran de succès, sinon le formulaire */}
             {showReconnect ? renderReconnectContent() : (
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -153,7 +185,7 @@ const EditProfileModal = ({ isOpen, onClose, user }) => {
                   <TabButton active={activeTab === 'password'} onClick={() => setActiveTab('password')} icon={<Lock size={16} />} label="Sécurité" />
                 </div>
 
-                {/* FORMULAIRE INFOS */}
+                {/* CONTENU INFOS */}
                 {activeTab === 'infos' && (
                   <form onSubmit={handleInfoSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <InputGroup label="Nom complet" value={infoData.name} onChange={e => setInfoData({...infoData, name: e.target.value})} />
@@ -163,7 +195,7 @@ const EditProfileModal = ({ isOpen, onClose, user }) => {
                   </form>
                 )}
 
-                {/* FORMULAIRE MOT DE PASSE */}
+                {/* CONTENU SÉCURITÉ */}
                 {activeTab === 'password' && (
                   <form onSubmit={handlePassSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div style={{position: 'relative'}}>
@@ -195,11 +227,10 @@ const EditProfileModal = ({ isOpen, onClose, user }) => {
   );
 };
 
-// Petits composants internes
+// Petits composants pour garder le code propre
 const TabButton = ({ active, onClick, icon, label }) => (
   <button 
-    type="button"
-    onClick={onClick}
+    type="button" onClick={onClick}
     style={{
       flex: 1, padding: '10px', borderRadius: '12px', border: 'none', cursor: 'pointer',
       backgroundColor: active ? '#FFF' : 'transparent',
