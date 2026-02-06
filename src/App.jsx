@@ -1,16 +1,16 @@
 // src/App.jsx
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { UpdateProvider } from './context/UpdateContext';
-import { ThemeProvider } from './context/ThemeContext'; // <--- IMPORT DU THEME
+import { ThemeProvider } from './context/ThemeContext';
 import { Toaster } from 'react-hot-toast';
 import MobileLayout from './components/MobileLayout';
 import UpdateNotification from './components/UpdateNotification';
 import GlobalLoader from './components/GlobalLoader';
+import OfflineModal from './components/OfflineModal';
 
-// ... (Tes imports de pages restent identiques) ...
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -29,6 +29,20 @@ import AdminCertificates from './pages/admin/AdminCertificates';
 
 function App() {
   const { user, loading } = useContext(AuthContext);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const getHomeRoute = () => {
     if (!user) return <Landing />;
@@ -38,10 +52,12 @@ function App() {
 
   return (
     <NotificationProvider>
-      <ThemeProvider> {/* <--- ON ENGLOBE ICI POUR QUE TOUT LE MONDE Y ACCÈDE */}
+      <ThemeProvider>
         <UpdateProvider>
           
           {loading && <GlobalLoader text="Chargement..." />}
+          
+          <OfflineModal isOffline={isOffline} />
 
           <div style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.3s' }}>
             <MobileLayout>
@@ -58,24 +74,20 @@ function App() {
               <UpdateNotification />
               
               <Routes>
-                {/* ROUTES PUBLIQUES */}
                 <Route path="/" element={getHomeRoute()} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
 
-                {/* ROUTES COMMUNES */}
                 <Route path="/home" element={user ? <Home /> : <Navigate to="/login" />} />
                 <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
                 <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
                 <Route path="/watch/:id" element={user ? <Watch /> : <Navigate to="/login" />} />
 
-                {/* ROUTES ÉTUDIANT */}
                 <Route path="/favorites" element={user ? <Favorites /> : <Navigate to="/login" />} />
                 <Route path="/history" element={user ? <History /> : <Navigate to="/login" />} />
                 <Route path="/certificates" element={user ? <Certificates /> : <Navigate to="/login" />} />
                 <Route path="/resources" element={user ? <Resources /> : <Navigate to="/login" />} />
                 
-                {/* ROUTES ADMIN */}
                 <Route path="/admin/dashboard" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />
                 <Route path="/admin/upload" element={user?.role === 'admin' ? <AdminUpload /> : <Navigate to="/" />} />
                 <Route path="/admin/resources" element={user?.role === 'admin' ? <AdminResources /> : <Navigate to="/" />} />

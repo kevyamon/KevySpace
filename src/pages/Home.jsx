@@ -1,7 +1,7 @@
 // src/pages/Home.jsx
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { SearchX, ArrowUp } from 'lucide-react'; 
+import { SearchX, ArrowUp, RefreshCw } from 'lucide-react'; 
 import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,6 @@ import { useNavigate } from 'react-router-dom';
 import HomeHeader from '../components/HomeHeader';
 import VideoCard from '../components/VideoCard';
 
-// ScrollToTop Interne (Adapté nuit)
 const ScrollToTopButton = () => {
     const [visible, setVisible] = useState(false);
     useEffect(() => {
@@ -26,8 +25,8 @@ const ScrollToTopButton = () => {
                     style={{
                         position: 'fixed', bottom: '90px', right: '20px', zIndex: 99,
                         width: '45px', height: '45px', borderRadius: '50%',
-                        background: 'var(--text-primary)', // Inverse du fond (Blanc sur noir / Noir sur blanc)
-                        color: 'var(--color-bg)',          // Couleur du fond
+                        background: 'var(--color-text-main)',
+                        color: 'var(--color-bg)',
                         border: 'none',
                         boxShadow: '0 4px 12px var(--shadow-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
                     }}
@@ -43,6 +42,7 @@ const Home = () => {
   const { user, setGlobalLoading } = useContext(AuthContext);
   const [videos, setVideos] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -60,8 +60,14 @@ const Home = () => {
     } finally {
       setTimeout(() => {
         setGlobalLoading(false);
+        setRefreshing(false);
       }, 300);
     }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchVideos();
   };
 
   const handleWatchVideo = (videoId) => {
@@ -78,9 +84,36 @@ const Home = () => {
       
       <HomeHeader user={user} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
-      <h2 style={{ fontSize: '18px', marginBottom: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>
-        {searchQuery ? `Résultats pour "${searchQuery}"` : 'Récemment ajoutés'}
-      </h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-text-main)' }}>
+          {searchQuery ? `Résultats pour "${searchQuery}"` : 'Récemment ajoutés'}
+        </h2>
+        
+        <motion.button
+          whileTap={{ scale: 0.9, rotate: 180 }}
+          onClick={handleRefresh}
+          disabled={refreshing}
+          style={{
+            background: 'var(--bg-input)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: refreshing ? 'not-allowed' : 'pointer',
+            boxShadow: '0 2px 8px var(--shadow-color)'
+          }}
+        >
+          <motion.div
+            animate={{ rotate: refreshing ? 360 : 0 }}
+            transition={{ duration: 1, repeat: refreshing ? Infinity : 0, ease: "linear" }}
+          >
+            <RefreshCw size={20} color="var(--color-text-main)" />
+          </motion.div>
+        </motion.button>
+      </div>
 
       {filteredVideos.length === 0 ? (
         <motion.div 
@@ -88,9 +121,9 @@ const Home = () => {
           style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', marginTop: '40px' }}
         >
           <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <SearchX size={32} color="var(--text-secondary)" />
+            <SearchX size={32} color="var(--color-text-secondary)" />
           </div>
-          <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '15px' }}>
+          <p style={{ textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '15px' }}>
             {searchQuery ? "Aucun module ne correspond à ta recherche." : "Aucune formation disponible pour le moment."}
           </p>
         </motion.div>
