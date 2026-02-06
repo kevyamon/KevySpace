@@ -1,48 +1,58 @@
 // src/components/CommentsSection.jsx
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Trash2, Edit2, Reply, Copy, Loader2, X } from 'lucide-react';
+import { Send, Trash2, Edit2, Reply, Copy, Loader2 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
-const LONG_PRESS_DURATION = 800; // 0.8s c'est le sweet spot
+const LONG_PRESS_DURATION = 800; 
 
 const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
   const { user } = useContext(AuthContext);
   
-  const [comments, setComments] = useState([]);
+  // États
+  const [comments, setComments] = useState([]); // La liste des commentaires
   const [loading, setLoading] = useState(true);
   const [inputText, setInputText] = useState('');
 
-  // États pour la Modale Focus
+  // États Focus / Action Sheet
   const [selectedComment, setSelectedComment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
   const timerRef = useRef(null);
 
+  // 1. CHARGEMENT DES COMMENTAIRES DEPUIS LE BACKEND
   useEffect(() => {
     const fetchComments = async () => {
+      if (!videoId) return;
       try {
+        setLoading(true);
+        // Appel au backend pour récupérer les commentaires de la vidéo
         const res = await api.get(`/api/videos/${videoId}/comments`);
+        
+        // On s'attend à ce que le backend renvoie { success: true, count: X, data: [...] }
         setComments(res.data.data || []);
+        
+        // Sync du compteur parent
         if (setCommentsCount) setCommentsCount(res.data.count || 0);
       } catch (err) {
-        console.error(err);
+        console.error("Erreur chargement commentaires:", err);
+        // On ne bloque pas l'UI, mais on peut afficher un toast ou laisser vide
       } finally {
         setLoading(false);
       }
     };
-    if (videoId) fetchComments();
-  }, [videoId]);
+    fetchComments();
+  }, [videoId, setCommentsCount]);
 
   // --- GESTION LONG PRESS ---
   const handleTouchStart = (comment) => {
     timerRef.current = setTimeout(() => {
       if (navigator.vibrate) navigator.vibrate(50);
       setSelectedComment(comment);
-      setIsModalOpen(true); // Ouvre la modale
+      setIsModalOpen(true);
     }, LONG_PRESS_DURATION);
   };
 
@@ -53,7 +63,9 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
     }
   };
 
-  // --- ACTIONS ---
+  // --- CRUD ACTIONS ---
+
+  // AJOUTER
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!inputText.trim()) return;
@@ -64,11 +76,16 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
       return;
     }
 
-    const tempId = Date.now();
+    // Optimistic UI : On ajoute temporairement pour la fluidité
+    const tempId = Date.now().toString(); // ID temporaire string
     const newCommentObj = {
       _id: tempId,
       text: inputText,
-      user: { _id: user.id, name: user.name, profilePicture: user.profilePicture },
+      user: { 
+        _id: user.id || user._id, // Gérer les deux cas possibles d'ID user
+        name: user.name, 
+        profilePicture: user.profilePicture 
+      },
       createdAt: new Date().toISOString()
     };
 
@@ -77,109 +94,156 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
     if (setCommentsCount) setCommentsCount(prev => prev + 1);
 
     try {
-      await api.post(`/api/videos/${videoId}/comments`, { text: newCommentObj.text });
-      const res = await api.get(`/api/videos/${videoId}/comments`);
-      setComments(res.data.data);
+      // Envoi au backend
+      const res = await api.post(`/api/videos/${videoId}/comments`, { text: newCommentObj.text });
+      
+      // Le backend doit renvoyer le commentaire créé avec son vrai ID et les infos user peuplées
+      // Idéalement, on remplace le commentaire temporaire par le vrai
+      const savedComment = res.data.data; // Supposons que le backend renvoie le commentaire créé dans data.data ou data directly
+      
+      setComments(prev => prev.map(c => c._id === tempId ? savedComment : c));
+
     } catch (err) {
-      setComments(comments.filter(c => c._id !== tempId));
-      toast.error("Erreur envoi.");
+      console.error(err);
+      setComments(prev => prev.filter(c => c._id !== tempId)); // Rollback
+      toast.error("Erreur lors de l'envoi.");
+      if (setCommentsCount) setCommentsCount(prev => prev - 1);
     }
   };
 
+  // SUPPRIMER
   const handleDelete = async () => {
-    const previous = [...comments];
+    if (!selectedComment) return;
+    
+    const previousComments = [...comments];
     setComments(comments.filter(c => c._id !== selectedComment._id));
     setIsModalOpen(false);
     if (setCommentsCount) setCommentsCount(prev => prev - 1);
 
     try {
-      await api.delete(`/api/comments/${selectedComment._id}`);
+      await api.delete(`/api/comments/${selectedComment._id}`); // Assure-toi que cette route existe au backend
       toast.success("Supprimé");
     } catch (err) {
-      setComments(previous);
+      console.error(err);
+      setComments(previousComments);
       toast.error("Erreur suppression");
+      if (setCommentsCount) setCommentsCount(prev => prev + 1);
     }
   };
 
+  // EDITER
   const handleEditInit = () => {
     setInputText(selectedComment.text);
     setEditMode(true);
     setIsModalOpen(false);
-    document.getElementById('comment-input')?.focus();
+    // Petit délai pour laisser la modale fermer avant de focus
+    setTimeout(() => document.getElementById('comment-input')?.focus(), 100);
   };
 
   const handleEditConfirm = async () => {
+    if (!selectedComment) return;
+
+    const originalComments = [...comments];
+    
+    // Optimistic Update
     setComments(comments.map(c => c._id === selectedComment._id ? { ...c, text: inputText } : c));
+    
     setEditMode(false);
     setInputText('');
     setSelectedComment(null);
+
     try {
-      await api.put(`/api/comments/${selectedComment._id}`, { text: inputText });
-    } catch (err) { toast.error("Erreur modif"); }
+      await api.put(`/api/comments/${selectedComment._id}`, { text: inputText }); // Route PUT backend
+    } catch (err) {
+      console.error(err);
+      setComments(originalComments);
+      toast.error("Erreur modification");
+    }
   };
 
+  // RÉPONDRE
   const handleReply = () => {
-    setInputText(`@${selectedComment.user.name} `);
+    if (!selectedComment) return;
+    setInputText(`@${selectedComment.user?.name || 'User'} `);
     setIsModalOpen(false);
-    document.getElementById('comment-input')?.focus();
+    setTimeout(() => document.getElementById('comment-input')?.focus(), 100);
   };
+
 
   return (
     <div style={{ marginTop: '24px', paddingBottom: '80px' }}>
       
+      {/* HEADER COMPTEUR */}
       <div style={{ marginBottom: '16px' }}>
         <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1D1D1F' }}>
           Commentaires <span style={{ color: '#86868B', fontSize: '16px' }}>{comments.length}</span>
         </h3>
       </div>
 
+      {/* LISTE OU LOADER */}
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
           <Loader2 className="animate-spin" color="var(--color-gold)" />
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {comments.map((comment) => (
-            <motion.div
-              key={comment._id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              // EVENTS
-              onTouchStart={() => handleTouchStart(comment)}
-              onTouchEnd={handleTouchEnd}
-              onMouseDown={() => handleTouchStart(comment)}
-              onMouseUp={handleTouchEnd}
-              onMouseLeave={handleTouchEnd}
-              style={{
-                display: 'flex', gap: '12px',
-                padding: '12px', borderRadius: '16px',
-                backgroundColor: '#FFF',
-                userSelect: 'none', cursor: 'pointer',
-                // Un petit effet visuel si on appuie (feedback)
-                border: '1px solid transparent'
-              }}
-              whileTap={{ scale: 0.98, backgroundColor: '#F9F9F9' }}
-            >
-              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#F5F5F7', overflow: 'hidden', flexShrink: 0 }}>
-                {comment.user?.profilePicture ? (
-                  <img src={comment.user.profilePicture} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#888' }}>{comment.user?.name?.[0]}</div>
-                )}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#1D1D1F' }}>
-                    {comment.user?.name}
-                    {comment.user?._id === user?.id && <span style={{ marginLeft: '6px', fontSize: '10px', background: '#F5F5F7', padding: '2px 6px', borderRadius: '4px' }}>Moi</span>}
-                  </span>
-                  <span style={{ fontSize: '11px', color: '#AAA' }}>{new Date(comment.createdAt).toLocaleDateString()}</span>
+          {comments.length > 0 ? (
+            comments.map((comment) => (
+              <motion.div
+                key={comment._id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                // EVENTS LONG PRESS
+                onTouchStart={() => handleTouchStart(comment)}
+                onTouchEnd={handleTouchEnd}
+                onMouseDown={() => handleTouchStart(comment)}
+                onMouseUp={handleTouchEnd}
+                onMouseLeave={handleTouchEnd}
+                style={{
+                  display: 'flex', gap: '12px',
+                  padding: '12px', borderRadius: '16px',
+                  backgroundColor: '#FFF',
+                  userSelect: 'none', cursor: 'pointer',
+                  border: '1px solid transparent' // Pour éviter le layout shift au focus
+                }}
+                whileTap={{ scale: 0.98, backgroundColor: '#F9F9F9' }}
+              >
+                {/* AVATAR */}
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#F5F5F7', overflow: 'hidden', flexShrink: 0 }}>
+                  {comment.user?.profilePicture ? (
+                    <img src={comment.user.profilePicture} alt={comment.user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#888' }}>
+                      {comment.user?.name ? comment.user.name[0].toUpperCase() : '?'}
+                    </div>
+                  )}
                 </div>
-                <p style={{ fontSize: '14px', color: '#424245', marginTop: '4px', lineHeight: '1.4' }}>{comment.text}</p>
-              </div>
-            </motion.div>
-          ))}
-          {comments.length === 0 && <p style={{ textAlign: 'center', color: '#AAA', fontSize: '14px', marginTop: '20px' }}>Aucun commentaire pour l'instant.</p>}
+
+                {/* CONTENU */}
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1D1D1F' }}>
+                      {comment.user?.name || 'Utilisateur'}
+                      {/* Badge "Moi" */}
+                      {user && (comment.user?._id === user.id || comment.user?._id === user._id) && (
+                        <span style={{ marginLeft: '6px', fontSize: '10px', background: '#F5F5F7', padding: '2px 6px', borderRadius: '4px', color: '#888' }}>Moi</span>
+                      )}
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#AAA' }}>
+                      {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : ''}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '14px', color: '#424245', marginTop: '4px', lineHeight: '1.4', wordBreak: 'break-word' }}>
+                    {comment.text}
+                  </p>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <p style={{ textAlign: 'center', color: '#AAA', fontSize: '14px', marginTop: '20px' }}>
+              Aucun commentaire. Soyez le premier ! 👇
+            </p>
+          )}
         </div>
       )}
 
@@ -188,21 +252,22 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
          {editMode && (
              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'12px', color:'var(--color-gold)', marginBottom:'4px', fontWeight:'700' }}>
                  <span>Modification...</span>
-                 <button onClick={() => { setEditMode(false); setInputText(''); }} style={{ background:'none', border:'none', color:'#FF3B30' }}>Annuler</button>
+                 <button onClick={() => { setEditMode(false); setInputText(''); }} style={{ background:'none', border:'none', color:'#FF3B30', cursor: 'pointer' }}>Annuler</button>
              </div>
          )}
          <form onSubmit={handleSubmit} style={{ position: 'relative' }}>
             <input
               id="comment-input"
               type="text"
-              placeholder={editMode ? "Modifier..." : "Ajouter un commentaire..."}
+              placeholder={editMode ? "Modifier votre message..." : "Ajouter un commentaire..."}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               style={{
                 width: '100%', padding: '16px 50px 16px 20px',
                 borderRadius: '24px', border: 'none',
                 backgroundColor: '#F5F5F7', fontSize: '15px', outline: 'none',
-                boxShadow: editMode ? '0 0 0 2px var(--color-gold)' : 'none'
+                boxShadow: editMode ? '0 0 0 2px var(--color-gold)' : 'none',
+                transition: 'box-shadow 0.2s'
               }}
             />
             <button 
@@ -212,7 +277,8 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
                 width: '36px', height: '36px', borderRadius: '50%',
                 backgroundColor: inputText.trim() ? 'var(--color-gold)' : '#E5E5EA',
                 border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: inputText.trim() ? 'pointer' : 'default'
+                cursor: inputText.trim() ? 'pointer' : 'default',
+                transition: 'background-color 0.2s'
               }}
             >
               <Send size={18} color={inputText.trim() ? '#000' : '#AAA'} />
@@ -224,20 +290,20 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
       <AnimatePresence>
         {isModalOpen && selectedComment && (
           <>
-            {/* 1. BACKDROP FLOU */}
+            {/* BACKDROP FLOU */}
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
               style={{ 
                 position: 'fixed', inset: 0, 
                 backgroundColor: 'rgba(0,0,0,0.6)', 
-                backdropFilter: 'blur(8px)', // L'effet demandé
+                backdropFilter: 'blur(8px)', 
                 zIndex: 99998,
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}
             />
 
-            {/* 2. LE CONTENU FLOTTANT AU CENTRE */}
+            {/* CONTENU FLOTTANT */}
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -249,28 +315,34 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
                 display: 'flex', flexDirection: 'column', gap: '20px'
               }}
             >
-              {/* A. CLONE DU COMMENTAIRE (Mise en valeur) */}
+              {/* CLONE DU COMMENTAIRE */}
               <div style={{ 
                 background: '#FFF', padding: '16px', borderRadius: '20px',
                 boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#F5F5F7', overflow:'hidden' }}>
-                      {selectedComment.user?.profilePicture && <img src={selectedComment.user.profilePicture} style={{width:'100%', height:'100%', objectFit:'cover'}} />}
+                      {selectedComment.user?.profilePicture ? (
+                          <img src={selectedComment.user.profilePicture} alt="Avatar" style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                      ) : (
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#888' }}>{selectedComment.user?.name?.[0]}</div>
+                      )}
                    </div>
-                   <span style={{ fontWeight: '700', fontSize: '14px' }}>{selectedComment.user?.name}</span>
+                   <span style={{ fontWeight: '700', fontSize: '14px' }}>{selectedComment.user?.name || 'Utilisateur'}</span>
                 </div>
-                <p style={{ fontSize: '15px', color: '#1D1D1F', lineHeight: '1.5' }}>{selectedComment.text}</p>
+                <p style={{ fontSize: '15px', color: '#1D1D1F', lineHeight: '1.5', maxHeight: '200px', overflowY: 'auto' }}>
+                    {selectedComment.text}
+                </p>
               </div>
 
-              {/* B. BOUTONS D'ACTIONS */}
+              {/* BOUTONS D'ACTIONS */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 
                 <ModalButton icon={<Reply size={20}/>} label="Répondre" onClick={handleReply} />
                 <ModalButton icon={<Copy size={20}/>} label="Copier" onClick={() => { navigator.clipboard.writeText(selectedComment.text); setIsModalOpen(false); toast.success("Copié"); }} />
 
-                {/* Si c'est MON commentaire */}
-                {user && user.id === selectedComment.user._id && (
+                {/* ACTIONS AUTEUR SEULEMENT */}
+                {user && (selectedComment.user?._id === user.id || selectedComment.user?._id === user._id) && (
                   <>
                     <ModalButton icon={<Edit2 size={20}/>} label="Modifier" onClick={handleEditInit} />
                     <ModalButton icon={<Trash2 size={20}/>} label="Supprimer" danger onClick={handleDelete} />
@@ -281,7 +353,7 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
                   onClick={() => setIsModalOpen(false)}
                   style={{ 
                     marginTop: '8px', background: 'rgba(255,255,255,0.2)', border: 'none', 
-                    color: '#FFF', padding: '14px', borderRadius: '16px', fontWeight: '600'
+                    color: '#FFF', padding: '14px', borderRadius: '16px', fontWeight: '600', cursor: 'pointer'
                   }}
                 >
                   Fermer
@@ -297,7 +369,7 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
   );
 };
 
-// Bouton spécial pour la modale sombre
+// Bouton interne pour la modale
 const ModalButton = ({ icon, label, onClick, danger }) => (
   <motion.button
     whileTap={{ scale: 0.95 }}
