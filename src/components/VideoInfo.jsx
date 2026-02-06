@@ -20,16 +20,17 @@ const VideoInfo = ({ video, viewsCount, likesCount, isLiked, onLike, onShare }) 
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1 style={{ fontSize: '20px', fontWeight: '800', lineHeight: '1.3', marginBottom: '8px' }}>
+      {/* Titre dynamique */}
+      <h1 style={{ fontSize: '20px', fontWeight: '800', lineHeight: '1.3', marginBottom: '8px', color: 'var(--text-primary)' }}>
         {video?.title}
       </h1>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', color: '#86868B', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <Eye size={14} /> {viewsCount.toLocaleString()} vues
         </span>
         <span>•</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: isLiked ? '#FF3B30' : '#86868B', fontWeight: isLiked ? '700' : '400' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: isLiked ? '#FF3B30' : 'var(--text-secondary)', fontWeight: isLiked ? '700' : '400' }}>
           <Heart size={14} fill={isLiked ? "#FF3B30" : "none"} /> {likesCount} likes
         </span>
         <span>•</span>
@@ -41,7 +42,7 @@ const VideoInfo = ({ video, viewsCount, likesCount, isLiked, onLike, onShare }) 
       {/* BARRE D'ACTIONS */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
         <ActionButton 
-          icon={<Heart size={20} fill={isLiked ? "#FF3B30" : "none"} color={isLiked ? "#FF3B30" : "#1D1D1F"} />} 
+          icon={<Heart size={20} fill={isLiked ? "#FF3B30" : "none"} color={isLiked ? "#FF3B30" : "var(--text-primary)"} />} 
           label={isLiked ? "Aimé" : "J'aime"} 
           onClick={handleLike} 
           active={isLiked} 
@@ -52,15 +53,16 @@ const VideoInfo = ({ video, viewsCount, likesCount, isLiked, onLike, onShare }) 
 
       {/* DESCRIPTION INTELLIGENTE */}
       <div style={{ 
-        backgroundColor: '#F2F2F7', borderRadius: '16px', padding: '16px',
+        backgroundColor: 'var(--bg-input)', // Fond dynamique (gris/sombre)
+        borderRadius: '16px', padding: '16px',
         marginBottom: '32px',
-        maxHeight: isDescExpanded ? 'none' : '250px', // Correction 'auto' n'anime pas bien en max-height
+        maxHeight: isDescExpanded ? 'none' : '250px', 
         overflow: 'hidden',
         transition: 'all 0.3s'
       }}>
-        <p style={{ fontWeight: '600', marginBottom: '4px', fontSize: '14px' }}>Description</p>
+        <p style={{ fontWeight: '600', marginBottom: '4px', fontSize: '14px', color: 'var(--text-primary)' }}>Description</p>
         <div style={{ 
-          fontSize: '14px', lineHeight: '1.5', color: '#1D1D1F',
+          fontSize: '14px', lineHeight: '1.5', color: 'var(--text-secondary)', // Texte gris clair/foncé
           display: isDescExpanded ? 'block' : '-webkit-box',
           WebkitLineClamp: isDescExpanded ? 'none' : 4,
           WebkitBoxOrient: 'vertical',
@@ -72,7 +74,7 @@ const VideoInfo = ({ video, viewsCount, likesCount, isLiked, onLike, onShare }) 
           onClick={() => setIsDescExpanded(!isDescExpanded)}
           style={{ 
             background: 'none', border: 'none', 
-            fontSize: '12px', fontWeight: '700', color: '#555',
+            fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)',
             marginTop: '8px', cursor: 'pointer', padding: 0
           }}
         >
@@ -83,12 +85,19 @@ const VideoInfo = ({ video, viewsCount, likesCount, isLiked, onLike, onShare }) 
   );
 };
 
-// Bouton interne (avec motion pour le petit effet d'appui)
+// Bouton interne (Adapté Nuit)
 const ActionButton = ({ icon, label, onClick, active }) => (
   <motion.button 
     whileTap={{ scale: 0.95 }}
     onClick={onClick} 
-    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', borderRadius: '18px', border: 'none', backgroundColor: active ? '#FFF0F0' : '#F5F5F7', color: active ? '#FF3B30' : '#1D1D1F', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
+    style={{ 
+      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', 
+      padding: '10px', borderRadius: '18px', border: 'none', 
+      // Fond et couleur dynamiques
+      backgroundColor: active ? '#FFF0F0' : 'var(--bg-input)', 
+      color: active ? '#FF3B30' : 'var(--text-primary)', 
+      fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' 
+    }}
   >
     {icon} {label}
   </motion.button>

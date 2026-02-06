@@ -1,7 +1,7 @@
 // src/pages/Home.jsx
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { SearchX, ArrowUp } from 'lucide-react'; // Ajout ArrowUp
+import { SearchX, ArrowUp } from 'lucide-react'; 
 import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import HomeHeader from '../components/HomeHeader';
 import VideoCard from '../components/VideoCard';
 
-// Petit composant interne ScrollToTop pour pas multiplier les fichiers
+// ScrollToTop Interne (Adapté nuit)
 const ScrollToTopButton = () => {
     const [visible, setVisible] = useState(false);
     useEffect(() => {
@@ -26,8 +26,10 @@ const ScrollToTopButton = () => {
                     style={{
                         position: 'fixed', bottom: '90px', right: '20px', zIndex: 99,
                         width: '45px', height: '45px', borderRadius: '50%',
-                        background: '#1D1D1F', color: '#FFD700', border: 'none',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                        background: 'var(--text-primary)', // Inverse du fond (Blanc sur noir / Noir sur blanc)
+                        color: 'var(--color-bg)',          // Couleur du fond
+                        border: 'none',
+                        boxShadow: '0 4px 12px var(--shadow-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
                     }}
                 >
                     <ArrowUp size={24} />
@@ -76,7 +78,7 @@ const Home = () => {
       
       <HomeHeader user={user} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
-      <h2 style={{ fontSize: '18px', marginBottom: '16px', fontWeight: '800', color: '#1D1D1F' }}>
+      <h2 style={{ fontSize: '18px', marginBottom: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>
         {searchQuery ? `Résultats pour "${searchQuery}"` : 'Récemment ajoutés'}
       </h2>
 
@@ -85,10 +87,10 @@ const Home = () => {
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', marginTop: '40px' }}
         >
-          <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#F9F9F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <SearchX size={32} color="#C7C7CC" />
+          <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <SearchX size={32} color="var(--text-secondary)" />
           </div>
-          <p style={{ textAlign: 'center', color: '#8E8E93', fontSize: '15px' }}>
+          <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '15px' }}>
             {searchQuery ? "Aucun module ne correspond à ta recherche." : "Aucune formation disponible pour le moment."}
           </p>
         </motion.div>
@@ -110,7 +112,6 @@ const Home = () => {
         </div>
       )}
       
-      {/* Ajout du bouton ScrollToTop ici */}
       <ScrollToTopButton />
     </div>
   );

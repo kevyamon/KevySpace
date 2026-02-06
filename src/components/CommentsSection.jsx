@@ -6,7 +6,7 @@ import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
-const LONG_PRESS_DURATION = 800; // 0.8s pour déclencher le menu
+const LONG_PRESS_DURATION = 800; 
 
 const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
   const { user } = useContext(AuthContext);
@@ -19,7 +19,7 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
   // États pour la Modale Focus (Appui Long)
   const [selectedComment, setSelectedComment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editMode, setEditMode] = useState(false); // Si true, on modifie un commentaire
+  const [editMode, setEditMode] = useState(false); 
 
   const timerRef = useRef(null);
 
@@ -32,7 +32,6 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
         const res = await api.get(`/api/videos/${videoId}/comments`);
         setComments(res.data.data || []);
         
-        // On synchronise le compteur parent (VideoInfo)
         if (setCommentsCount) setCommentsCount(res.data.count || 0);
       } catch (err) {
         console.error("Erreur chargement commentaires", err);
@@ -46,7 +45,6 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
   // --- 2. GESTION DU LONG PRESS ---
   const handleStartPress = (comment) => {
     timerRef.current = setTimeout(() => {
-      // Vibration haptique pour confirmer
       if (navigator.vibrate) navigator.vibrate(50);
       setSelectedComment(comment);
       setIsModalOpen(true);
@@ -62,20 +60,17 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
 
   // --- 3. ACTIONS (CREATE / UPDATE / DELETE) ---
 
-  // A. POSTER OU MODIFIER
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!inputText.trim()) return;
     if (!user) return toast.error("Connectez-vous pour participer !");
 
-    // CAS 1 : MODIFICATION
     if (editMode && selectedComment) {
       handleEditConfirm();
       return;
     }
 
-    // CAS 2 : NOUVEAU COMMENTAIRE
-    // Optimistic UI : On affiche tout de suite
+    // Optimistic UI
     const tempId = Date.now().toString();
     const newCommentObj = {
       _id: tempId,
@@ -93,28 +88,19 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
     if (setCommentsCount) setCommentsCount(prev => prev + 1);
 
     try {
-      // Envoi réel au backend
       const res = await api.post(`/api/videos/${videoId}/comments`, { text: newCommentObj.text });
-      
-      // On remplace le commentaire temporaire par le vrai (qui a le bon ID)
       const savedComment = res.data.data; 
       setComments(prev => prev.map(c => c._id === tempId ? savedComment : c));
-
     } catch (err) {
-      // Si ça rate, on annule
       setComments(prev => prev.filter(c => c._id !== tempId));
       toast.error("Erreur lors de l'envoi.");
       if (setCommentsCount) setCommentsCount(prev => prev - 1);
     }
   };
 
-  // B. SUPPRIMER
   const handleDelete = async () => {
     if (!selectedComment) return;
-    
     const previousComments = [...comments];
-    
-    // On retire de l'écran tout de suite
     setComments(comments.filter(c => c._id !== selectedComment._id));
     setIsModalOpen(false);
     if (setCommentsCount) setCommentsCount(prev => prev - 1);
@@ -123,26 +109,21 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
       await api.delete(`/api/comments/${selectedComment._id}`);
       toast.success("Commentaire supprimé");
     } catch (err) {
-      // Si ça rate, on remet tout
       setComments(previousComments);
       toast.error("Impossible de supprimer");
       if (setCommentsCount) setCommentsCount(prev => prev + 1);
     }
   };
 
-  // C. INITIALISER LA MODIFICATION
   const handleEditInit = () => {
     setInputText(selectedComment.text);
     setEditMode(true);
     setIsModalOpen(false);
-    // Petit délai pour laisser la modale se fermer
     setTimeout(() => document.getElementById('comment-input')?.focus(), 100);
   };
 
-  // D. CONFIRMER LA MODIFICATION
   const handleEditConfirm = async () => {
     const originalComments = [...comments];
-    
     setComments(comments.map(c => c._id === selectedComment._id ? { ...c, text: inputText } : c));
     setEditMode(false);
     setInputText('');
@@ -156,7 +137,6 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
     }
   };
 
-  // E. RÉPONDRE
   const handleReply = () => {
     setInputText(`@${selectedComment.user?.name || 'User'} `);
     setIsModalOpen(false);
@@ -168,8 +148,8 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
       
       {/* HEADER COMPTEUR */}
       <div style={{ marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1D1D1F' }}>
-          Commentaires <span style={{ color: '#86868B', fontSize: '16px' }}>{comments.length}</span>
+        <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>
+          Commentaires <span style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>{comments.length}</span>
         </h3>
       </div>
 
@@ -186,28 +166,28 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
                 key={comment._id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                // --- EVENTS LONG PRESS (Mobile & PC) ---
+                // --- EVENTS LONG PRESS ---
                 onTouchStart={() => handleStartPress(comment)}
                 onTouchEnd={handleEndPress}
                 onMouseDown={() => handleStartPress(comment)}
                 onMouseUp={handleEndPress}
                 onMouseLeave={handleEndPress}
-                // ---------------------------------------
-                whileTap={{ scale: 0.98, backgroundColor: '#F9F9F9' }}
+                // -------------------------
+                whileTap={{ scale: 0.98, backgroundColor: 'var(--bg-input)' }}
                 style={{
                   display: 'flex', gap: '12px',
                   padding: '12px', borderRadius: '16px',
-                  backgroundColor: '#FFF',
+                  backgroundColor: 'var(--bg-surface)', // Fond dynamique
                   userSelect: 'none', cursor: 'pointer',
-                  border: '1px solid transparent'
+                  border: '1px solid var(--border-color)' // Bordure dynamique
                 }}
               >
                 {/* AVATAR */}
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#F5F5F7', overflow: 'hidden', flexShrink: 0 }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-input)', overflow: 'hidden', flexShrink: 0 }}>
                   {comment.user?.profilePicture ? (
                     <img src={comment.user.profilePicture} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#888' }}>
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
                       {comment.user?.name ? comment.user.name[0].toUpperCase() : '?'}
                     </div>
                   )}
@@ -216,25 +196,25 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
                 {/* TEXTE */}
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1D1D1F' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
                       {comment.user?.name || 'Utilisateur'}
                       {/* Badge "Moi" */}
                       {user && (comment.user?._id === user.id || comment.user?._id === user._id) && (
-                        <span style={{ marginLeft: '6px', fontSize: '10px', background: '#F5F5F7', padding: '2px 6px', borderRadius: '4px', color: '#888' }}>Moi</span>
+                        <span style={{ marginLeft: '6px', fontSize: '10px', background: 'var(--bg-input)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-secondary)' }}>Moi</span>
                       )}
                     </span>
-                    <span style={{ fontSize: '11px', color: '#AAA' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                       {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : ''}
                     </span>
                   </div>
-                  <p style={{ fontSize: '14px', color: '#424245', marginTop: '4px', lineHeight: '1.4', wordBreak: 'break-word' }}>
+                  <p style={{ fontSize: '14px', color: 'var(--text-primary)', marginTop: '4px', lineHeight: '1.4', wordBreak: 'break-word' }}>
                     {comment.text}
                   </p>
                 </div>
               </motion.div>
             ))
           ) : (
-            <p style={{ textAlign: 'center', color: '#AAA', fontSize: '14px', marginTop: '20px' }}>
+            <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px', marginTop: '20px' }}>
               Aucun commentaire. Soyez le premier ! 👇
             </p>
           )}
@@ -259,7 +239,9 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
               style={{
                 width: '100%', padding: '16px 50px 16px 20px',
                 borderRadius: '24px', border: 'none',
-                backgroundColor: '#F5F5F7', fontSize: '15px', outline: 'none',
+                backgroundColor: 'var(--bg-input)', // Fond dynamique
+                color: 'var(--text-primary)',       // Texte dynamique
+                fontSize: '15px', outline: 'none',
                 boxShadow: editMode ? '0 0 0 2px var(--color-gold)' : 'none',
                 transition: 'box-shadow 0.2s'
               }}
@@ -269,13 +251,13 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
               style={{
                 position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
                 width: '36px', height: '36px', borderRadius: '50%',
-                backgroundColor: inputText.trim() ? 'var(--color-gold)' : '#E5E5EA',
+                backgroundColor: inputText.trim() ? 'var(--color-gold)' : 'var(--bg-surface)', // Fond dynamique
                 border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: inputText.trim() ? 'pointer' : 'default',
                 transition: 'background-color 0.2s'
               }}
             >
-              <Send size={18} color={inputText.trim() ? '#000' : '#AAA'} />
+              <Send size={18} color={inputText.trim() ? '#000' : 'var(--text-secondary)'} />
             </button>
          </form>
       </div>
@@ -291,7 +273,7 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
               style={{ 
                 position: 'fixed', inset: 0, 
                 backgroundColor: 'rgba(0,0,0,0.6)', 
-                backdropFilter: 'blur(8px)', // L'effet flou demandé
+                backdropFilter: 'blur(8px)', 
                 zIndex: 99998,
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}
@@ -311,20 +293,20 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
             >
               {/* CLONE DU COMMENTAIRE (Pour focus) */}
               <div style={{ 
-                background: '#FFF', padding: '16px', borderRadius: '20px',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+                background: 'var(--bg-surface)', padding: '16px', borderRadius: '20px',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '1px solid var(--border-color)'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
-                   <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#F5F5F7', overflow:'hidden' }}>
+                   <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-input)', overflow:'hidden' }}>
                       {selectedComment.user?.profilePicture ? (
                           <img src={selectedComment.user.profilePicture} style={{width:'100%', height:'100%', objectFit:'cover'}} />
                       ) : (
-                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#888' }}>{selectedComment.user?.name?.[0]}</div>
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--text-secondary)' }}>{selectedComment.user?.name?.[0]}</div>
                       )}
                    </div>
-                   <span style={{ fontWeight: '700', fontSize: '14px' }}>{selectedComment.user?.name}</span>
+                   <span style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-primary)' }}>{selectedComment.user?.name}</span>
                 </div>
-                <p style={{ fontSize: '15px', color: '#1D1D1F', lineHeight: '1.5', maxHeight: '200px', overflowY: 'auto' }}>
+                <p style={{ fontSize: '15px', color: 'var(--text-primary)', lineHeight: '1.5', maxHeight: '200px', overflowY: 'auto' }}>
                     {selectedComment.text}
                 </p>
               </div>
@@ -376,8 +358,8 @@ const ModalButton = ({ icon, label, onClick, danger }) => (
     style={{
       display: 'flex', alignItems: 'center', gap: '12px',
       width: '100%', padding: '16px',
-      backgroundColor: danger ? '#FF3B30' : '#FFF',
-      color: danger ? '#FFF' : '#1D1D1F',
+      backgroundColor: danger ? '#FF3B30' : 'var(--bg-surface)',
+      color: danger ? '#FFF' : 'var(--text-primary)',
       border: 'none', borderRadius: '16px',
       fontSize: '15px', fontWeight: '600', cursor: 'pointer',
       boxShadow: '0 4px 12px rgba(0,0,0,0.1)'

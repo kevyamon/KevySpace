@@ -20,10 +20,10 @@ const HomeHeader = ({ user, searchQuery, setSearchQuery }) => {
         marginBottom: '20px' 
       }}>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: '800', lineHeight: '1.2' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: '800', lineHeight: '1.2', color: 'var(--text-primary)' }}>
             Salut, <span style={{ color: 'var(--color-gold)' }}>{user?.name?.split(' ')[0]}</span>
           </h1>
-          <p style={{ fontSize: '13px', color: '#86868B', fontWeight: '500' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '500' }}>
             Qu'apprenons-nous aujourd'hui ?
           </p>
         </div>
@@ -34,16 +34,16 @@ const HomeHeader = ({ user, searchQuery, setSearchQuery }) => {
           onClick={() => navigate('/notifications')}
           style={{ 
             position: 'relative',
-            background: '#FFF', 
-            border: '1px solid rgba(255, 215, 0, 0.2)', // Contour jaune subtil
+            background: 'var(--bg-surface)', // Fond dynamique
+            border: '1px solid var(--border-color)', // Bordure dynamique
             borderRadius: '50%', 
             width: '44px', height: '44px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(255, 215, 0, 0.1)',
+            boxShadow: '0 4px 12px var(--shadow-color)',
             cursor: 'pointer'
           }}
         >
-          <Bell size={20} color="#FFD700" fill="#FFD700" /> {/* Jaune Or */}
+          <Bell size={20} color="#FFD700" fill="#FFD700" /> {/* Jaune Or reste fixe */}
           
           {unreadCount > 0 && (
             <span style={{
@@ -51,7 +51,7 @@ const HomeHeader = ({ user, searchQuery, setSearchQuery }) => {
               width: '8px', height: '8px',
               backgroundColor: '#FF3B30',
               borderRadius: '50%',
-              border: '1px solid #FFF'
+              border: '1px solid var(--bg-surface)'
             }}></span>
           )}
         </motion.button>
@@ -61,7 +61,7 @@ const HomeHeader = ({ user, searchQuery, setSearchQuery }) => {
       <div style={{ position: 'relative' }}>
         <div style={{ 
           position: 'absolute', left: '16px', top: '50%', 
-          transform: 'translateY(-50%)', pointerEvents: 'none', color: '#86868B'
+          transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-secondary)'
         }}>
           <Search size={18} />
         </div>
@@ -75,17 +75,23 @@ const HomeHeader = ({ user, searchQuery, setSearchQuery }) => {
             width: '100%',
             padding: '14px 40px 14px 48px', // Espace pour la croix à droite
             borderRadius: '16px',
-            border: 'none',
-            backgroundColor: 'rgba(255, 255, 255, 0.8)', 
+            border: '1px solid var(--border-color)', // Bordure subtile
+            backgroundColor: 'var(--bg-glass)', // Fond vitré dynamique (Noir/Blanc transparent)
             backdropFilter: 'blur(10px)', 
-            boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+            boxShadow: '0 4px 20px var(--shadow-color)',
             fontSize: '15px',
-            color: '#1D1D1F',
+            color: 'var(--text-primary)', // Texte dynamique
             outline: 'none',
             transition: 'all 0.2s ease'
           }}
-          onFocus={(e) => e.target.style.boxShadow = '0 4px 25px rgba(255, 215, 0, 0.15)'}
-          onBlur={(e) => e.target.style.boxShadow = '0 4px 20px rgba(0,0,0,0.04)'}
+          onFocus={(e) => {
+             e.target.style.boxShadow = '0 4px 25px rgba(255, 215, 0, 0.15)'; // Ombre dorée au focus
+             e.target.style.borderColor = 'var(--color-gold)';
+          }}
+          onBlur={(e) => {
+             e.target.style.boxShadow = '0 4px 20px var(--shadow-color)';
+             e.target.style.borderColor = 'var(--border-color)';
+          }}
         />
 
         {/* CROIX POUR VIDER (Apparaît si texte) */}
@@ -98,9 +104,10 @@ const HomeHeader = ({ user, searchQuery, setSearchQuery }) => {
                     onClick={() => setSearchQuery('')}
                     style={{
                         position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                        background: '#E5E5EA', border: 'none', borderRadius: '50%',
+                        background: 'var(--bg-input)', // Fond bouton dynamique
+                        border: 'none', borderRadius: '50%',
                         width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer', color: '#888'
+                        cursor: 'pointer', color: 'var(--text-secondary)'
                     }}
                 >
                     <X size={12} />

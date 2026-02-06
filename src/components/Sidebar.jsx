@@ -3,15 +3,16 @@ import React, { useContext, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { useUpdate } from '../context/UpdateContext'; // <--- IMPORT DU CONTEXT
+import { useUpdate } from '../context/UpdateContext'; 
 import ContactModal from './ContactModal'; 
 import logoImg from '../assets/logo.png'; 
 import packageJson from '../../package.json'; 
+import ThemeToggle from './ThemeToggle'; // <--- AJOUT DU TOGGLE
 
 import { 
   X, Home, User, LogOut, Heart, FileText, Download, Clock,
   LayoutDashboard, UploadCloud, HelpCircle, Award,
-  RefreshCw // Icone pour la maj
+  RefreshCw 
 } from 'lucide-react';
 
 const useIsMobile = () => {
@@ -26,7 +27,7 @@ const useIsMobile = () => {
 
 const Sidebar = ({ isOpen, onClose }) => {
   const { user, logout } = useContext(AuthContext);
-  const { triggerManualCheck, updateStatus } = useUpdate(); // <--- RÉCUPÉRATION
+  const { triggerManualCheck, updateStatus } = useUpdate(); 
   const navigate = useNavigate();
   const location = useLocation();
   const [isContactOpen, setIsContactOpen] = useState(false);
@@ -66,7 +67,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   const renderMenuContent = () => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       
-      {/* HEADER ... (Code existant inchangé) ... */}
+      {/* HEADER */}
       <div style={{ marginBottom: '20px', textAlign: 'center', display:'flex', flexDirection:'column', alignItems:'center' }}>
         {isMobile ? (
            <>
@@ -77,7 +78,8 @@ const Sidebar = ({ isOpen, onClose }) => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontWeight: '800', fontSize: '26px', 
                 boxShadow: '0 8px 24px rgba(255, 215, 0, 0.4)',
-                border: '3px solid #FFF', marginBottom: '8px',
+                border: '3px solid var(--bg-surface)', // Bordure dynamique
+                marginBottom: '8px',
                 overflow: 'hidden'
               }}>
                 {user?.profilePicture ? (
@@ -86,8 +88,8 @@ const Sidebar = ({ isOpen, onClose }) => {
                   user?.name?.charAt(0).toUpperCase()
                 )}
               </div>
-              <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1D1D1F', marginBottom: '2px' }}>{user?.name}</h3>
-              <p style={{ fontSize: '12px', color: '#888', margin: 0 }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '2px' }}>{user?.name}</h3>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
                 {user?.role === 'admin' ? 'Administrateur' : user?.email}
               </p>
            </>
@@ -96,9 +98,14 @@ const Sidebar = ({ isOpen, onClose }) => {
               <div style={{ width: '40px', height: '40px', minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <img src={logoImg} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '50%', clipPath: 'circle(50% at 50% 50%)', WebkitClipPath: 'circle(50% at 50% 50%)' }} />
               </div>
-              <span style={{ fontSize: '20px', fontWeight: '800', color: '#1D1D1F' }}>KevySpace</span>
+              <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)' }}>KevySpace</span>
            </div>
         )}
+        
+        {/* AJOUT DU TOGGLE JOUR/NUIT ICI */}
+        <div style={{ marginTop: '12px' }}>
+           <ThemeToggle />
+        </div>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '4px' }}>
@@ -109,22 +116,22 @@ const Sidebar = ({ isOpen, onClose }) => {
               style={{
                 display: 'flex', alignItems: 'center', gap: '14px',
                 padding: '12px 16px', borderRadius: '16px', border: 'none',
-                backgroundColor: isMobile ? '#FFF' : '#F5F5F7', 
-                color: '#1D1D1F', fontWeight: '600',
+                backgroundColor: isMobile ? 'var(--bg-input)' : 'var(--bg-main)', // Fond dynamique
+                color: 'var(--text-primary)', fontWeight: '600',
                 cursor: 'pointer', textAlign: 'left', fontSize: '14px',
-                boxShadow: isMobile ? '0 2px 8px rgba(0,0,0,0.03)' : 'none', 
+                boxShadow: isMobile ? '0 2px 8px var(--shadow-color)' : 'none', 
                 marginBottom: '8px'
               }}
             >
               <HelpCircle size={18} color="var(--color-gold)" />
               Contacter le formateur
             </button>
-            <div style={{ height: '1px', background: 'rgba(0,0,0,0.05)', margin: '4px 0' }}></div>
+            <div style={{ height: '1px', background: 'var(--border-color)', margin: '4px 0' }}></div>
           </>
         )}
 
         {menuItems.map((item, index) => {
-          if (item.isSeparator) return <div key={index} style={{ height: '1px', background: 'rgba(0,0,0,0.05)', margin: '4px 0' }}></div>;
+          if (item.isSeparator) return <div key={index} style={{ height: '1px', background: 'var(--border-color)', margin: '4px 0' }}></div>;
           
           const isActive = location.pathname === item.path;
           const specialStyle = item.isHighlight ? {
@@ -139,8 +146,8 @@ const Sidebar = ({ isOpen, onClose }) => {
               style={{
                 display: 'flex', alignItems: 'center', gap: '14px',
                 padding: '10px 16px', borderRadius: '14px', border: 'none',
-                backgroundColor: isActive ? (isMobile ? 'rgba(0,0,0,0.05)' : '#1D1D1F') : 'transparent',
-                color: isActive ? (isMobile ? '#000' : '#FFF') : (item.isAdmin ? '#FF3B30' : '#1D1D1F'),
+                backgroundColor: isActive ? (isMobile ? 'var(--border-color)' : 'var(--bg-input)') : 'transparent',
+                color: isActive ? 'var(--text-primary)' : (item.isAdmin ? '#FF3B30' : 'var(--text-primary)'),
                 fontWeight: isActive ? '700' : '500',
                 cursor: 'pointer', transition: 'all 0.2s',
                 textAlign: 'left', fontSize: '14px', 
@@ -153,15 +160,15 @@ const Sidebar = ({ isOpen, onClose }) => {
           );
         })}
         
-        {/* NOUVEAU BOUTON : MISE À JOUR */}
-        <div style={{ height: '1px', background: 'rgba(0,0,0,0.05)', margin: '4px 0' }}></div>
+        {/* BOUTON MISE À JOUR */}
+        <div style={{ height: '1px', background: 'var(--border-color)', margin: '4px 0' }}></div>
         <button
           onClick={() => { triggerManualCheck(); if(onClose) onClose(); }}
           style={{
             display: 'flex', alignItems: 'center', gap: '14px',
             padding: '10px 16px', borderRadius: '14px', border: 'none',
             backgroundColor: 'transparent',
-            color: updateStatus === 'waiting' ? '#FF9500' : '#86868B', // Orange si en attente, Gris sinon
+            color: updateStatus === 'waiting' ? '#FF9500' : 'var(--text-secondary)',
             fontWeight: '600',
             cursor: 'pointer', transition: 'all 0.2s',
             textAlign: 'left', fontSize: '14px', 
@@ -186,7 +193,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           <LogOut size={18} />
           Se déconnecter
         </button>
-        <p style={{ textAlign: 'center', fontSize: '10px', color: '#AAA', marginTop: '8px', fontWeight: '500', opacity: 0.7, letterSpacing: '0.5px' }}>
+        <p style={{ textAlign: 'center', fontSize: '10px', color: 'var(--text-secondary)', marginTop: '8px', fontWeight: '500', opacity: 0.7, letterSpacing: '0.5px' }}>
           KevySpace v{packageJson.version}
         </p>
       </div>
@@ -195,35 +202,35 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   if (!isMobile) {
     return (
-      <div style={{ width: '280px', height: '100vh', backgroundColor: '#FFF', borderRight: '1px solid #F5F5F7', padding: '24px 20px', position: 'fixed', left: 0, top: 0, zIndex: 100 }}>
+      <div style={{ width: '280px', height: '100vh', backgroundColor: 'var(--bg-surface)', borderRight: '1px solid var(--border-color)', padding: '24px 20px', position: 'fixed', left: 0, top: 0, zIndex: 100 }}>
         {renderMenuContent()}
         <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
       </div>
     );
   }
 
-  // Rendu Mobile ... (Inchangé)
+  // Rendu Mobile
   return (
     <>
       <AnimatePresence>
         {isOpen && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(4px)', zIndex: 9998 }} />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 9998 }} />
             <motion.div
               initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               style={{
                 position: 'fixed', top: 0, right: 0, bottom: 0, 
                 width: '80%', maxWidth: '320px',
-                backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                backgroundColor: 'var(--bg-surface)', // Couleur de fond dynamique (Important!)
                 backdropFilter: 'blur(20px)', zIndex: 9999,
-                boxShadow: '-10px 0 30px rgba(0,0,0,0.1)',
+                boxShadow: '-10px 0 30px rgba(0,0,0,0.3)',
                 display: 'flex', flexDirection: 'column', padding: '20px', 
-                borderLeft: '1px solid rgba(255,255,255,0.5)'
+                borderLeft: '1px solid var(--border-color)'
               }}
             >
-              <button onClick={onClose} style={{ position: 'absolute', top: '20px', left: '20px', background: 'rgba(255,255,255,0.5)', border: 'none', borderRadius: '50%', padding: '6px', cursor: 'pointer' }}>
-                <X size={20} color="#1D1D1F" />
+              <button onClick={onClose} style={{ position: 'absolute', top: '20px', left: '20px', background: 'var(--bg-input)', border: 'none', borderRadius: '50%', padding: '6px', cursor: 'pointer' }}>
+                <X size={20} color="var(--text-primary)" />
               </button>
               <div style={{ marginTop: '30px', height: '100%' }}>
                  {renderMenuContent()}

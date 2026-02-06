@@ -4,30 +4,52 @@
    1. VARIABLES & SYSTEME DE DESIGN
    =========================== */
 :root {
-  /* PALETTE KEVYSPACE */
+  /* --- CONSTANTES (Ne changent pas) --- */
   --color-gold: #FFD700;
-  --color-bg: #F5F5F7;
-  --color-text-main: #1D1D1F;
-  --color-text-secondary: #86868B;
   --color-danger: #FF3B30;
   
   --radius-l: 24px;
   --radius-m: 16px;
   --radius-s: 12px;
   
-  /* ESPACEMENTS */
   --spacing-xs: 8px;
   --spacing-s: 12px;
   --spacing-m: 16px;
   --spacing-l: 24px;
   --spacing-xl: 32px;
+
+  /* --- PALETTE JOUR (Light Mode par défaut) --- */
+  --color-bg: #F5F5F7;              /* Fond principal */
+  --bg-surface: #FFFFFF;            /* Cartes, Modales */
+  --bg-input: #F5F5F7;              /* Champs de saisie */
+  --bg-glass: rgba(255, 255, 255, 0.8); /* Effet flou */
+  
+  --color-text-main: #1D1D1F;
+  --color-text-secondary: #86868B;
+  
+  --border-color: rgba(0, 0, 0, 0.05);
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* --- PALETTE NUIT (Dark Mode) --- */
+[data-theme='dark'] {
+  --color-bg: #000000;              /* Noir profond */
+  --bg-surface: #1C1C1E;            /* Gris anthracite pour les cartes */
+  --bg-input: #2C2C2E;              /* Gris plus clair pour inputs */
+  --bg-glass: rgba(28, 28, 30, 0.8); /* Verre sombre */
+  
+  --color-text-main: #F5F5F7;       /* Blanc cassé (plus doux) */
+  --color-text-secondary: #A1A1A6;  /* Gris argenté */
+  
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.5);
 }
 
 /* ===========================
    2. RESET UNIVERSEL
    =========================== */
 * {
-  box-sizing: border-box; /* CRUCIAL : Le padding n'augmente pas la largeur */
+  box-sizing: border-box; 
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
@@ -39,34 +61,32 @@
 html, body {
   height: 100%;
   width: 100%;
+  
+  /* Utilisation des variables dynamiques */
   background-color: var(--color-bg);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Roboto, sans-serif;
   color: var(--color-text-main);
   
-  /* 🛑 STOP SCROLL GLOBAL : C'est la clé de l'effet "App Native" */
+  /* Transition fluide lors du changement de thème */
+  transition: background-color 0.3s ease, color 0.3s ease;
+  
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Roboto, sans-serif;
+  
+  /* 🛑 STOP SCROLL GLOBAL */
   overflow: hidden; 
-  position: fixed; /* Empêche le rebond élastique de toute la page sur iOS */
-  
-  /* Scroll fluide natif */
+  position: fixed; 
   -webkit-overflow-scrolling: touch;
-  
-  /* Taille de police de base */
   font-size: 16px;
 }
 
 #root {
   height: 100%;
   width: 100%;
-  /* CRITICAL: On le transforme en Flex Container pour que MobileLayout prenne toute la place */
   display: flex;
   flex-direction: column;
-  
-  /* On interdit au Root de scroller, c'est MobileLayout qui gérera l'intérieur */
   overflow: hidden; 
   position: relative;
 }
 
-/* Empêche les images et vidéos de déborder */
 img, video {
   max-width: 100%;
   height: auto;
@@ -78,24 +98,22 @@ img, video {
    =========================== */
 @media (min-width: 500px) {
   body {
-    background-color: #111111;
+    /* Fond du simulateur (hors téléphone) - Reste sombre pour le contraste */
+    background-color: #111111; 
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 20px;
-    /* Le body desktop ne scroll pas */
     overflow: hidden; 
   }
 
   #root {
     max-width: 420px;
-    height: 90vh; /* Hauteur du téléphone simulé */
+    height: 90vh; 
     max-height: 850px;
     
-    background-color: var(--color-bg);
+    background-color: var(--color-bg); /* Le téléphone prend la couleur du thème */
     border-radius: 40px;
-    
-    /* Le téléphone lui-même ne scroll pas (c'est l'écran dedans qui scrollera) */
     overflow: hidden; 
     
     box-shadow: 
@@ -108,29 +126,24 @@ img, video {
 /* ===========================
    5. UTILITAIRES
    =========================== */
-
-/* Safe Area pour iPhone avec encoche */
 @supports (padding: max(0px)) {
   body {
     padding-left: max(0px, env(safe-area-inset-left));
     padding-right: max(0px, env(safe-area-inset-right));
-    /* On ne met pas de padding-bottom ici car MobileLayout gère la hauteur */
   }
 }
 
-/* Classe utilitaire au cas où */
 .scroll-container {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Désactive le zoom sur les inputs iOS */
 input, textarea, select {
   font-size: 16px !important;
 }
 
-/* Personnalisation Scrollbar (Chrome/Safari) */
+/* Scrollbar adaptée au thème */
 ::-webkit-scrollbar {
   width: 5px;
 }
@@ -138,6 +151,7 @@ input, textarea, select {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CCC;
+  background: var(--color-text-secondary); /* Couleur dynamique */
   border-radius: 10px;
+  opacity: 0.5;
 }

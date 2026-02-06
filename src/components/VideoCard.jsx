@@ -19,25 +19,22 @@ const VideoCard = ({ video, onClick }) => {
     }
   }, [video, user]);
 
-  // --- LOGIQUE HAPTIQUE (VIBRATION) ---
   const triggerHaptic = () => {
     if (navigator.vibrate) {
-      navigator.vibrate(50); // Vibration courte et sèche (50ms)
+      navigator.vibrate(50); 
     }
   };
 
-  // --- LOGIQUE BUSINESS ---
   const isNew = (dateString) => {
     const diffHours = Math.abs(new Date() - new Date(dateString)) / 36e5;
     return diffHours <= 24;
   };
 
-  // Une vidéo est "Trending" si elle a plus de 100 vues (Ajuste ce chiffre selon ton trafic)
   const isTrending = (views) => views >= 100;
 
   const handleLike = async (e) => {
     e.stopPropagation();
-    triggerHaptic(); // Bzzzt !
+    triggerHaptic(); 
 
     if (!user) return toast.error("Connectez-vous pour aimer !");
 
@@ -61,14 +58,14 @@ const VideoCard = ({ video, onClick }) => {
 
   const handleShare = (e) => {
     e.stopPropagation();
-    triggerHaptic(); // Bzzzt !
+    triggerHaptic(); 
     const link = `${window.location.origin}/watch/${video._id}`;
     navigator.clipboard.writeText(link);
     toast.success("Lien copié !");
   };
 
   const handleCardClick = () => {
-    triggerHaptic(); // Bzzzt !
+    triggerHaptic(); 
     onClick();
   };
 
@@ -93,13 +90,14 @@ const VideoCard = ({ video, onClick }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       style={{
-        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%)',
+        // --- ADAPTATION MODE NUIT ---
+        background: 'var(--bg-glass)', // Fond vitré dynamique
         backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 215, 0, 0.4)',
+        border: '1px solid var(--border-color)',
         borderRadius: '24px',
         padding: '12px',
         marginBottom: '20px',
-        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+        boxShadow: '0 8px 32px 0 var(--shadow-color)',
         cursor: 'pointer',
         position: 'relative',
         overflow: 'hidden'
@@ -117,7 +115,6 @@ const VideoCard = ({ video, onClick }) => {
              <PlayCircle size={32} color="#FFD700" fill="rgba(255,215,0,0.2)" />
           </div>
 
-          {/* BADGE NEW (Haut Gauche) */}
           {isNew(video.createdAt) && (
             <motion.div 
               initial={{ scale: 0 }} animate={{ scale: 1 }}
@@ -134,14 +131,13 @@ const VideoCard = ({ video, onClick }) => {
             </motion.div>
           )}
 
-          {/* BADGE TRENDING (Haut Droite) */}
           {isTrending(video.views) && (
             <motion.div 
               initial={{ scale: 0 }} animate={{ scale: [1, 1.1, 1] }} 
-              transition={{ repeat: Infinity, duration: 2 }} // Effet Respiration
+              transition={{ repeat: Infinity, duration: 2 }} 
               style={{
                 position: 'absolute', top: '0', right: '0',
-                background: 'linear-gradient(45deg, #FF512F, #DD2476)', // Dégradé Feu
+                background: 'linear-gradient(45deg, #FF512F, #DD2476)', 
                 color: '#FFF', 
                 fontSize: '9px', fontWeight: '800',
                 padding: '4px 6px', 
@@ -157,22 +153,22 @@ const VideoCard = ({ video, onClick }) => {
 
         {/* INFOS */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '6px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1D1D1F', lineHeight: '1.3', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', lineHeight: '1.3', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
             {video.title}
           </h3>
-          <p style={{ fontSize: '13px', color: '#666', fontWeight: '500', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '500', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
             {video.description || "Aucune description."}
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-            <Clock size={12} color="#AAA" />
-            <span style={{ fontSize: '11px', color: '#AAA', fontWeight: '600' }}>
+            <Clock size={12} color="var(--text-secondary)" />
+            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600' }}>
               {timeAgo(video.createdAt)}
             </span>
           </div>
         </div>
       </div>
 
-      <div style={{ height: '1px', background: 'rgba(0,0,0,0.05)', marginBottom: '12px' }}></div>
+      <div style={{ height: '1px', background: 'var(--border-color)', marginBottom: '12px' }}></div>
 
       {/* FOOTER ACTIONS */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
@@ -180,7 +176,7 @@ const VideoCard = ({ video, onClick }) => {
           <StatBadge icon={<Eye size={14} />} count={video.views} />
           <StatBadge icon={<MessageCircle size={14} />} count={video.comments?.length} />
           <StatBadge 
-            icon={<Heart size={14} fill={isLiked ? "#FF3B30" : "none"} color={isLiked ? "#FF3B30" : "#666"} />} 
+            icon={<Heart size={14} fill={isLiked ? "#FF3B30" : "none"} color={isLiked ? "#FF3B30" : "var(--text-secondary)"} />} 
             count={likesCount} 
             active={isLiked}
           />
@@ -188,7 +184,7 @@ const VideoCard = ({ video, onClick }) => {
 
         <div style={{ display: 'flex', gap: '8px' }}>
           <ActionButton onClick={handleShare} icon={<Share2 size={18} />} />
-          <ActionButton onClick={handleLike} active={isLiked} icon={<Heart size={18} fill={isLiked ? "#FF3B30" : "transparent"} color={isLiked ? "#FF3B30" : "#1D1D1F"} />} />
+          <ActionButton onClick={handleLike} active={isLiked} icon={<Heart size={18} fill={isLiked ? "#FF3B30" : "transparent"} color={isLiked ? "#FF3B30" : "var(--text-primary)"} />} />
         </div>
       </div>
     </motion.div>
@@ -198,12 +194,12 @@ const VideoCard = ({ video, onClick }) => {
 const StatBadge = ({ icon, count, active }) => (
   <div style={{ 
     display: 'flex', alignItems: 'center', gap: '4px', 
-    backgroundColor: active ? 'rgba(255, 59, 48, 0.1)' : 'rgba(255,255,255,0.5)', 
+    backgroundColor: active ? 'rgba(255, 59, 48, 0.1)' : 'var(--bg-input)', // Fond dynamique
     padding: '4px 8px', borderRadius: '8px',
-    border: '1px solid rgba(0,0,0,0.03)'
+    border: '1px solid var(--border-color)'
   }}>
-    <span style={{ color: active ? '#FF3B30' : '#86868B' }}>{icon}</span>
-    <span style={{ fontSize: '12px', color: active ? '#FF3B30' : '#1D1D1F', fontWeight: '700' }}>
+    <span style={{ color: active ? '#FF3B30' : 'var(--text-secondary)' }}>{icon}</span>
+    <span style={{ fontSize: '12px', color: active ? '#FF3B30' : 'var(--text-primary)', fontWeight: '700' }}>
       {count || 0}
     </span>
   </div>
@@ -215,11 +211,11 @@ const ActionButton = ({ onClick, icon, active }) => (
     onClick={onClick}
     style={{ 
       width: '36px', height: '36px', borderRadius: '50%',
-      background: active ? '#FFF0F0' : 'rgba(255,255,255,0.8)',
-      border: '1px solid rgba(0,0,0,0.05)',
+      background: active ? '#FFF0F0' : 'var(--bg-input)', // Fond dynamique
+      border: '1px solid var(--border-color)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', 
-      cursor: 'pointer', color: '#1D1D1F',
-      boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+      cursor: 'pointer', color: 'var(--text-primary)',
+      boxShadow: '0 2px 5px var(--shadow-color)'
     }}
   >
     {icon}
