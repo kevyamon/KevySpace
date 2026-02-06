@@ -1,88 +1,87 @@
 // src/components/CommentsSection.jsx
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Trash2, Edit2, Reply, Copy, Loader2 } from 'lucide-react';
+import { Send, Trash2, Edit2, Reply, Copy, Loader2, X } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
-const LONG_PRESS_DURATION = 800; 
+const LONG_PRESS_DURATION = 800; // 0.8s pour déclencher le menu
 
 const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
   const { user } = useContext(AuthContext);
   
-  // États
-  const [comments, setComments] = useState([]); // La liste des commentaires
+  // --- ÉTATS ---
+  const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [inputText, setInputText] = useState('');
 
-  // États Focus / Action Sheet
+  // États pour la Modale Focus (Appui Long)
   const [selectedComment, setSelectedComment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editMode, setEditMode] = useState(false);
+  const [editMode, setEditMode] = useState(false); // Si true, on modifie un commentaire
 
   const timerRef = useRef(null);
 
-  // 1. CHARGEMENT DES COMMENTAIRES DEPUIS LE BACKEND
+  // --- 1. CHARGEMENT DES COMMENTAIRES (READ) ---
   useEffect(() => {
     const fetchComments = async () => {
       if (!videoId) return;
       try {
         setLoading(true);
-        // Appel au backend pour récupérer les commentaires de la vidéo
         const res = await api.get(`/api/videos/${videoId}/comments`);
-        
-        // On s'attend à ce que le backend renvoie { success: true, count: X, data: [...] }
         setComments(res.data.data || []);
         
-        // Sync du compteur parent
+        // On synchronise le compteur parent (VideoInfo)
         if (setCommentsCount) setCommentsCount(res.data.count || 0);
       } catch (err) {
-        console.error("Erreur chargement commentaires:", err);
-        // On ne bloque pas l'UI, mais on peut afficher un toast ou laisser vide
+        console.error("Erreur chargement commentaires", err);
       } finally {
         setLoading(false);
       }
     };
     fetchComments();
-  }, [videoId, setCommentsCount]);
+  }, [videoId]);
 
-  // --- GESTION LONG PRESS ---
-  const handleTouchStart = (comment) => {
+  // --- 2. GESTION DU LONG PRESS ---
+  const handleStartPress = (comment) => {
     timerRef.current = setTimeout(() => {
+      // Vibration haptique pour confirmer
       if (navigator.vibrate) navigator.vibrate(50);
       setSelectedComment(comment);
       setIsModalOpen(true);
     }, LONG_PRESS_DURATION);
   };
 
-  const handleTouchEnd = () => {
+  const handleEndPress = () => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
   };
 
-  // --- CRUD ACTIONS ---
+  // --- 3. ACTIONS (CREATE / UPDATE / DELETE) ---
 
-  // AJOUTER
+  // A. POSTER OU MODIFIER
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!inputText.trim()) return;
-    if (!user) return toast.error("Connectez-vous !");
+    if (!user) return toast.error("Connectez-vous pour participer !");
 
+    // CAS 1 : MODIFICATION
     if (editMode && selectedComment) {
       handleEditConfirm();
       return;
     }
 
-    // Optimistic UI : On ajoute temporairement pour la fluidité
-    const tempId = Date.now().toString(); // ID temporaire string
+    // CAS 2 : NOUVEAU COMMENTAIRE
+    // Optimistic UI : On affiche tout de suite
+    const tempId = Date.now().toString();
     const newCommentObj = {
       _id: tempId,
       text: inputText,
       user: { 
-        _id: user.id || user._id, // Gérer les deux cas possibles d'ID user
+        _id: user.id || user._id, 
         name: user.name, 
         profilePicture: user.profilePicture 
       },
@@ -94,84 +93,78 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
     if (setCommentsCount) setCommentsCount(prev => prev + 1);
 
     try {
-      // Envoi au backend
+      // Envoi réel au backend
       const res = await api.post(`/api/videos/${videoId}/comments`, { text: newCommentObj.text });
       
-      // Le backend doit renvoyer le commentaire créé avec son vrai ID et les infos user peuplées
-      // Idéalement, on remplace le commentaire temporaire par le vrai
-      const savedComment = res.data.data; // Supposons que le backend renvoie le commentaire créé dans data.data ou data directly
-      
+      // On remplace le commentaire temporaire par le vrai (qui a le bon ID)
+      const savedComment = res.data.data; 
       setComments(prev => prev.map(c => c._id === tempId ? savedComment : c));
 
     } catch (err) {
-      console.error(err);
-      setComments(prev => prev.filter(c => c._id !== tempId)); // Rollback
+      // Si ça rate, on annule
+      setComments(prev => prev.filter(c => c._id !== tempId));
       toast.error("Erreur lors de l'envoi.");
       if (setCommentsCount) setCommentsCount(prev => prev - 1);
     }
   };
 
-  // SUPPRIMER
+  // B. SUPPRIMER
   const handleDelete = async () => {
     if (!selectedComment) return;
     
     const previousComments = [...comments];
+    
+    // On retire de l'écran tout de suite
     setComments(comments.filter(c => c._id !== selectedComment._id));
     setIsModalOpen(false);
     if (setCommentsCount) setCommentsCount(prev => prev - 1);
 
     try {
-      await api.delete(`/api/comments/${selectedComment._id}`); // Assure-toi que cette route existe au backend
-      toast.success("Supprimé");
+      await api.delete(`/api/comments/${selectedComment._id}`);
+      toast.success("Commentaire supprimé");
     } catch (err) {
-      console.error(err);
+      // Si ça rate, on remet tout
       setComments(previousComments);
-      toast.error("Erreur suppression");
+      toast.error("Impossible de supprimer");
       if (setCommentsCount) setCommentsCount(prev => prev + 1);
     }
   };
 
-  // EDITER
+  // C. INITIALISER LA MODIFICATION
   const handleEditInit = () => {
     setInputText(selectedComment.text);
     setEditMode(true);
     setIsModalOpen(false);
-    // Petit délai pour laisser la modale fermer avant de focus
+    // Petit délai pour laisser la modale se fermer
     setTimeout(() => document.getElementById('comment-input')?.focus(), 100);
   };
 
+  // D. CONFIRMER LA MODIFICATION
   const handleEditConfirm = async () => {
-    if (!selectedComment) return;
-
     const originalComments = [...comments];
     
-    // Optimistic Update
     setComments(comments.map(c => c._id === selectedComment._id ? { ...c, text: inputText } : c));
-    
     setEditMode(false);
     setInputText('');
     setSelectedComment(null);
 
     try {
-      await api.put(`/api/comments/${selectedComment._id}`, { text: inputText }); // Route PUT backend
+      await api.put(`/api/comments/${selectedComment._id}`, { text: inputText });
     } catch (err) {
-      console.error(err);
       setComments(originalComments);
       toast.error("Erreur modification");
     }
   };
 
-  // RÉPONDRE
+  // E. RÉPONDRE
   const handleReply = () => {
-    if (!selectedComment) return;
     setInputText(`@${selectedComment.user?.name || 'User'} `);
     setIsModalOpen(false);
     setTimeout(() => document.getElementById('comment-input')?.focus(), 100);
   };
 
-
   return (
-    <div style={{ marginTop: '24px', paddingBottom: '80px' }}>
+    <div style={{ marginTop: '24px', paddingBottom: '100px' }}>
       
       {/* HEADER COMPTEUR */}
       <div style={{ marginBottom: '16px' }}>
@@ -180,7 +173,7 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
         </h3>
       </div>
 
-      {/* LISTE OU LOADER */}
+      {/* LISTE DES COMMENTAIRES */}
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
           <Loader2 className="animate-spin" color="var(--color-gold)" />
@@ -193,25 +186,26 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
                 key={comment._id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                // EVENTS LONG PRESS
-                onTouchStart={() => handleTouchStart(comment)}
-                onTouchEnd={handleTouchEnd}
-                onMouseDown={() => handleTouchStart(comment)}
-                onMouseUp={handleTouchEnd}
-                onMouseLeave={handleTouchEnd}
+                // --- EVENTS LONG PRESS (Mobile & PC) ---
+                onTouchStart={() => handleStartPress(comment)}
+                onTouchEnd={handleEndPress}
+                onMouseDown={() => handleStartPress(comment)}
+                onMouseUp={handleEndPress}
+                onMouseLeave={handleEndPress}
+                // ---------------------------------------
+                whileTap={{ scale: 0.98, backgroundColor: '#F9F9F9' }}
                 style={{
                   display: 'flex', gap: '12px',
                   padding: '12px', borderRadius: '16px',
                   backgroundColor: '#FFF',
                   userSelect: 'none', cursor: 'pointer',
-                  border: '1px solid transparent' // Pour éviter le layout shift au focus
+                  border: '1px solid transparent'
                 }}
-                whileTap={{ scale: 0.98, backgroundColor: '#F9F9F9' }}
               >
                 {/* AVATAR */}
                 <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#F5F5F7', overflow: 'hidden', flexShrink: 0 }}>
                   {comment.user?.profilePicture ? (
-                    <img src={comment.user.profilePicture} alt={comment.user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={comment.user.profilePicture} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#888' }}>
                       {comment.user?.name ? comment.user.name[0].toUpperCase() : '?'}
@@ -219,7 +213,7 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
                   )}
                 </div>
 
-                {/* CONTENU */}
+                {/* TEXTE */}
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '13px', fontWeight: '700', color: '#1D1D1F' }}>
@@ -251,8 +245,8 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
       <div style={{ marginTop: '20px' }}>
          {editMode && (
              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'12px', color:'var(--color-gold)', marginBottom:'4px', fontWeight:'700' }}>
-                 <span>Modification...</span>
-                 <button onClick={() => { setEditMode(false); setInputText(''); }} style={{ background:'none', border:'none', color:'#FF3B30', cursor: 'pointer' }}>Annuler</button>
+                 <span>Modification en cours...</span>
+                 <button onClick={() => { setEditMode(false); setInputText(''); }} style={{ background:'none', border:'none', color:'#FF3B30', cursor:'pointer' }}>Annuler</button>
              </div>
          )}
          <form onSubmit={handleSubmit} style={{ position: 'relative' }}>
@@ -290,20 +284,20 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
       <AnimatePresence>
         {isModalOpen && selectedComment && (
           <>
-            {/* BACKDROP FLOU */}
+            {/* 1. FOND FLOU (BACKDROP) */}
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
               style={{ 
                 position: 'fixed', inset: 0, 
                 backgroundColor: 'rgba(0,0,0,0.6)', 
-                backdropFilter: 'blur(8px)', 
+                backdropFilter: 'blur(8px)', // L'effet flou demandé
                 zIndex: 99998,
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}
             />
 
-            {/* CONTENU FLOTTANT */}
+            {/* 2. CONTENU FLOTTANT */}
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -315,7 +309,7 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
                 display: 'flex', flexDirection: 'column', gap: '20px'
               }}
             >
-              {/* CLONE DU COMMENTAIRE */}
+              {/* CLONE DU COMMENTAIRE (Pour focus) */}
               <div style={{ 
                 background: '#FFF', padding: '16px', borderRadius: '20px',
                 boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
@@ -323,12 +317,12 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#F5F5F7', overflow:'hidden' }}>
                       {selectedComment.user?.profilePicture ? (
-                          <img src={selectedComment.user.profilePicture} alt="Avatar" style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                          <img src={selectedComment.user.profilePicture} style={{width:'100%', height:'100%', objectFit:'cover'}} />
                       ) : (
                           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#888' }}>{selectedComment.user?.name?.[0]}</div>
                       )}
                    </div>
-                   <span style={{ fontWeight: '700', fontSize: '14px' }}>{selectedComment.user?.name || 'Utilisateur'}</span>
+                   <span style={{ fontWeight: '700', fontSize: '14px' }}>{selectedComment.user?.name}</span>
                 </div>
                 <p style={{ fontSize: '15px', color: '#1D1D1F', lineHeight: '1.5', maxHeight: '200px', overflowY: 'auto' }}>
                     {selectedComment.text}
@@ -339,9 +333,14 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 
                 <ModalButton icon={<Reply size={20}/>} label="Répondre" onClick={handleReply} />
-                <ModalButton icon={<Copy size={20}/>} label="Copier" onClick={() => { navigator.clipboard.writeText(selectedComment.text); setIsModalOpen(false); toast.success("Copié"); }} />
+                
+                <ModalButton icon={<Copy size={20}/>} label="Copier le texte" onClick={() => { 
+                    navigator.clipboard.writeText(selectedComment.text); 
+                    setIsModalOpen(false); 
+                    toast.success("Copié !"); 
+                }} />
 
-                {/* ACTIONS AUTEUR SEULEMENT */}
+                {/* ACTIONS RÉSERVÉES À L'AUTEUR (OU ADMIN) */}
                 {user && (selectedComment.user?._id === user.id || selectedComment.user?._id === user._id) && (
                   <>
                     <ModalButton icon={<Edit2 size={20}/>} label="Modifier" onClick={handleEditInit} />
