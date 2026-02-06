@@ -18,24 +18,26 @@
   --spacing-l: 24px;
   --spacing-xl: 32px;
 
-  /* --- PALETTE BEIGE FONCÉ (Thème Unique) --- */
+  /* --- FOND D'APPLICATION --- */
   --color-bg: #2A241B;              /* Fond principal beige foncé */
   --bg-main: #2A241B;               /* Alias pour compatibilité */
-  --bg-surface: #3A3328;            /* Cartes, Modales - un peu plus clair */
-  --bg-input: #4A443A;              /* Champs de saisie */
-  --bg-glass: rgba(42, 36, 27, 0.8); /* Effet flou beige foncé */
   
-  /* Texte clair pour contraste sur fond foncé */
-  --color-text-main: #F5F3F0;       /* Blanc cassé / beige très clair */
-  --color-text-secondary: #D6CFC4;  /* Beige clair pour texte secondaire */
+  /* --- SURFACES (composants) --- */
+  --bg-surface: #FFFFFF;            /* Cartes, Modales, Sidebar - BLANC PUR */
+  --bg-input: #F8F8F8;              /* Champs de saisie - gris très clair */
+  --bg-glass: rgba(255, 255, 255, 0.9); /* Effet flou sur blanc */
+  
+  /* --- TEXTES SUR SURFACES BLANCHES --- */
+  --color-text-main: #1D1D1F;       /* Texte principal foncé (sur blanc) */
+  --color-text-secondary: #86868B;  /* Texte secondaire gris (sur blanc) */
   
   /* Alias pour compatibilité ancienne syntaxe */
-  --text-primary: #F5F3F0;
-  --text-secondary: #D6CFC4;
+  --text-primary: #1D1D1F;
+  --text-secondary: #86868B;
   
-  /* Bordures et ombres adaptées au thème beige foncé */
-  --border-color: rgba(245, 243, 240, 0.1);
-  --shadow-color: rgba(0, 0, 0, 0.3);
+  /* Bordures et ombres adaptées */
+  --border-color: rgba(0, 0, 0, 0.08);
+  --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
 /* ===========================
@@ -55,9 +57,11 @@ html, body {
   height: 100%;
   width: 100%;
   
-  /* Utilisation des variables dynamiques */
+  /* Fond beige foncé pour l'application */
   background-color: var(--color-bg);
-  color: var(--color-text-main);
+  
+  /* Texte par défaut (pour le fond) - clair sur fond foncé */
+  color: #F5F3F0;
   
   /* Transition fluide pour les changements d'état */
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -132,6 +136,9 @@ img, video {
   -webkit-overflow-scrolling: touch;
 }
 
+/* ===========================
+   6. ÉLÉMENTS DE FORMULAIRE
+   =========================== */
 input, textarea, select {
   font-size: 16px !important;
   background-color: var(--bg-input);
@@ -139,6 +146,13 @@ input, textarea, select {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-s);
   padding: var(--spacing-s) var(--spacing-m);
+  transition: all 0.2s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.1);
 }
 
 input::placeholder, textarea::placeholder {
@@ -146,6 +160,9 @@ input::placeholder, textarea::placeholder {
   opacity: 0.7;
 }
 
+/* ===========================
+   7. BOUTONS
+   =========================== */
 button {
   background-color: var(--bg-surface);
   color: var(--color-text-main);
@@ -153,35 +170,48 @@ button {
   border-radius: var(--radius-s);
   padding: var(--spacing-s) var(--spacing-m);
   cursor: pointer;
+  font-weight: 600;
   transition: all 0.2s ease;
 }
 
-button:hover {
-  background-color: var(--bg-input);
+button:hover:not(:disabled) {
+  background-color: #F5F5F5;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--shadow-color);
 }
 
-button:active {
+button:active:not(:disabled) {
   transform: translateY(0);
 }
 
-/* Scrollbar adaptée au thème beige foncé */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===========================
+   8. SCROLLBAR
+   =========================== */
 ::-webkit-scrollbar {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
   background: var(--bg-surface);
+  border-radius: var(--radius-s);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-text-secondary);
-  border-radius: 10px;
+  border-radius: var(--radius-s);
   opacity: 0.5;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-main);
 }
 
-/* Classes utilitaires pour les textes */
+/* ===========================
+   9. CLASSES UTILITAIRES
+   =========================== */
+/* Textes */
 .text-primary {
   color: var(--color-text-main);
 }
@@ -190,7 +220,11 @@ button:active {
   color: var(--color-text-secondary);
 }
 
-/* Classes pour les arrière-plans */
+.text-on-dark {
+  color: #F5F3F0; /* Texte clair pour fond foncé */
+}
+
+/* Arrière-plans */
 .bg-main {
   background-color: var(--bg-main);
 }
@@ -203,12 +237,67 @@ button:active {
   background-color: var(--bg-input);
 }
 
+/* Cartes */
+.card {
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px var(--shadow-color);
+  padding: var(--spacing-l);
+}
+
 /* Bordures */
 .border {
   border: 1px solid var(--border-color);
 }
 
+.border-light {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 /* Ombre */
 .shadow {
   box-shadow: 0 2px 10px var(--shadow-color);
+}
+
+.shadow-lg {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* ===========================
+   10. CORRECTION DES CONTRASTES
+   =========================== */
+/* Assurer que les textes sur fond blanc sont bien lisibles */
+.bg-surface,
+.bg-input,
+.card,
+button:not(.bg-main) {
+  color: var(--color-text-main);
+}
+
+/* Texte sur fond beige foncé (si jamais utilisé) */
+.bg-main .text-primary,
+.bg-main .text-secondary {
+  color: #F5F3F0;
+}
+
+/* ===========================
+   11. ANIMATIONS
+   =========================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease;
 }
