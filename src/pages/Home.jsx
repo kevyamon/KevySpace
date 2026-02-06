@@ -90,7 +90,7 @@ const Home = () => {
         </h2>
         
         <motion.button
-          whileTap={{ scale: 0.9, rotate: 180 }}
+          whileTap={{ scale: 0.9 }}
           onClick={handleRefresh}
           disabled={refreshing}
           style={{
