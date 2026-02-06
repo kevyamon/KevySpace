@@ -20,12 +20,13 @@ const VideoInfo = ({ video, viewsCount, likesCount, isLiked, onLike, onShare }) 
 
   return (
     <div style={{ padding: '20px' }}>
-      {/* Titre dynamique */}
+      {/* Titre */}
       <h1 style={{ fontSize: '20px', fontWeight: '800', lineHeight: '1.3', marginBottom: '8px', color: 'var(--text-primary)' }}>
         {video?.title}
       </h1>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+      {/* Stats (Vues, Likes, Date) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <Eye size={14} /> {viewsCount.toLocaleString()} vues
         </span>
@@ -39,7 +40,7 @@ const VideoInfo = ({ video, viewsCount, likesCount, isLiked, onLike, onShare }) 
         </span>
       </div>
 
-      {/* BARRE D'ACTIONS */}
+      {/* BARRE D'ACTIONS (CORRIGÉE : VISIBILITÉ MAXIMALE) */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
         <ActionButton 
           icon={<Heart size={20} fill={isLiked ? "#FF3B30" : "none"} color={isLiked ? "#FF3B30" : "var(--text-primary)"} />} 
@@ -51,51 +52,69 @@ const VideoInfo = ({ video, viewsCount, likesCount, isLiked, onLike, onShare }) 
         <ActionButton icon={<MessageCircle size={20} />} label={`${video?.comments?.length || 0}`} onClick={() => {}} />
       </div>
 
-      {/* DESCRIPTION INTELLIGENTE */}
+      {/* DESCRIPTION ACCORDÉON */}
       <div style={{ 
-        backgroundColor: 'var(--bg-input)', // Fond dynamique (gris/sombre)
+        backgroundColor: 'var(--bg-input)', // Fond légèrement grisé/sombre pour se détacher du fond de page
+        border: '1px solid var(--border-color)', // Bordure subtile
         borderRadius: '16px', padding: '16px',
         marginBottom: '32px',
-        maxHeight: isDescExpanded ? 'none' : '250px', 
+        maxHeight: isDescExpanded ? 'none' : '150px', // Plus compact par défaut
         overflow: 'hidden',
-        transition: 'all 0.3s'
+        transition: 'all 0.3s ease',
+        position: 'relative'
       }}>
-        <p style={{ fontWeight: '600', marginBottom: '4px', fontSize: '14px', color: 'var(--text-primary)' }}>Description</p>
+        <p style={{ fontWeight: '700', marginBottom: '8px', fontSize: '14px', color: 'var(--text-primary)' }}>Description</p>
+        
         <div style={{ 
-          fontSize: '14px', lineHeight: '1.5', color: 'var(--text-secondary)', // Texte gris clair/foncé
+          fontSize: '14px', lineHeight: '1.6', color: 'var(--text-secondary)',
           display: isDescExpanded ? 'block' : '-webkit-box',
-          WebkitLineClamp: isDescExpanded ? 'none' : 4,
+          WebkitLineClamp: isDescExpanded ? 'none' : 3,
           WebkitBoxOrient: 'vertical',
           overflow: 'hidden'
         }}>
-          {video?.description || "Aucune description."}
+          {video?.description || "Aucune description pour ce cours."}
         </div>
+
+        {/* Bouton Voir plus */}
         <button 
           onClick={() => setIsDescExpanded(!isDescExpanded)}
           style={{ 
-            background: 'none', border: 'none', 
+            display: 'block', width: '100%', textAlign: 'center',
+            background: 'transparent', border: 'none', borderTop: '1px solid var(--border-color)',
             fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)',
-            marginTop: '8px', cursor: 'pointer', padding: 0
+            marginTop: '12px', paddingTop: '8px', cursor: 'pointer'
           }}
         >
-          {isDescExpanded ? "▲ Réduire" : "▼ Tout afficher"}
+          {isDescExpanded ? "▲ Réduire" : "▼ Lire la suite"}
         </button>
       </div>
     </div>
   );
 };
 
-// Bouton interne (Adapté Nuit)
+// --- LE BOUTON CORRIGÉ ---
 const ActionButton = ({ icon, label, onClick, active }) => (
   <motion.button 
     whileTap={{ scale: 0.95 }}
     onClick={onClick} 
     style={{ 
-      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', 
-      padding: '10px', borderRadius: '18px', border: 'none', 
-      // Fond et couleur dynamiques
-      backgroundColor: active ? '#FFF0F0' : 'var(--bg-input)', 
+      flex: 1, 
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', 
+      padding: '12px', 
+      borderRadius: '16px', 
+      
+      // 1. FOND : Surface (Blanc/Gris Foncé) ou Rouge pâle si actif
+      backgroundColor: active ? 'rgba(255, 59, 48, 0.1)' : 'var(--bg-surface)', 
+      
+      // 2. BORDURE : Indispensable pour la visibilité sur fond blanc
+      border: active ? '1px solid #FF3B30' : '1px solid var(--border-color)', 
+      
+      // 3. COULEUR TEXTE
       color: active ? '#FF3B30' : 'var(--text-primary)', 
+      
+      // 4. OMBRE : Pour le relief "Pop"
+      boxShadow: '0 2px 6px var(--shadow-color)',
+      
       fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' 
     }}
   >
