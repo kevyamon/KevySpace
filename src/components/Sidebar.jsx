@@ -7,7 +7,7 @@ import { useUpdate } from '../context/UpdateContext';
 import ContactModal from './ContactModal'; 
 import logoImg from '../assets/logo.png'; 
 import packageJson from '../../package.json'; 
-import ThemeToggle from './ThemeToggle'; // <--- AJOUT DU TOGGLE
+import ThemeToggle from './ThemeToggle'; 
 
 import { 
   X, Home, User, LogOut, Heart, FileText, Download, Clock,
@@ -78,7 +78,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontWeight: '800', fontSize: '26px', 
                 boxShadow: '0 8px 24px rgba(255, 215, 0, 0.4)',
-                border: '3px solid var(--bg-surface)', // Bordure dynamique
+                border: '3px solid var(--bg-surface)', 
                 marginBottom: '8px',
                 overflow: 'hidden'
               }}>
@@ -102,7 +102,6 @@ const Sidebar = ({ isOpen, onClose }) => {
            </div>
         )}
         
-        {/* AJOUT DU TOGGLE JOUR/NUIT ICI */}
         <div style={{ marginTop: '12px' }}>
            <ThemeToggle />
         </div>
@@ -116,7 +115,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               style={{
                 display: 'flex', alignItems: 'center', gap: '14px',
                 padding: '12px 16px', borderRadius: '16px', border: 'none',
-                backgroundColor: isMobile ? 'var(--bg-input)' : 'var(--bg-main)', // Fond dynamique
+                backgroundColor: isMobile ? 'var(--bg-input)' : 'var(--bg-main)', 
                 color: 'var(--text-primary)', fontWeight: '600',
                 cursor: 'pointer', textAlign: 'left', fontSize: '14px',
                 boxShadow: isMobile ? '0 2px 8px var(--shadow-color)' : 'none', 
@@ -160,7 +159,6 @@ const Sidebar = ({ isOpen, onClose }) => {
           );
         })}
         
-        {/* BOUTON MISE À JOUR */}
         <div style={{ height: '1px', background: 'var(--border-color)', margin: '4px 0' }}></div>
         <button
           onClick={() => { triggerManualCheck(); if(onClose) onClose(); }}
@@ -222,16 +220,34 @@ const Sidebar = ({ isOpen, onClose }) => {
               style={{
                 position: 'fixed', top: 0, right: 0, bottom: 0, 
                 width: '80%', maxWidth: '320px',
-                backgroundColor: 'var(--bg-surface)', // Couleur de fond dynamique (Important!)
+                backgroundColor: 'var(--bg-surface)', 
                 backdropFilter: 'blur(20px)', zIndex: 9999,
                 boxShadow: '-10px 0 30px rgba(0,0,0,0.3)',
                 display: 'flex', flexDirection: 'column', padding: '20px', 
                 borderLeft: '1px solid var(--border-color)'
               }}
             >
-              <button onClick={onClose} style={{ position: 'absolute', top: '20px', left: '20px', background: 'var(--bg-input)', border: 'none', borderRadius: '50%', padding: '6px', cursor: 'pointer' }}>
-                <X size={20} color="var(--text-primary)" />
-              </button>
+              {/* --- BOUTON FERMER AMÉLIORÉ & ANIMÉ --- */}
+              <motion.button 
+                onClick={onClose} 
+                whileHover={{ rotate: 90, scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                style={{ 
+                  position: 'absolute', top: '20px', left: '20px', 
+                  background: 'var(--bg-input)', 
+                  border: '1px solid var(--border-color)', 
+                  borderRadius: '50%', 
+                  width: '40px', height: '40px', // Taille fixe pour un rond parfait
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px var(--shadow-color)', // Ombre pour le détacher
+                  zIndex: 20
+                }}
+              >
+                <X size={22} color="var(--text-primary)" />
+              </motion.button>
+              
               <div style={{ marginTop: '30px', height: '100%' }}>
                  {renderMenuContent()}
               </div>

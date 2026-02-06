@@ -4,13 +4,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { Loader2 } from 'lucide-react';
 import io from 'socket.io-client';
 
 // Composants
 import VideoPlayer from '../components/VideoPlayer';
 import VideoInfo from '../components/VideoInfo';
 import CommentsSection from '../components/CommentsSection';
+import GlobalLoader from '../components/GlobalLoader'; // <--- IMPORT AJOUTÉ
 
 // 2. CONNEXION SOCKET
 const socket = io('https://kevyspace-backend.onrender.com');
@@ -118,7 +118,9 @@ const Watch = () => {
     toast.success("Lien copié !");
   };
 
-  if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loader2 className="animate-spin" color="var(--color-gold)" size={32} /></div>;
+  // --- REMPLACEMENT DU LOADER ICI ---
+  if (loading) return <GlobalLoader text="Chargement du cours..." />;
+  
   if (!video) return null;
 
   return (

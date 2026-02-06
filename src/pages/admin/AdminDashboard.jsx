@@ -1,14 +1,16 @@
+// src/pages/admin/AdminDashboard.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
-import { Plus, Trash2, Video, Loader2, Mail, Phone, Lock, Unlock } from 'lucide-react'; // J'ai retiré LogOut des imports
+import { Plus, Trash2, Video, Mail, Phone, Lock, Unlock } from 'lucide-react'; // Loader2 retiré
 import Button from '../../components/Button';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../../components/ConfirmModal';
+import GlobalLoader from '../../components/GlobalLoader'; // <--- 1. IMPORT AJOUTÉ
 
 const AdminDashboard = () => {
-  const { user } = useContext(AuthContext); // Plus besoin de 'logout' ici
+  const { user } = useContext(AuthContext); 
   const navigate = useNavigate();
   
   const [activeTab, setActiveTab] = useState('videos');
@@ -141,7 +143,7 @@ const AdminDashboard = () => {
       </div>
 
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}><Loader2 className="animate-spin" color="var(--color-gold)" size={32} /></div>
+        <GlobalLoader text="Chargement des données..." /> // <--- 2. REMPLACEMENT ICI
       ) : (
         <>
           {activeTab === 'videos' && (
