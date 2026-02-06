@@ -51,11 +51,9 @@ const MobileLayout = ({ children }) => {
     return (
       <div style={{ 
         minHeight: '100vh', 
-        width: '100%',
         backgroundColor: 'var(--color-bg)',
         display: 'flex',
-        flexDirection: 'column',
-        overflow: 'auto'
+        flexDirection: 'column'
       }}>
         {/* HEADER DESKTOP */}
         {showNavbar && (
@@ -70,7 +68,8 @@ const MobileLayout = ({ children }) => {
             position: 'sticky',
             top: 0,
             zIndex: 100,
-            boxShadow: '0 2px 10px var(--shadow-color)'
+            boxShadow: '0 2px 10px var(--shadow-color)',
+            flexShrink: 0
           }}>
             {/* LOGO */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -92,6 +91,11 @@ const MobileLayout = ({ children }) => {
                 Kevy<span style={{ color: 'var(--color-gold)' }}>Space</span>
               </div>
             </div>
+
+            {/* BOUTON HOME DESKTOP */}
+            <div>
+              <HeaderHomeButton size={24} />
+            </div>
           </header>
         )}
 
@@ -103,16 +107,16 @@ const MobileLayout = ({ children }) => {
           margin: '0 auto',
           width: '100%',
           padding: '24px',
-          gap: '24px'
+          gap: '24px',
+          overflow: 'hidden'
         }}>
           {/* SIDEBAR DESKTOP (toujours visible si connecté) */}
           {showSidebar && (
-            <aside style={{
+            <div style={{
               width: '280px',
               flexShrink: 0,
               position: 'sticky',
               top: '88px',
-              alignSelf: 'flex-start',
               height: 'calc(100vh - 112px)',
               overflowY: 'auto',
               overflowX: 'hidden',
@@ -122,26 +126,19 @@ const MobileLayout = ({ children }) => {
               boxShadow: '0 4px 20px var(--shadow-color)'
             }}>
               <Sidebar />
-            </aside>
+            </div>
           )}
 
           {/* CONTENU */}
           <main style={{
             flex: 1,
             minWidth: 0,
-            backgroundColor: 'transparent',
-            minHeight: 'calc(100vh - 136px)'
+            color: 'var(--color-text-on-bg)',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            minHeight: 'calc(100vh - 120px)'
           }}>
-            <div style={{
-              backgroundColor: showSidebar ? 'var(--bg-surface)' : 'transparent',
-              borderRadius: showSidebar ? '16px' : '0',
-              border: showSidebar ? '1px solid var(--border-color)' : 'none',
-              boxShadow: showSidebar ? '0 4px 20px var(--shadow-color)' : 'none',
-              minHeight: '100%',
-              overflow: 'hidden'
-            }}>
-              {children}
-            </div>
+            {children}
           </main>
         </div>
       </div>
@@ -164,7 +161,7 @@ const MobileLayout = ({ children }) => {
 
         {/* NAVBAR TABLETTE */}
         {showNavbar && (
-          <header style={{
+          <div style={{
             flexShrink: 0,
             height: '64px',
             display: 'flex',
@@ -173,8 +170,6 @@ const MobileLayout = ({ children }) => {
             padding: '0 24px',
             backgroundColor: 'var(--bg-surface)',
             borderBottom: '1px solid var(--border-color)',
-            position: 'sticky',
-            top: 0,
             zIndex: 10
           }}>
             {/* BOUTON HOME */}
@@ -222,16 +217,16 @@ const MobileLayout = ({ children }) => {
                 <Menu size={24} color="var(--color-text-main)" />
               </button>
             </div>
-          </header>
+          </div>
         )}
 
         {/* CONTENU TABLETTE */}
-        <main style={{ 
+        <div style={{ 
           flex: 1,
           padding: '20px',
           overflowY: 'auto',
           overflowX: 'hidden',
-          width: '100%'
+          color: 'var(--color-text-on-bg)'
         }}>
           <div style={{
             maxWidth: '800px',
@@ -240,17 +235,17 @@ const MobileLayout = ({ children }) => {
           }}>
             {children}
           </div>
-        </main>
+        </div>
       </div>
     );
   }
 
   // =========================================
-  // 3. VERSION MOBILE (< 768px) - CORRIGÉ
+  // 3. VERSION MOBILE (< 768px)
   // =========================================
   return (
     <div style={{
-      width: '100%',
+      width: '100vw',
       height: '100dvh',
       display: 'flex',
       flexDirection: 'column',
@@ -263,23 +258,21 @@ const MobileLayout = ({ children }) => {
 
       {/* NAVBAR MOBILE */}
       {showNavbar && (
-        <header style={{
+        <div style={{
           flexShrink: 0,
-          height: '60px',
+          height: '56px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 16px',
           backgroundColor: 'var(--bg-surface)',
           borderBottom: '1px solid var(--border-color)',
-          position: 'sticky',
-          top: 0,
           zIndex: 10
         }}>
           
           {/* BOUTON HOME */}
           <div style={{ width: '32px' }}>
-            <HeaderHomeButton size={24} />
+            <HeaderHomeButton size={22} />
           </div>
 
           {/* LOGO */}
@@ -296,7 +289,7 @@ const MobileLayout = ({ children }) => {
             />
             <div style={{ 
               fontWeight: '800', 
-              fontSize: '18px', 
+              fontSize: '17px', 
               color: 'var(--color-text-main)' 
             }}>
               Kevy<span style={{ color: 'var(--color-gold)' }}>Space</span>
@@ -311,30 +304,26 @@ const MobileLayout = ({ children }) => {
                 background: 'none', 
                 border: 'none', 
                 padding: 0, 
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
+                cursor: 'pointer' 
               }}
             >
-              <Menu size={24} color="var(--color-text-main)" />
+              <Menu size={22} color="var(--color-text-main)" />
             </button>
           </div>
-        </header>
+        </div>
       )}
 
-      {/* CONTENU MOBILE - OPTIMISÉ */}
-      <main style={{ 
+      {/* CONTENU MOBILE */}
+      <div style={{ 
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
         WebkitOverflowScrolling: 'touch',
         padding: showNavbar ? '12px' : '0',
-        width: '100%',
-        minHeight: 0
+        color: 'var(--color-text-on-bg)'
       }}>
         {children}
-      </main>
+      </div>
     </div>
   );
 };

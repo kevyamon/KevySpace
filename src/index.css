@@ -19,21 +19,21 @@
   --spacing-xl: 32px;
 
   /* --- FOND D'APPLICATION --- */
-  --color-bg: #2A241B;              /* Fond principal beige foncé */
-  --bg-main: #2A241B;               /* Alias pour compatibilité */
+  --color-bg: #2A241B;
+  --bg-main: #2A241B;
   
   /* --- SURFACES (composants) --- */
-  --bg-surface: #FFFFFF;            /* Cartes, Modales, Sidebar - BLANC PUR */
-  --bg-input: #F8F8F8;              /* Champs de saisie - gris très clair */
-  --bg-glass: rgba(255, 255, 255, 0.9); /* Effet flou sur blanc */
+  --bg-surface: #FFFFFF;
+  --bg-input: #F8F8F8;
+  --bg-glass: rgba(255, 255, 255, 0.9);
   
   /* --- TEXTES SUR SURFACES BLANCHES --- */
-  --color-text-main: #1D1D1F;       /* Texte principal foncé (sur blanc) */
-  --color-text-secondary: #86868B;  /* Texte secondaire gris (sur blanc) */
+  --color-text-main: #1D1D1F;
+  --color-text-secondary: #86868B;
   
-  /* --- TEXTES SUR FOND BEIGE FONCÉ (ajout) --- */
-  --color-text-on-bg: #F5F3F0;      /* Texte clair pour fond foncé */
-  --color-text-on-bg-secondary: #C4C2BF; /* Texte secondaire sur fond foncé */
+  /* --- TEXTES SUR FOND PRINCIPAL (beige foncé) --- */
+  --color-text-on-bg: #FFD700;
+  --color-text-on-bg-secondary: #F5F3F0;
   
   /* Alias pour compatibilité ancienne syntaxe */
   --text-primary: #1D1D1F;
@@ -61,24 +61,17 @@ html, body {
   height: 100%;
   width: 100%;
   
-  /* Fond beige foncé pour l'application */
   background-color: var(--color-bg);
-  color: var(--color-text-on-bg); /* Texte clair pour fond foncé */
+  color: var(--color-text-on-bg-secondary);
   
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Roboto, sans-serif;
   font-size: 16px;
-  line-height: 1.5;
   
-  /* Desktop : scroll naturel */
   overflow: auto;
-  
-  /* Suppression des marges par défaut */
-  margin: 0;
-  padding: 0;
 }
 
 #root {
-  min-height: 100%;
+  height: 100%;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -91,25 +84,7 @@ img, video {
 }
 
 /* ===========================
-   4. CORRECTION TEXTES LIBRES
-   =========================== */
-/* Tous les titres h1-h6 en dehors de composants blancs */
-h1, h2, h3, h4, h5, h6 {
-  color: var(--color-text-on-bg);
-}
-
-/* Tous les paragraphes et spans libres */
-p, span, div:not([class*="card"]):not([class*="modal"]):not([class*="button"]) {
-  color: inherit; /* Hérite du parent (donc --color-text-on-bg) */
-}
-
-/* Force les textes sur fond beige à être clairs */
-body > *, #root > * {
-  color: var(--color-text-on-bg);
-}
-
-/* ===========================
-   5. UTILITAIRES
+   4. UTILITAIRES
    =========================== */
 @supports (padding: max(0px)) {
   body {
@@ -142,51 +117,19 @@ input, textarea, select {
 }
 
 /* ===========================
-   6. RESPONSIVE MOBILE OPTIMISÉ
+   5. RESPONSIVE MOBILE
    =========================== */
 @media (max-width: 767px) {
-  html {
-    /* Hauteur dynamique pour mobile (évite le problème de barre d'adresse) */
+  html, body {
+    overflow: hidden;
     height: 100dvh;
-    overflow: hidden;
-  }
-  
-  body {
-    height: 100%;
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
+    width: 100vw;
     -webkit-overflow-scrolling: touch;
   }
   
   #root {
-    height: 100%;
+    height: 100dvh;
+    width: 100vw;
     overflow: hidden;
-  }
-}
-
-/* ===========================
-   7. RESPONSIVE TABLET
-   =========================== */
-@media (min-width: 768px) and (max-width: 1023px) {
-  html, body {
-    overflow: auto;
-  }
-  
-  #root {
-    min-height: 100vh;
-  }
-}
-
-/* ===========================
-   8. RESPONSIVE DESKTOP
-   =========================== */
-@media (min-width: 1024px) {
-  html, body {
-    overflow: auto;
-  }
-  
-  #root {
-    min-height: 100vh;
   }
 }
