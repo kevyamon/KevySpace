@@ -1,132 +1,114 @@
 // src/components/HomeHeader.jsx
 import React, { useContext } from 'react';
 import { Search, Bell, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AuthContext } from '../context/AuthContext';
-import HeaderHomeButton from './HeaderHomeButton';
+import { NotificationContext } from '../context/NotificationContext';
 
-const HomeHeader = ({ searchTerm, setSearchTerm, onNotificationClick }) => {
-  const { user } = useContext(AuthContext);
-
-  // Fonction pour vider la recherche proprement
-  const clearSearch = () => {
-    setSearchTerm('');
-  };
+const HomeHeader = ({ user, searchQuery, setSearchQuery }) => {
+  const navigate = useNavigate();
+  const { unreadCount } = useContext(NotificationContext); 
 
   return (
-    <div style={{ 
-      marginBottom: '24px', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      gap: '20px' 
-    }}>
+    <div style={{ marginBottom: '24px', paddingTop: '20px' }}>
       
-      {/* LIGNE DU HAUT : SALUTATION + CLOCHE */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* LIGNE DU HAUT : SALUTATION + NOTIFICATIONS */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '20px' 
+      }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#1D1D1F', marginBottom: '4px' }}>
-            Hello, {user?.name?.split(' ')[0]} 👋
+          <h1 style={{ fontSize: '22px', fontWeight: '800', lineHeight: '1.2' }}>
+            Salut, <span style={{ color: 'var(--color-gold)' }}>{user?.name?.split(' ')[0]}</span>
           </h1>
-          <p style={{ color: '#86868B', fontSize: '14px', fontWeight: '500' }}>
-            Prêt à apprendre ?
+          <p style={{ fontSize: '13px', color: '#86868B', fontWeight: '500' }}>
+            Qu'apprenons-nous aujourd'hui ?
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
-          {/* BOUTON ADMIN (Visible seulement si admin) */}
-          <HeaderHomeButton />
-
-          {/* CLOCHE GOLD ANIMÉE */}
-          <motion.button 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ rotate: [0, -20, 20, -10, 10, 0] }} // Animation "Ding Dong"
-            onClick={onNotificationClick}
-            style={{
-              position: 'relative',
-              width: '48px', height: '48px',
-              borderRadius: '16px',
-              backgroundColor: '#FFF',
-              border: '1px solid rgba(0,0,0,0.05)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
-            }}
-          >
-            <Bell size={22} color="#FFD700" fill="#FFD700" /> {/* JAUNE PLEIN */}
-            
-            {/* Indicateur point rouge (Optionnel: tu pourras le connecter au context plus tard) */}
+        {/* BOUTON NOTIFICATION (JAUNE + ANIMÉ) */}
+        <motion.button 
+          whileTap={{ rotate: [0, -20, 20, 0] }} // Petite animation Ding-Dong
+          onClick={() => navigate('/notifications')}
+          style={{ 
+            position: 'relative',
+            background: '#FFF', 
+            border: '1px solid rgba(255, 215, 0, 0.2)', // Contour jaune subtil
+            borderRadius: '50%', 
+            width: '44px', height: '44px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(255, 215, 0, 0.1)',
+            cursor: 'pointer'
+          }}
+        >
+          <Bell size={20} color="#FFD700" fill="#FFD700" /> {/* Jaune Or */}
+          
+          {unreadCount > 0 && (
             <span style={{
-              position: 'absolute', top: '12px', right: '12px',
+              position: 'absolute', top: '10px', right: '12px',
               width: '8px', height: '8px',
-              backgroundColor: '#FF3B30', borderRadius: '50%',
-              border: '2px solid #FFF'
+              backgroundColor: '#FF3B30',
+              borderRadius: '50%',
+              border: '1px solid #FFF'
             }}></span>
-          </motion.button>
-        </div>
+          )}
+        </motion.button>
       </div>
 
-      {/* BARRE DE RECHERCHE 1000x PLUS JOLIE */}
-      <div style={{ position: 'relative', width: '100%' }}>
+      {/* BARRE DE RECHERCHE "LIQUID GLASS" AMÉLIORÉE */}
+      <div style={{ position: 'relative' }}>
         <div style={{ 
-          position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)',
-          color: '#86868B', pointerEvents: 'none'
+          position: 'absolute', left: '16px', top: '50%', 
+          transform: 'translateY(-50%)', pointerEvents: 'none', color: '#86868B'
         }}>
-          <Search size={20} />
+          <Search size={18} />
         </div>
         
-        <input
+        <input 
           type="text"
-          placeholder="Rechercher un cours, un sujet..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Rechercher un module..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           style={{
             width: '100%',
-            padding: '16px 48px 16px 48px', // Place pour l'icone et la croix
-            fontSize: '16px',
-            borderRadius: '20px',
+            padding: '14px 40px 14px 48px', // Espace pour la croix à droite
+            borderRadius: '16px',
             border: 'none',
-            backgroundColor: '#F5F5F7', // Gris Apple
+            backgroundColor: 'rgba(255, 255, 255, 0.8)', 
+            backdropFilter: 'blur(10px)', 
+            boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+            fontSize: '15px',
             color: '#1D1D1F',
             outline: 'none',
-            transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-            boxShadow: 'inset 0 0 0 1px transparent', // Pour l'animation de focus
+            transition: 'all 0.2s ease'
           }}
-          // Effet au focus via CSS-in-JS simulé
-          onFocus={(e) => {
-            e.target.style.backgroundColor = '#FFF';
-            e.target.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08), inset 0 0 0 2px var(--color-gold)';
-          }}
-          onBlur={(e) => {
-            e.target.style.backgroundColor = '#F5F5F7';
-            e.target.style.boxShadow = 'inset 0 0 0 1px transparent';
-          }}
+          onFocus={(e) => e.target.style.boxShadow = '0 4px 25px rgba(255, 215, 0, 0.15)'}
+          onBlur={(e) => e.target.style.boxShadow = '0 4px 20px rgba(0,0,0,0.04)'}
         />
 
-        {/* CROIX DE FERMETURE (Apparaît si texte > 0) */}
+        {/* CROIX POUR VIDER (Apparaît si texte) */}
         <AnimatePresence>
-          {searchTerm.length > 0 && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
-              whileTap={{ scale: 0.8 }}
-              onClick={clearSearch}
-              style={{
-                position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)',
-                width: '24px', height: '24px',
-                borderRadius: '50%',
-                backgroundColor: '#C7C7CC',
-                border: 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer',
-                color: '#FFF'
-              }}
-            >
-              <X size={14} strokeWidth={3} />
-            </motion.button>
-          )}
+            {searchQuery && (
+                <motion.button
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    onClick={() => setSearchQuery('')}
+                    style={{
+                        position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                        background: '#E5E5EA', border: 'none', borderRadius: '50%',
+                        width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', color: '#888'
+                    }}
+                >
+                    <X size={12} />
+                </motion.button>
+            )}
         </AnimatePresence>
       </div>
+
     </div>
   );
 };

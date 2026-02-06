@@ -1,108 +1,117 @@
 // src/pages/Home.jsx
-import React, { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
-import VideoCard from '../components/VideoCard';
-import HomeHeader from '../components/HomeHeader';
-import { Loader2, AlertCircle } from 'lucide-react';
+import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import ScrollToTop from '../components/ScrollToTop'; // <--- 1. IMPORT
+import { SearchX, ArrowUp } from 'lucide-react'; // Ajout ArrowUp
+import api from '../services/api';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+
+import HomeHeader from '../components/HomeHeader';
+import VideoCard from '../components/VideoCard';
+
+// Petit composant interne ScrollToTop pour pas multiplier les fichiers
+const ScrollToTopButton = () => {
+    const [visible, setVisible] = useState(false);
+    useEffect(() => {
+        const toggle = () => setVisible(window.scrollY > 300);
+        window.addEventListener('scroll', toggle);
+        return () => window.removeEventListener('scroll', toggle);
+    }, []);
+    return (
+        <AnimatePresence>
+            {visible && (
+                <motion.button
+                    initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    style={{
+                        position: 'fixed', bottom: '90px', right: '20px', zIndex: 99,
+                        width: '45px', height: '45px', borderRadius: '50%',
+                        background: '#1D1D1F', color: '#FFD700', border: 'none',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                    }}
+                >
+                    <ArrowUp size={24} />
+                </motion.button>
+            )}
+        </AnimatePresence>
+    );
+};
 
 const Home = () => {
-  const { setGlobalLoading } = useContext(AuthContext);
-  const navigate = useNavigate();
+  const { user, setGlobalLoading } = useContext(AuthContext);
   const [videos, setVideos] = useState([]);
-  const [filteredVideos, setFilteredVideos] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchVideos = async () => {
-      try {
-        const res = await api.get('/api/videos');
-        setVideos(res.data.data);
-        setFilteredVideos(res.data.data);
-      } catch (err) {
-        setError("Impossible de charger les cours.");
-      } finally {
-        setLoading(false);
-      }
-    };
+    setGlobalLoading(true);
     fetchVideos();
+    return () => setGlobalLoading(false);
   }, []);
 
-  useEffect(() => {
-    if (searchTerm === '') {
-      setFilteredVideos(videos);
-    } else {
-      const lower = searchTerm.toLowerCase();
-      const filtered = videos.filter(
-        (v) =>
-          v.title.toLowerCase().includes(lower) ||
-          (v.description && v.description.toLowerCase().includes(lower))
-      );
-      setFilteredVideos(filtered);
+  const fetchVideos = async () => {
+    try {
+      const res = await api.get('/api/videos');
+      setVideos(res.data.data);
+    } catch (err) {
+      console.error("Erreur chargement vidéos", err);
+    } finally {
+      setTimeout(() => {
+        setGlobalLoading(false);
+      }, 300);
     }
-  }, [searchTerm, videos]);
+  };
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <Loader2 className="animate-spin" size={40} color="var(--color-gold)" />
-      </div>
-    );
-  }
+  const handleWatchVideo = (videoId) => {
+    navigate(`/watch/${videoId}`);
+  };
 
-  if (error) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '50px', color: '#FF3B30' }}>
-        <AlertCircle size={48} />
-        <p style={{ marginTop: '10px', fontWeight: '600' }}>{error}</p>
-        <button 
-          onClick={() => window.location.reload()} 
-          style={{ marginTop: '20px', padding: '10px 20px', borderRadius: '12px', border: 'none', background: '#1D1D1F', color: '#FFF' }}
-        >
-          Réessayer
-        </button>
-      </div>
-    );
-  }
+  const filteredVideos = videos.filter(video => 
+    video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (video.description && video.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
-    <div style={{ padding: '20px', paddingBottom: '100px', minHeight: '100vh' }}>
+    <div style={{ padding: '0 24px 100px 24px', minHeight: '100%' }}>
       
-      {/* HEADER AMÉLIORÉ (Barre + Cloche) */}
-      <HomeHeader 
-        searchTerm={searchTerm} 
-        setSearchTerm={setSearchTerm} 
-        onNotificationClick={() => navigate('/notifications')}
-      />
+      <HomeHeader user={user} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
-      {/* FEED VIDÉOS */}
-      <div>
-        <h2 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '16px', color: '#1D1D1F' }}>
-          {searchTerm ? `Résultats pour "${searchTerm}"` : 'Récemment ajoutés'}
-        </h2>
-        
-        {filteredVideos.length > 0 ? (
-          filteredVideos.map((video) => (
-            <VideoCard 
-              key={video._id} 
-              video={video} 
-              onClick={() => navigate(`/watch/${video._id}`)} 
-            />
-          ))
-        ) : (
-          <div style={{ textAlign: 'center', marginTop: '40px', color: '#86868B' }}>
-            <p>Aucun cours trouvé 🕵️‍♂️</p>
+      <h2 style={{ fontSize: '18px', marginBottom: '16px', fontWeight: '800', color: '#1D1D1F' }}>
+        {searchQuery ? `Résultats pour "${searchQuery}"` : 'Récemment ajoutés'}
+      </h2>
+
+      {filteredVideos.length === 0 ? (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', marginTop: '40px' }}
+        >
+          <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#F9F9F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <SearchX size={32} color="#C7C7CC" />
           </div>
-        )}
-      </div>
-
-      {/* BOUTON SCROLL TO TOP INTELLIGENT */}
-      <ScrollToTop /> {/* <--- 2. PLACEMENT */}
-
+          <p style={{ textAlign: 'center', color: '#8E8E93', fontSize: '15px' }}>
+            {searchQuery ? "Aucun module ne correspond à ta recherche." : "Aucune formation disponible pour le moment."}
+          </p>
+        </motion.div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {filteredVideos.map((video, index) => (
+            <motion.div
+              key={video._id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <VideoCard 
+                video={video} 
+                onClick={() => handleWatchVideo(video._id)} 
+              />
+            </motion.div>
+          ))}
+        </div>
+      )}
+      
+      {/* Ajout du bouton ScrollToTop ici */}
+      <ScrollToTopButton />
     </div>
   );
 };
