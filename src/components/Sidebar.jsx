@@ -63,11 +63,60 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const menuItems = user?.role === 'admin' ? adminLinks : userLinks;
 
+  // Style commun pour tous les boutons de navigation
+  const getButtonStyle = (isActive, item) => {
+    const baseStyle = {
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: '14px',
+      padding: '10px 14px', 
+      borderRadius: '14px', 
+      cursor: 'pointer', 
+      transition: 'all 0.2s',
+      textAlign: 'left', 
+      fontSize: '14px',
+      width: '100%',
+      boxSizing: 'border-box'
+    };
+
+    // Bouton highlight (Vue Site)
+    if (item?.isHighlight) {
+      return {
+        ...baseStyle,
+        backgroundColor: 'var(--color-gold)', 
+        color: 'var(--color-bg)', 
+        fontWeight: '800',
+        border: '1px solid var(--color-gold)',
+        boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
+      };
+    }
+
+    // Bouton actif
+    if (isActive) {
+      return {
+        ...baseStyle,
+        backgroundColor: isMobile ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 215, 0, 0.1)',
+        color: 'var(--color-gold)',
+        fontWeight: '700',
+        border: '1px solid rgba(255, 215, 0, 0.3)'
+      };
+    }
+
+    // Bouton normal
+    return {
+      ...baseStyle,
+      backgroundColor: 'transparent',
+      color: item?.isAdmin ? '#FF3B30' : 'var(--text-primary)',
+      fontWeight: '500',
+      border: '1px solid var(--border-color)'
+    };
+  };
+
   const renderMenuContent = () => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       
       {/* HEADER */}
-      <div style={{ marginBottom: '20px', textAlign: 'center', display:'flex', flexDirection:'column', alignItems:'center' }}>
+      <div style={{ marginBottom: '20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {isMobile ? (
            <>
               <div style={{ 
@@ -100,7 +149,6 @@ const Sidebar = ({ isOpen, onClose }) => {
               <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)' }}>KevySpace</span>
            </div>
         )}
-        {/* SUPPRESSION DU THEMETOGGLE - PLUS DE BOUTON MODE NUIT */}
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '4px' }}>
@@ -109,12 +157,11 @@ const Sidebar = ({ isOpen, onClose }) => {
             <button
               onClick={() => setIsContactOpen(true)}
               style={{
-                display: 'flex', alignItems: 'center', gap: '14px',
-                padding: '12px 16px', borderRadius: '16px', border: 'none',
-                backgroundColor: isMobile ? 'var(--bg-input)' : 'var(--bg-main)', 
-                color: 'var(--text-primary)', fontWeight: '600',
-                cursor: 'pointer', textAlign: 'left', fontSize: '14px',
-                boxShadow: isMobile ? '0 2px 8px var(--shadow-color)' : 'none', 
+                ...getButtonStyle(false, {}),
+                backgroundColor: isMobile ? 'rgba(255, 215, 0, 0.08)' : 'rgba(255, 215, 0, 0.05)',
+                color: 'var(--text-primary)', 
+                fontWeight: '600',
+                border: '1px solid rgba(255, 215, 0, 0.2)',
                 marginBottom: '8px'
               }}
             >
@@ -129,27 +176,16 @@ const Sidebar = ({ isOpen, onClose }) => {
           if (item.isSeparator) return <div key={index} style={{ height: '1px', background: 'var(--border-color)', margin: '4px 0' }}></div>;
           
           const isActive = location.pathname === item.path;
-          const specialStyle = item.isHighlight ? {
-            backgroundColor: '#FFD700', color: '#000', fontWeight: '800',
-            boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
-          } : {};
 
           return (
             <button
               key={index}
               onClick={() => handleNavigate(item.path)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '14px',
-                padding: '10px 16px', borderRadius: '14px', border: 'none',
-                backgroundColor: isActive ? (isMobile ? 'var(--border-color)' : 'var(--bg-input)') : 'transparent',
-                color: isActive ? 'var(--text-primary)' : (item.isAdmin ? '#FF3B30' : 'var(--text-primary)'),
-                fontWeight: isActive ? '700' : '500',
-                cursor: 'pointer', transition: 'all 0.2s',
-                textAlign: 'left', fontSize: '14px', 
-                ...specialStyle
-              }}
+              style={getButtonStyle(isActive, item)}
             >
-              {item.icon}
+              {React.cloneElement(item.icon, { 
+                color: item.isHighlight ? 'var(--color-bg)' : (isActive ? 'var(--color-gold)' : (item.isAdmin ? '#FF3B30' : undefined))
+              })}
               {item.label}
             </button>
           );
@@ -159,16 +195,13 @@ const Sidebar = ({ isOpen, onClose }) => {
         <button
           onClick={() => { triggerManualCheck(); if(onClose) onClose(); }}
           style={{
-            display: 'flex', alignItems: 'center', gap: '14px',
-            padding: '10px 16px', borderRadius: '14px', border: 'none',
-            backgroundColor: 'transparent',
+            ...getButtonStyle(false, {}),
             color: updateStatus === 'waiting' ? '#FF9500' : 'var(--text-secondary)',
-            fontWeight: '600',
-            cursor: 'pointer', transition: 'all 0.2s',
-            textAlign: 'left', fontSize: '14px', 
+            border: updateStatus === 'waiting' ? '1px solid rgba(255, 149, 0, 0.3)' : '1px solid var(--border-color)',
+            backgroundColor: updateStatus === 'waiting' ? 'rgba(255, 149, 0, 0.08)' : 'transparent'
           }}
         >
-          <RefreshCw size={18} />
+          <RefreshCw size={18} color={updateStatus === 'waiting' ? '#FF9500' : undefined} />
           {updateStatus === 'waiting' ? 'Mise à jour (En attente)' : 'Vérifier mise à jour'}
         </button>
 
@@ -181,7 +214,8 @@ const Sidebar = ({ isOpen, onClose }) => {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
             width: '100%', padding: '12px', borderRadius: '16px',
             border: '1px solid #FF3B30', background: 'transparent', 
-            color: '#FF3B30', fontWeight: '600', cursor: 'pointer', fontSize: '14px'
+            color: '#FF3B30', fontWeight: '600', cursor: 'pointer', fontSize: '14px',
+            boxSizing: 'border-box'
           }}
         >
           <LogOut size={18} />
@@ -203,7 +237,6 @@ const Sidebar = ({ isOpen, onClose }) => {
     );
   }
 
-  // Rendu Mobile
   return (
     <>
       <AnimatePresence>
@@ -223,7 +256,6 @@ const Sidebar = ({ isOpen, onClose }) => {
                 borderLeft: '1px solid var(--border-color)'
               }}
             >
-              {/* --- BOUTON FERMER AMÉLIORÉ & ANIMÉ --- */}
               <motion.button 
                 onClick={onClose} 
                 whileHover={{ rotate: 90, scale: 1.1 }}
