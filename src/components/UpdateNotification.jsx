@@ -1,90 +1,129 @@
 // src/components/UpdateNotification.jsx
 import React from 'react';
-import { useRegisterSW } from 'virtual:pwa-register/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, Zap } from 'lucide-react';
-import { useAutoUpdate } from '../hooks/useAutoUpdate'; // Import du hook
+import { RefreshCw, DownloadCloud, X, Code2 } from 'lucide-react';
+import { useUpdate } from '../context/UpdateContext'; // On utilise le Context
 
 const UpdateNotification = () => {
-  // 1. Détection PWA standard
-  const {
-    needRefresh: [needRefreshSW, setNeedRefreshSW],
-    updateServiceWorker,
-  } = useRegisterSW();
+  const { updateStatus, progress, currentVersion, installUpdate, dismissUpdate } = useUpdate();
 
-  // 2. Détection Git automatique
-  const { updateAvailable: gitUpdateAvailable, reloadPage } = useAutoUpdate();
-
-  // Si l'un des deux dit "Update", on affiche !
-  const hasUpdate = needRefreshSW || gitUpdateAvailable;
-
-  const handleUpdate = () => {
-    if (needRefreshSW) {
-      updateServiceWorker(true);
-    } else {
-      reloadPage();
-    }
-  };
+  // On affiche SI 'available' OU 'installing'
+  const isVisible = updateStatus === 'available' || updateStatus === 'installing';
 
   return (
     <AnimatePresence>
-      {hasUpdate && (
+      {isVisible && (
         <div style={{
-          position: 'fixed', inset: 0, zIndex: 99999999, 
+          position: 'fixed', inset: 0, zIndex: 99999999,
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
         }}>
+          
+          {/* FOND FLOU */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             style={{
               position: 'absolute', inset: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(8px)',
+              backgroundColor: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(10px)',
             }}
           />
 
+          {/* LA CARTE PRO */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+            transition={{ type: "spring", stiffness: 350, damping: 30 }}
             style={{
               position: 'relative', backgroundColor: '#FFF',
-              width: '100%', maxWidth: '400px',
-              borderRadius: '24px', padding: '32px',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px'
+              width: '100%', maxWidth: '380px',
+              borderRadius: '28px', padding: '0', overflow: 'hidden',
+              boxShadow: '0 40px 80px -12px rgba(0, 0, 0, 0.5)',
+              border: '1px solid rgba(255,255,255,0.1)'
             }}
           >
-            <div style={{
-              width: '64px', height: '64px', backgroundColor: '#FFF8E1',
-              borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <motion.div animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }}>
-                <RefreshCw size={32} color="#FFD700" strokeWidth={2.5} />
-              </motion.div>
-            </div>
+            
+            {/* HEADER DESIGN */}
+            <div style={{ padding: '32px 32px 20px 32px', textAlign: 'center' }}>
+              <div style={{
+                width: '72px', height: '72px', backgroundColor: '#F5F5F7',
+                borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 20px auto', boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)'
+              }}>
+                {updateStatus === 'installing' ? (
+                   <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+                      <RefreshCw size={32} color="#1D1D1F" />
+                   </motion.div>
+                ) : (
+                   <DownloadCloud size={32} color="#1D1D1F" />
+                )}
+              </div>
 
-            <div>
-              <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#1D1D1F', marginBottom: '8px' }}>
-                Nouvelle version dispo !
+              <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#1D1D1F', marginBottom: '8px' }}>
+                {updateStatus === 'installing' ? 'Installation en cours...' : 'Nouvelle version disponible'}
               </h2>
-              <p style={{ fontSize: '15px', color: '#86868B', lineHeight: '1.5' }}>
-                Une mise à jour a été détectée (Nouveau Commit). Installez-la pour continuer.
+              
+              <p style={{ fontSize: '14px', color: '#86868B', lineHeight: '1.5' }}>
+                {updateStatus === 'installing' 
+                  ? 'Optimisation des fichiers pour une expérience fluide.' 
+                  : 'Une mise à jour importante est prête à être installée.'}
               </p>
+
+              {/* VERSION & DEV INFO */}
+              <div style={{ marginTop: '20px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                 <div style={{ background: '#F5F5F7', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', color: '#1D1D1F' }}>
+                    v{currentVersion} → New
+                 </div>
+                 <div style={{ background: '#F5F5F7', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', color: '#86868B', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Code2 size={10} /> Developper: Kevy LLC
+                 </div>
+              </div>
             </div>
 
-            <motion.button
-              onClick={handleUpdate}
-              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}
-              style={{
-                marginTop: '12px', width: '100%', backgroundColor: '#1D1D1F', color: '#FFF',
-                border: 'none', padding: '16px', borderRadius: '16px',
-                fontSize: '16px', fontWeight: '700', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
-              }}
-            >
-              <Zap size={20} fill="#FFF" />
-              Mettre à jour
-            </motion.button>
+            {/* JAUGE DE PROGRESSION (Visible uniquement si installing) */}
+            {updateStatus === 'installing' && (
+              <div style={{ padding: '0 32px 40px 32px' }}>
+                <div style={{ height: '6px', background: '#F0F0F0', borderRadius: '10px', overflow: 'hidden' }}>
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                    style={{ height: '100%', background: '#1D1D1F' }}
+                  />
+                </div>
+                <p style={{ textAlign: 'center', fontSize: '12px', color: '#AAA', marginTop: '10px', fontWeight: '600' }}>
+                  {progress}%
+                </p>
+              </div>
+            )}
+
+            {/* BOUTONS (Cachés pendant l'installation pour éviter les clics) */}
+            {updateStatus !== 'installing' && (
+              <div style={{ padding: '0 32px 32px 32px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <motion.button
+                  onClick={installUpdate}
+                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }}
+                  style={{
+                    width: '100%', padding: '16px', borderRadius: '18px',
+                    backgroundColor: '#1D1D1F', color: '#FFF', border: 'none',
+                    fontSize: '15px', fontWeight: '700', cursor: 'pointer',
+                    boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+                  }}
+                >
+                  Installer et Redémarrer
+                </motion.button>
+
+                <button
+                  onClick={dismissUpdate}
+                  style={{
+                    width: '100%', padding: '14px', borderRadius: '18px',
+                    backgroundColor: 'transparent', color: '#86868B', border: 'none',
+                    fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+                  }}
+                >
+                  Plus tard
+                </button>
+              </div>
+            )}
+
           </motion.div>
         </div>
       )}

@@ -5,52 +5,52 @@ import { VitePWA } from 'vite-plugin-pwa'
 import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
+import packageJson from './package.json' // <--- On importe ta version Pro (1.1.0)
 
-// --- 1. RÉCUPÉRATION AUTOMATIQUE DU HASH GIT ---
+// --- 1. HASH GIT (Pour la détection technique fiable & auto) ---
 const getGitHash = () => {
   try {
-    // Si on est sur Render, ils fournissent le commit via variable d'env
     if (process.env.RENDER_GIT_COMMIT) {
       return process.env.RENDER_GIT_COMMIT.trim();
     }
-    // Sinon (en local), on demande à Git
     return execSync('git rev-parse --short HEAD').toString().trim();
   } catch (e) {
-    console.warn("⚠️ Impossible de lire le hash git, utilisation timestamp.");
-    return Date.now().toString(); // Fallback
+    return Date.now().toString();
   }
 };
 
-const appVersion = getGitHash();
+const buildHash = getGitHash(); // ex: "a1b2c3d"
 
-// --- 2. PLUGIN POUR GÉNÉRER version.json AUTOMATIQUEMENT ---
+// --- 2. TON PLUGIN AUTOMATIQUE (On le garde !) ---
 const generateVersionJson = () => {
   return {
     name: 'generate-version-json',
     writeBundle() {
-      // On écrit le fichier directement dans le dossier de sortie (dist)
-      const versionData = { version: appVersion };
+      // On écrit le HASH dans le fichier version.json (pour la détection)
+      const versionData = { version: buildHash };
       const outputPath = path.resolve(__dirname, 'dist', 'version.json');
       
-      // Sécurité : on s'assure que 'dist' existe (parfois Vite le vide)
       if (!fs.existsSync(path.resolve(__dirname, 'dist'))) {
         fs.mkdirSync(path.resolve(__dirname, 'dist'));
       }
       
       fs.writeFileSync(outputPath, JSON.stringify(versionData));
-      console.log(`✅ [Auto-Update] version.json généré : ${appVersion}`);
+      console.log(`✅ [Auto-Update] version.json généré avec Hash : ${buildHash}`);
     }
   }
 }
 
 export default defineConfig({
-  // On rend la version accessible partout dans le code JS
+  // C'est ICI la magie : On donne 2 infos à l'app
   define: {
-    '__APP_VERSION__': JSON.stringify(appVersion),
+    // 1. Pour l'affichage Pro ("v1.1.0")
+    '__APP_VERSION__': JSON.stringify(packageJson.version),
+    // 2. Pour la détection Technique ("a1b2c3d")
+    '__BUILD_HASH__': JSON.stringify(buildHash),
   },
   plugins: [
     react(),
-    generateVersionJson(), // Notre plugin maison
+    generateVersionJson(), // Ton plugin qui bosse tout seul
     VitePWA({
       registerType: 'prompt',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
@@ -74,14 +74,14 @@ export default defineConfig({
       },
       workbox: {
         cleanupOutdatedCaches: true,
-        // Important pour ne pas mettre en cache le fichier de version
         runtimeCaching: [
           {
+            // On force le réseau pour le fichier de version
             urlPattern: /\/version\.json/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'version-check',
-              expiration: { maxEntries: 1, maxAgeSeconds: 0 } // 0 seconde de cache
+              expiration: { maxEntries: 1, maxAgeSeconds: 0 }
             }
           }
         ]

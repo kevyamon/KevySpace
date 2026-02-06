@@ -3,28 +3,27 @@ import React, { useContext } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { UpdateProvider } from './context/UpdateContext'; // <--- IMPORT
 import { Toaster } from 'react-hot-toast';
 import MobileLayout from './components/MobileLayout';
 import UpdateNotification from './components/UpdateNotification';
 import GlobalLoader from './components/GlobalLoader';
 
+// ... (Gardons tes imports de pages tels quels) ...
 // --- PAGES PUBLIQUES ---
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
-
 // --- PAGES COMMUNES ---
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Notifications from './pages/Notifications';
 import Watch from './pages/Watch';
-
-// --- PAGES ÉTUDIANT (USER) ---
+// --- PAGES ÉTUDIANT ---
 import Favorites from './pages/Favorites';
 import History from './pages/History';
 import Certificates from './pages/Certificates';
 import Resources from './pages/Resources';
-
 // --- PAGES ADMIN ---
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUpload from './pages/admin/AdminUpload';
@@ -32,10 +31,8 @@ import AdminResources from './pages/admin/AdminResources';
 import AdminCertificates from './pages/admin/AdminCertificates'; 
 
 function App() {
-  // On récupère uniquement le 'loading' maître du Context
   const { user, loading } = useContext(AuthContext);
 
-  // Redirection intelligente
   const getHomeRoute = () => {
     if (!user) return <Landing />;
     if (user.role === 'admin') return <AdminDashboard />;
@@ -44,35 +41,26 @@ function App() {
 
   return (
     <NotificationProvider>
-      
-      {/* 1. LE LOADER GLOBAL EN "OVERLAY" */}
-      {/* Il obéit directement au Context (piloté par les pages) */}
-      {loading && (
-        <GlobalLoader text="Chargement..." />
-      )}
+      <UpdateProvider> {/* <--- ON ENGLOBE TOUT ICI */}
+        
+        {loading && <GlobalLoader text="Chargement..." />}
 
-      {/* 2. L'APPLICATION */}
-      {/* On cache visuellement l'app tant que ça charge pour éviter les flashs */}
-      <div style={{ 
-        opacity: loading ? 0 : 1, 
-        transition: 'opacity 0.3s' 
-      }}>
-        <MobileLayout>
-          
-          <Toaster 
-            position="top-center"
-            containerStyle={{ zIndex: 9999999 }}
-            toastOptions={{
-              style: { borderRadius: '16px', background: '#333', color: '#fff', fontSize: '14px', fontWeight: '500' },
-              success: { style: { background: '#E5F9E5', color: '#1D1D1F', border: '1px solid #34C759' }, iconTheme: { primary: '#34C759', secondary: '#E5F9E5' } },
-              error: { style: { background: '#FFE5E5', color: '#1D1D1F', border: '1px solid #FF3B30' }, iconTheme: { primary: '#FF3B30', secondary: '#FFE5E5' } },
-            }}
-          />
+        <div style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.3s' }}>
+          <MobileLayout>
+            <Toaster 
+              position="top-center"
+              containerStyle={{ zIndex: 9999999 }}
+              toastOptions={{
+                style: { borderRadius: '16px', background: '#333', color: '#fff', fontSize: '14px', fontWeight: '500' },
+                success: { style: { background: '#E5F9E5', color: '#1D1D1F', border: '1px solid #34C759' }, iconTheme: { primary: '#34C759', secondary: '#E5F9E5' } },
+                error: { style: { background: '#FFE5E5', color: '#1D1D1F', border: '1px solid #FF3B30' }, iconTheme: { primary: '#FF3B30', secondary: '#FFE5E5' } },
+              }}
+            />
 
-          <UpdateNotification />
-          
-          <Routes>
-            {/* ROUTES PUBLIQUES */}
+            <UpdateNotification />
+            
+            <Routes>
+               {/* ROUTES PUBLIQUES */}
             <Route path="/" element={getHomeRoute()} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -96,10 +84,11 @@ function App() {
             <Route path="/admin/certificates" element={user?.role === 'admin' ? <AdminCertificates /> : <Navigate to="/" />} />
 
             <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
+            </Routes>
 
-        </MobileLayout>
-      </div>
+          </MobileLayout>
+        </div>
+      </UpdateProvider>
     </NotificationProvider>
   );
 }

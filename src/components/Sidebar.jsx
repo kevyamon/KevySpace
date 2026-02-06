@@ -3,14 +3,15 @@ import React, { useContext, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { useUpdate } from '../context/UpdateContext'; // <--- IMPORT DU CONTEXT
 import ContactModal from './ContactModal'; 
 import logoImg from '../assets/logo.png'; 
-import packageJson from '../../package.json'; // <--- 1. IMPORT DIRECT DE LA VERSION
+import packageJson from '../../package.json'; 
 
 import { 
-  X, Home, User, LogOut, 
-  Heart, FileText, Download, Clock,
-  LayoutDashboard, UploadCloud, HelpCircle, Award
+  X, Home, User, LogOut, Heart, FileText, Download, Clock,
+  LayoutDashboard, UploadCloud, HelpCircle, Award,
+  RefreshCw // Icone pour la maj
 } from 'lucide-react';
 
 const useIsMobile = () => {
@@ -25,6 +26,7 @@ const useIsMobile = () => {
 
 const Sidebar = ({ isOpen, onClose }) => {
   const { user, logout } = useContext(AuthContext);
+  const { triggerManualCheck, updateStatus } = useUpdate(); // <--- RÉCUPÉRATION
   const navigate = useNavigate();
   const location = useLocation();
   const [isContactOpen, setIsContactOpen] = useState(false);
@@ -64,7 +66,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   const renderMenuContent = () => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       
-      {/* HEADER */}
+      {/* HEADER ... (Code existant inchangé) ... */}
       <div style={{ marginBottom: '20px', textAlign: 'center', display:'flex', flexDirection:'column', alignItems:'center' }}>
         {isMobile ? (
            <>
@@ -79,11 +81,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 overflow: 'hidden'
               }}>
                 {user?.profilePicture ? (
-                  <img 
-                    src={user.profilePicture} 
-                    alt="Avatar" 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                  />
+                  <img src={user.profilePicture} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   user?.name?.charAt(0).toUpperCase()
                 )}
@@ -95,30 +93,14 @@ const Sidebar = ({ isOpen, onClose }) => {
            </>
         ) : (
            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '12px', width: '100%', marginBottom: '4px' }}>
-              <div style={{ 
-                  width: '40px', height: '40px', 
-                  minWidth: '40px', minHeight: '40px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>
-                <img 
-                  src={logoImg} 
-                  alt="Logo" 
-                  style={{ 
-                    width: '40px', 
-                    height: '40px', 
-                    objectFit: 'cover',
-                    borderRadius: '50%',
-                    clipPath: 'circle(50% at 50% 50%)',
-                    WebkitClipPath: 'circle(50% at 50% 50%)' 
-                  }} 
-                />
+              <div style={{ width: '40px', height: '40px', minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src={logoImg} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '50%', clipPath: 'circle(50% at 50% 50%)', WebkitClipPath: 'circle(50% at 50% 50%)' }} />
               </div>
               <span style={{ fontSize: '20px', fontWeight: '800', color: '#1D1D1F' }}>KevySpace</span>
            </div>
         )}
       </div>
 
-      {/* LISTE DES LIENS */}
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '4px' }}>
         {user?.role !== 'admin' && (
           <>
@@ -126,8 +108,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               onClick={() => setIsContactOpen(true)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '14px',
-                padding: '12px 16px', 
-                borderRadius: '16px', border: 'none',
+                padding: '12px 16px', borderRadius: '16px', border: 'none',
                 backgroundColor: isMobile ? '#FFF' : '#F5F5F7', 
                 color: '#1D1D1F', fontWeight: '600',
                 cursor: 'pointer', textAlign: 'left', fontSize: '14px',
@@ -157,8 +138,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               onClick={() => handleNavigate(item.path)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '14px',
-                padding: '10px 16px', 
-                borderRadius: '14px', border: 'none',
+                padding: '10px 16px', borderRadius: '14px', border: 'none',
                 backgroundColor: isActive ? (isMobile ? 'rgba(0,0,0,0.05)' : '#1D1D1F') : 'transparent',
                 color: isActive ? (isMobile ? '#000' : '#FFF') : (item.isAdmin ? '#FF3B30' : '#1D1D1F'),
                 fontWeight: isActive ? '700' : '500',
@@ -172,9 +152,27 @@ const Sidebar = ({ isOpen, onClose }) => {
             </button>
           );
         })}
+        
+        {/* NOUVEAU BOUTON : MISE À JOUR */}
+        <div style={{ height: '1px', background: 'rgba(0,0,0,0.05)', margin: '4px 0' }}></div>
+        <button
+          onClick={() => { triggerManualCheck(); if(onClose) onClose(); }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '14px',
+            padding: '10px 16px', borderRadius: '14px', border: 'none',
+            backgroundColor: 'transparent',
+            color: updateStatus === 'waiting' ? '#FF9500' : '#86868B', // Orange si en attente, Gris sinon
+            fontWeight: '600',
+            cursor: 'pointer', transition: 'all 0.2s',
+            textAlign: 'left', fontSize: '14px', 
+          }}
+        >
+          <RefreshCw size={18} />
+          {updateStatus === 'waiting' ? 'Mise à jour (En attente)' : 'Vérifier mise à jour'}
+        </button>
+
       </div>
 
-      {/* FOOTER : VERSION & LOGOUT */}
       <div style={{ marginTop: '16px' }}>
         <button
           onClick={handleLogout}
@@ -188,16 +186,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           <LogOut size={18} />
           Se déconnecter
         </button>
-        <p style={{ 
-          textAlign: 'center', 
-          fontSize: '10px', 
-          color: '#AAA', 
-          marginTop: '8px',
-          fontWeight: '500',
-          opacity: 0.7, 
-          letterSpacing: '0.5px'
-        }}>
-          {/* 2. AFFICHAGE DE LA VERSION DU PACKAGE.JSON */}
+        <p style={{ textAlign: 'center', fontSize: '10px', color: '#AAA', marginTop: '8px', fontWeight: '500', opacity: 0.7, letterSpacing: '0.5px' }}>
           KevySpace v{packageJson.version}
         </p>
       </div>
@@ -213,16 +202,13 @@ const Sidebar = ({ isOpen, onClose }) => {
     );
   }
 
+  // Rendu Mobile ... (Inchangé)
   return (
     <>
       <AnimatePresence>
         {isOpen && (
           <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={onClose}
-              style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(4px)', zIndex: 9998 }}
-            />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(4px)', zIndex: 9998 }} />
             <motion.div
               initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
