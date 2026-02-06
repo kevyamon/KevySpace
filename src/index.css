@@ -1,4 +1,4 @@
-index.css
+/* src/index.css */
 
 /* ===========================
    1. VARIABLES & SYSTEME DE DESIGN
@@ -66,16 +66,10 @@ index.css
 }
 
 /* ===========================
-   3. BASE GLOBALE & RESPONSIVE
+   3. BASE MOBILE (FENÊTRE FIXE)
    =========================== */
-html {
+html, body {
   height: 100%;
-  width: 100%;
-  font-size: 16px;
-}
-
-body {
-  min-height: 100vh;
   width: 100%;
   
   /* Utilisation des variables dynamiques */
@@ -87,19 +81,20 @@ body {
   
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Roboto, sans-serif;
   
-  /* Gestion du scroll */
-  overflow-x: hidden;
-  overflow-y: auto; /* Scroll naturel sur PC */
+  /* 🛑 STOP SCROLL GLOBAL */
+  overflow: hidden; 
+  position: fixed; 
   -webkit-overflow-scrolling: touch;
+  font-size: 16px;
 }
 
 #root {
-  min-height: 100vh;
+  height: 100%;
   width: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden; 
   position: relative;
-  isolation: isolate; /* Crée un nouveau contexte d'empilement propre */
 }
 
 img, video {
@@ -109,7 +104,37 @@ img, video {
 }
 
 /* ===========================
-   4. UTILITAIRES
+   4. MODE DESKTOP (SIMULATEUR)
+   =========================== */
+@media (min-width: 500px) {
+  body {
+    /* Fond du simulateur (hors téléphone) - Reste sombre pour le contraste */
+    background-color: #111111; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overflow: hidden; 
+  }
+
+  #root {
+    max-width: 420px;
+    height: 90vh; 
+    max-height: 850px;
+    
+    background-color: var(--color-bg); /* Le téléphone prend la couleur du thème */
+    border-radius: 40px;
+    overflow: hidden; 
+    
+    box-shadow: 
+      0 0 0 10px #333,
+      0 20px 50px rgba(0, 0, 0, 0.5);
+    position: relative;
+  }
+}
+
+/* ===========================
+   5. UTILITAIRES
    =========================== */
 @supports (padding: max(0px)) {
   body {
@@ -130,14 +155,13 @@ input, textarea, select {
 
 /* Scrollbar adaptée au thème */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-text-secondary);
+  background: var(--color-text-secondary); /* Couleur dynamique */
   border-radius: 10px;
   opacity: 0.5;
 }
