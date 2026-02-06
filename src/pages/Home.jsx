@@ -1,13 +1,14 @@
 // src/pages/Home.jsx
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { SearchX, ArrowUp, RefreshCw } from 'lucide-react'; 
+import { SearchX, ArrowUp } from 'lucide-react'; 
 import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 import HomeHeader from '../components/HomeHeader';
 import VideoCard from '../components/VideoCard';
+import RefreshButton from '../components/RefreshButton';
 
 const ScrollToTopButton = () => {
     const [visible, setVisible] = useState(false);
@@ -89,30 +90,10 @@ const Home = () => {
           {searchQuery ? `Résultats pour "${searchQuery}"` : 'Récemment ajoutés'}
         </h2>
         
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={handleRefresh}
-          disabled={refreshing}
-          style={{
-            background: 'var(--bg-input)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '50%',
-            width: '40px',
-            height: '40px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: refreshing ? 'not-allowed' : 'pointer',
-            boxShadow: '0 2px 8px var(--shadow-color)'
-          }}
-        >
-          <motion.div
-            animate={{ rotate: refreshing ? 360 : 0 }}
-            transition={{ duration: 1, repeat: refreshing ? Infinity : 0, ease: "linear" }}
-          >
-            <RefreshCw size={20} color="var(--color-text-main)" />
-          </motion.div>
-        </motion.button>
+        <RefreshButton 
+          onClick={handleRefresh} 
+          refreshing={refreshing} 
+        />
       </div>
 
       {filteredVideos.length === 0 ? (
