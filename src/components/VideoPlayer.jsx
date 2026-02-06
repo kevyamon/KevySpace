@@ -29,13 +29,13 @@ const VideoPlayer = ({ videoUrl, thumbnailUrl, onPlay }) => {
         </button>
       </div>
 
+      {/* FIX FULLSCREEN: Retrait de controlsList qui bloquait parfois */}
       <video 
         src={videoUrl} 
         controls 
-        controlsList="nodownload" 
         style={{ width: '100%', height: '100%', objectFit: 'contain' }}
         poster={thumbnailUrl}
-        onPlay={onPlay} // <--- DÉCLENCHEUR ESSENTIEL
+        onPlay={onPlay}
       />
     </div>
   );
