@@ -4,11 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Button from '../components/Button';
 import { Rocket, ShieldCheck, Zap } from 'lucide-react';
-import packageJson from '../../package.json'; // <--- 1. IMPORT DE LA VERSION
+import packageJson from '../../package.json'; 
 
 const Landing = () => {
   const navigate = useNavigate();
-  const currentYear = new Date().getFullYear(); // <--- 2. ANNÉE AUTOMATIQUE
+  const currentYear = new Date().getFullYear(); 
 
   return (
     <div style={{
@@ -17,10 +17,10 @@ const Landing = () => {
       width: '100%',
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center', // CENTRAGE HORIZONTAL DES ENFANTS
+      alignItems: 'center', 
       padding: '20px', 
-      paddingTop: '50px', 
-      paddingBottom: '32px', 
+      paddingTop: '30px', // RÉDUIT (avant: 50px)
+      paddingBottom: '20px', // RÉDUIT (avant: 32px)
       overflowX: 'hidden', 
     }}>
       
@@ -30,7 +30,7 @@ const Landing = () => {
         width: '100%', 
         display: 'flex', 
         flexDirection: 'column', 
-        alignItems: 'center' // Centrage spécifique du header
+        alignItems: 'center' 
       }}>
         
         {/* APP NAME CENTRÉ */}
@@ -40,9 +40,9 @@ const Landing = () => {
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
           <h1 style={{ 
-            fontSize: 'clamp(36px, 10vw, 48px)', 
+            fontSize: 'clamp(32px, 8vw, 42px)', // LÉGÈREMENT RÉDUIT
             lineHeight: '1.1', 
-            marginBottom: '16px',
+            marginBottom: '12px',
             fontWeight: '800',
             textAlign: 'center',
           }}>
@@ -50,57 +50,56 @@ const Landing = () => {
           </h1>
         </motion.div>
 
-        {/* SLOGAN "VAGUE" (GROS TITRE) */}
-        <div style={{ marginBottom: '12px', textAlign: 'center' }}>
+        {/* SLOGAN */}
+        <div style={{ marginBottom: '8px', textAlign: 'center' }}>
           <WavyText 
             text="La formation réinventée." 
             delay={0.3}
             style={{
-              fontSize: '26px', // Gros titre
+              fontSize: '22px', // RÉDUIT (26px -> 22px)
               fontWeight: '700',
               color: 'var(--color-text-main)',
               lineHeight: '1.2',
             }}
           />
           
-          {/* Sous-titre plus discret */}
           <motion.p 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.5, duration: 0.8 }}
             style={{ 
-              fontSize: '15px', 
+              fontSize: '14px', 
               color: 'var(--color-text-secondary)', 
               fontWeight: '500',
-              marginTop: '8px'
+              marginTop: '6px'
             }}
           >
             Sécurisée. Fluide. Privée.
           </motion.p>
         </div>
 
-        {/* LISTE FEATURES (ZIG-ZAG) */}
+        {/* LISTE FEATURES (COMPACTÉE) */}
         <div style={{ 
-          marginTop: '48px', 
+          marginTop: '24px', // FORTEMENT RÉDUIT (48px -> 24px)
           display: 'flex', 
           flexDirection: 'column', 
-          gap: '24px',
+          gap: '16px', // RÉDUIT (24px -> 16px)
           width: '100%' 
         }}>
           <FeatureItem 
-            icon={<Rocket size={20} color="#FFD700" />} 
+            icon={<Rocket size={18} color="#FFD700" />} 
             text="Apprentissage ultra-rapide" 
             delay={0.4} 
             direction="left"
           />
           <FeatureItem 
-            icon={<ShieldCheck size={20} color="#FFD700" />} 
+            icon={<ShieldCheck size={18} color="#FFD700" />} 
             text="Contenu 100% sécurisé" 
             delay={0.6} 
             direction="right"
           />
           <FeatureItem 
-            icon={<Zap size={20} color="#FFD700" />} 
+            icon={<Zap size={18} color="#FFD700" />} 
             text="Expérience fluide" 
             delay={0.8} 
             direction="left"
@@ -109,7 +108,7 @@ const Landing = () => {
       </div>
 
       {/* 2. SPACER FLEXIBLE */}
-      <div style={{ flex: '1 1 auto', minHeight: '32px' }}></div>
+      <div style={{ flex: '1 1 auto', minHeight: '20px' }}></div>
 
       {/* 3. BOUTONS CTA */}
       <motion.div 
@@ -119,26 +118,27 @@ const Landing = () => {
         style={{ 
           display: 'flex', 
           flexDirection: 'column', 
-          gap: '12px',
+          gap: '10px', // Espacement réduit entre boutons
           flex: '0 0 auto',
           width: '100%'
         }}
       >
-        <Button fullWidth onClick={() => navigate('/login')} pulse={true}>
+        {/* BOUTONS EN TAILLE SMALL */}
+        <Button fullWidth onClick={() => navigate('/login')} pulse={true} size="small">
           Se connecter
         </Button>
-        <Button variant="secondary" fullWidth onClick={() => navigate('/register')} pulse={true}>
+        <Button variant="secondary" fullWidth onClick={() => navigate('/register')} pulse={true} size="small">
           Créer un compte
         </Button>
         
-        {/* FOOTER : VERSION DYNAMIQUE + COPYRIGHT */}
+        {/* FOOTER BIEN VISIBLE MAINTENANT */}
         <div style={{ 
           textAlign: 'center', 
-          fontSize: '11px', 
+          fontSize: '10px', 
           color: '#999', 
-          marginTop: '12px',
+          marginTop: '10px',
           fontWeight: '500',
-          lineHeight: '1.5' // Un peu d'air entre les lignes
+          lineHeight: '1.4' 
         }}>
           <p style={{ margin: 0 }}>Par Kevin Amon@{currentYear} Tout droit réservé</p>
           <p style={{ margin: 0 }}>v{packageJson.version} • Mobile Experience</p>
@@ -151,16 +151,14 @@ const Landing = () => {
 
 /* --- COMPOSANTS INTERNES --- */
 
-// Composant pour l'effet Vague (Lettre par lettre)
 const WavyText = ({ text, style, delay = 0 }) => {
-  // On décompose le texte en lettres
   const letters = Array.from(text);
 
   const container = {
     hidden: { opacity: 0 },
     visible: (i = 1) => ({
       opacity: 1,
-      transition: { staggerChildren: 0.05, delayChildren: delay }, // Effet cascade rapide
+      transition: { staggerChildren: 0.05, delayChildren: delay }, 
     }),
   };
 
@@ -168,20 +166,12 @@ const WavyText = ({ text, style, delay = 0 }) => {
     visible: {
       opacity: 1,
       y: 0,
-      transition: {
-        type: "spring",
-        damping: 12,
-        stiffness: 200,
-      },
+      transition: { type: "spring", damping: 12, stiffness: 200 },
     },
     hidden: {
       opacity: 0,
-      y: 20, // Les lettres viennent du bas
-      transition: {
-        type: "spring",
-        damping: 12,
-        stiffness: 200,
-      },
+      y: 20, 
+      transition: { type: "spring", damping: 12, stiffness: 200 },
     },
   };
 
@@ -194,14 +184,13 @@ const WavyText = ({ text, style, delay = 0 }) => {
     >
       {letters.map((letter, index) => (
         <motion.span variants={child} key={index} style={{ display: 'inline-block' }}>
-          {letter === " " ? "\u00A0" : letter} {/* Gestion des espaces insécables */}
+          {letter === " " ? "\u00A0" : letter} 
         </motion.span>
       ))}
     </motion.div>
   );
 };
 
-// Composant FeatureItem avec direction
 const FeatureItem = ({ icon, text, delay, direction }) => {
   const startX = direction === 'left' ? -50 : 50;
 
@@ -209,23 +198,14 @@ const FeatureItem = ({ icon, text, delay, direction }) => {
     <motion.div 
       initial={{ opacity: 0, x: startX }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ 
-        delay, 
-        type: "spring", 
-        stiffness: 80,
-        damping: 15
-      }}
-      style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '14px' 
-      }}
+      transition={{ delay, type: "spring", stiffness: 80, damping: 15 }}
+      style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
     >
       <div style={{ 
         background: '#fff', 
-        padding: '12px',
-        borderRadius: '12px', 
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', // Ombre légèrement renforcée
+        padding: '10px', // Padding réduit
+        borderRadius: '10px', 
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', 
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -234,7 +214,7 @@ const FeatureItem = ({ icon, text, delay, direction }) => {
       </div>
       <span style={{ 
         fontWeight: '600', 
-        fontSize: '15px', // Un poil plus lisible
+        fontSize: '14px', // Police réduite
         color: 'var(--color-text-main)',
       }}>
         {text}

@@ -6,19 +6,33 @@ import { Loader2 } from 'lucide-react';
 const Button = ({ 
   children, 
   onClick, 
-  variant = 'primary', // 'primary', 'secondary', 'outline', 'danger'
+  variant = 'primary', 
+  size = 'medium', // <--- NOUVELLE PROP (small, medium, large)
   isLoading = false, 
   type = 'button',
   fullWidth = false,
-  pulse = false // NOUVELLE PROP : Active l'effet respiration
+  pulse = false 
 }) => {
   
-  // Styles dynamiques
+  // Gestion des tailles
+  const getSizeStyle = () => {
+    switch (size) {
+      case 'small':
+        return { padding: '10px 16px', fontSize: '14px' }; // Plus compact
+      case 'large':
+        return { padding: '20px 32px', fontSize: '18px' };
+      case 'medium':
+      default:
+        return { padding: '16px 24px', fontSize: '16px' }; // Taille standard actuelle
+    }
+  };
+
   const getStyle = () => {
+    const sizeStyle = getSizeStyle();
+    
     const base = {
-      padding: '16px 24px',
+      ...sizeStyle, // On applique la taille choisie
       borderRadius: 'var(--radius-l)',
-      fontSize: '16px',
       fontWeight: '600',
       border: 'none',
       cursor: isLoading ? 'not-allowed' : 'pointer',
@@ -27,7 +41,7 @@ const Button = ({
       justifyContent: 'center',
       gap: '8px',
       width: fullWidth ? '100%' : 'auto',
-      transition: 'background-color 0.2s ease, color 0.2s ease', // On laisse Framer gérer le scale
+      transition: 'background-color 0.2s ease, color 0.2s ease', 
     };
 
     switch (variant) {
@@ -44,12 +58,11 @@ const Button = ({
     }
   };
 
-  // Configuration de l'animation de respiration
   const breathingAnimation = {
-    scale: [1, 1.03, 1], // Zoom très léger (3%)
+    scale: [1, 1.03, 1], 
     boxShadow: [
       "0px 0px 0px rgba(0,0,0,0)",
-      "0px 4px 12px rgba(255, 215, 0, 0.4)", // Lueur dorée subtile au pic
+      "0px 4px 12px rgba(255, 215, 0, 0.4)", 
       "0px 0px 0px rgba(0,0,0,0)"
     ]
   };
@@ -60,34 +73,19 @@ const Button = ({
       onClick={onClick}
       style={getStyle()}
       disabled={isLoading}
-      
-      // ANIMATION D'ENTRÉE + RESPIRATION (Si demandée)
       initial={{ opacity: 0, y: 10 }}
-      animate={
-        pulse && !isLoading
-          ? { opacity: 1, y: 0, ...breathingAnimation } // Entrée + Respiration
-          : { opacity: 1, y: 0 } // Juste l'entrée
-      }
+      animate={pulse && !isLoading ? { opacity: 1, y: 0, ...breathingAnimation } : { opacity: 1, y: 0 }}
       transition={
         pulse && !isLoading
           ? { 
               opacity: { duration: 0.3 }, 
               y: { duration: 0.3 },
-              scale: { 
-                duration: 2, // Cycle lent de 2 secondes
-                repeat: Infinity, 
-                ease: "easeInOut" 
-              },
-              boxShadow: {
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }
+              scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+              boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
             }
           : { duration: 0.3 }
       }
-      
-      whileTap={{ scale: 0.96 }} // Le "clic" reste prioritaire
+      whileTap={{ scale: 0.96 }} 
     >
       {isLoading && <Loader2 className="animate-spin" size={20} />}
       {children}
