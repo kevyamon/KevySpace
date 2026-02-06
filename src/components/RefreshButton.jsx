@@ -1,9 +1,42 @@
 // src/components/RefreshButton.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw } from 'lucide-react';
 
 const RefreshButton = ({ onClick, refreshing, disabled }) => {
+  const [progress, setProgress] = useState(0);
+
+  // Gestion de la progression de la jauge
+  useEffect(() => {
+    let animationFrame;
+    let startTime;
+    
+    if (refreshing) {
+      setProgress(0);
+      startTime = Date.now();
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        // Animation de 2 secondes pour remplir complètement
+        const newProgress = Math.min(elapsed / 2000, 1);
+        setProgress(newProgress);
+        
+        if (newProgress < 1) {
+          animationFrame = requestAnimationFrame(animate);
+        }
+      };
+      
+      animationFrame = requestAnimationFrame(animate);
+    } else {
+      setProgress(0);
+    }
+    
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [refreshing]);
+
   return (
     <motion.button
       whileTap={{ scale: 0.95 }}
@@ -13,17 +46,17 @@ const RefreshButton = ({ onClick, refreshing, disabled }) => {
         position: 'relative',
         background: 'var(--bg-input)',
         border: '1px solid var(--border-color)',
-        borderRadius: '12px', // Rectangulaire avec bords adoucis
+        borderRadius: '12px',
         padding: '0 16px',
         height: '40px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: '10px',
         cursor: (refreshing || disabled) ? 'not-allowed' : 'pointer',
         boxShadow: '0 2px 8px var(--shadow-color)',
-        overflow: 'hidden', // Pour contenir la jauge
-        minWidth: '120px' // Largeur minimale pour le texte
+        overflow: 'hidden',
+        minWidth: '120px',
+        transition: 'all 0.2s ease'
       }}
     >
       {/* Jauge de progression en arrière-plan */}
@@ -31,20 +64,16 @@ const RefreshButton = ({ onClick, refreshing, disabled }) => {
         {refreshing && (
           <motion.div
             initial={{ width: '0%' }}
-            animate={{ width: '100%' }}
+            animate={{ width: `${progress * 100}%` }}
             exit={{ opacity: 0 }}
-            transition={{ 
-              duration: 1.5, 
-              ease: "easeInOut", 
-              repeat: Infinity // Boucle tant que ça charge
-            }}
+            transition={{ duration: 0.1 }}
             style={{
               position: 'absolute',
               left: 0,
               top: 0,
               bottom: 0,
-              background: 'var(--color-text-secondary)', // Ou une couleur d'accentuation
-              opacity: 0.1, // Transparence pour ne pas masquer le texte
+              background: 'var(--color-text-secondary)',
+              opacity: 0.1,
               zIndex: 0
             }}
           />
@@ -52,22 +81,48 @@ const RefreshButton = ({ onClick, refreshing, disabled }) => {
       </AnimatePresence>
 
       {/* Contenu au premier plan */}
-      <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <motion.div
-            animate={{ rotate: refreshing ? 360 : 0 }}
-            transition={{ duration: 1, repeat: refreshing ? Infinity : 0, ease: "linear" }}
-        >
-            <RefreshCw size={16} color="var(--color-text-main)" />
-        </motion.div>
-        
+      <div style={{ 
+        position: 'relative', 
+        zIndex: 1, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        width: '100%'
+      }}>
         <span style={{ 
-            fontSize: '14px', 
-            fontWeight: '600', 
-            color: 'var(--color-text-main)' 
+          fontSize: '14px', 
+          fontWeight: '600', 
+          color: 'var(--color-text-main)',
+          whiteSpace: 'nowrap'
         }}>
-            {refreshing ? 'Chargement...' : 'Actualiser'}
+          {refreshing ? 'Actualisation...' : 'Actualiser'}
         </span>
+        
+        {/* Indicateur visuel minimal pendant le rafraîchissement */}
+        {refreshing && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              width: '4px',
+              height: '4px',
+              borderRadius: '50%',
+              background: 'var(--color-text-main)',
+              marginLeft: '8px',
+              animation: 'pulse 1.5s infinite'
+            }}
+          />
+        )}
       </div>
+
+      {/* Style CSS pour l'animation de pulse */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 1; }
+        }
+      `}</style>
     </motion.button>
   );
 };
