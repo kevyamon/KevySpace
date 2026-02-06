@@ -1,47 +1,45 @@
+// src/hooks/useAutoUpdate.js
 import { useState, useEffect } from 'react';
 
-// Intervalle de vérification (ex: toutes les 60 secondes)
-const CHECK_INTERVAL = 60 * 1000; 
+// On vérifie souvent (ex: toutes les 30 secondes) car c'est léger
+const CHECK_INTERVAL = 30 * 1000; 
 
 export const useAutoUpdate = () => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
 
   useEffect(() => {
-    // La version actuelle injectée au moment du Build (voir vite.config.js)
-    // Note: Vite remplace __APP_VERSION__ par la string réelle
-    const currentVersion = __APP_VERSION__;
+    // Récupéré depuis vite.config.js (le Hash Git du build actuel)
+    // eslint-disable-next-line no-undef
+    const localHash = __APP_VERSION__;
 
     const checkVersion = async () => {
       try {
-        // Cache Busting : on ajoute ?t=timestamp pour forcer le navigateur à ne pas utiliser le cache
+        // On ajoute ?t=... pour être sûr de ne jamais lire le cache
         const res = await fetch(`/version.json?t=${Date.now()}`);
         
         if (res.ok) {
           const remoteData = await res.json();
-          const remoteVersion = remoteData.version;
+          const remoteHash = remoteData.version;
 
-          // Comparaison : Si le hash du serveur est différent du hash local
-          if (remoteVersion && remoteVersion !== currentVersion) {
-            console.log(`🚀 Nouvelle version détectée : ${remoteVersion} (Actuelle: ${currentVersion})`);
+          // Si les Hashs sont différents, c'est qu'il y a eu un nouveau déploiement Git
+          if (remoteHash && remoteHash !== localHash) {
+            console.log(`🚀 Update Git détecté ! Local: ${localHash} -> Remote: ${remoteHash}`);
             setUpdateAvailable(true);
           }
         }
       } catch (err) {
-        console.error("Erreur vérification maj:", err);
+        // Silence en cas d'erreur réseau
       }
     };
 
-    // 1. Vérification initiale
-    // checkVersion(); // Optionnel : vérifier dès le chargement
-
-    // 2. Polling régulier
+    checkVersion();
     const interval = setInterval(checkVersion, CHECK_INTERVAL);
 
     return () => clearInterval(interval);
   }, []);
 
   const reloadPage = () => {
-    // Rechargement dur pour purger le cache JS
+    // Force le rechargement serveur
     window.location.reload(true);
   };
 
