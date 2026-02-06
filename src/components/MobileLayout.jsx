@@ -51,9 +51,11 @@ const MobileLayout = ({ children }) => {
     return (
       <div style={{ 
         minHeight: '100vh', 
+        width: '100%',
         backgroundColor: 'var(--color-bg)',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        overflow: 'auto'
       }}>
         {/* HEADER DESKTOP */}
         {showNavbar && (
@@ -90,26 +92,6 @@ const MobileLayout = ({ children }) => {
                 Kevy<span style={{ color: 'var(--color-gold)' }}>Space</span>
               </div>
             </div>
-
-            {/* BOUTON MENU POUR OUVRIR LA SIDEBAR (seulement si sidebar cachée) */}
-            {showSidebar && (
-              <button 
-                onClick={() => setIsSidebarOpen(true)}
-                style={{ 
-                  display: 'none', // Caché par défaut sur desktop
-                  background: 'var(--bg-input)', 
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '12px',
-                  width: '40px',
-                  height: '40px',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer'
-                }}
-              >
-                <Menu size={20} color="var(--color-text-main)" />
-              </button>
-            )}
           </header>
         )}
 
@@ -120,38 +102,46 @@ const MobileLayout = ({ children }) => {
           maxWidth: '1400px',
           margin: '0 auto',
           width: '100%',
-          padding: screenType === 'desktop' ? '24px' : '16px'
+          padding: '24px',
+          gap: '24px'
         }}>
           {/* SIDEBAR DESKTOP (toujours visible si connecté) */}
           {showSidebar && (
-            <div style={{
+            <aside style={{
               width: '280px',
               flexShrink: 0,
               position: 'sticky',
-              top: screenType === 'desktop' ? '88px' : '80px',
-              height: 'calc(100vh - 88px)',
+              top: '88px',
+              alignSelf: 'flex-start',
+              height: 'calc(100vh - 112px)',
               overflowY: 'auto',
+              overflowX: 'hidden',
               backgroundColor: 'var(--bg-surface)',
               borderRadius: '16px',
               border: '1px solid var(--border-color)',
-              marginRight: '24px',
               boxShadow: '0 4px 20px var(--shadow-color)'
             }}>
               <Sidebar />
-            </div>
+            </aside>
           )}
 
           {/* CONTENU */}
           <main style={{
             flex: 1,
-            backgroundColor: showSidebar ? 'transparent' : 'var(--bg-surface)',
-            borderRadius: showSidebar ? '16px' : '0',
-            border: showSidebar ? '1px solid var(--border-color)' : 'none',
-            overflow: 'hidden',
-            minHeight: 'calc(100vh - 120px)',
-            boxShadow: showSidebar ? '0 4px 20px var(--shadow-color)' : 'none'
+            minWidth: 0,
+            backgroundColor: 'transparent',
+            minHeight: 'calc(100vh - 136px)'
           }}>
-            {children}
+            <div style={{
+              backgroundColor: showSidebar ? 'var(--bg-surface)' : 'transparent',
+              borderRadius: showSidebar ? '16px' : '0',
+              border: showSidebar ? '1px solid var(--border-color)' : 'none',
+              boxShadow: showSidebar ? '0 4px 20px var(--shadow-color)' : 'none',
+              minHeight: '100%',
+              overflow: 'hidden'
+            }}>
+              {children}
+            </div>
           </main>
         </div>
       </div>
@@ -174,7 +164,7 @@ const MobileLayout = ({ children }) => {
 
         {/* NAVBAR TABLETTE */}
         {showNavbar && (
-          <div style={{
+          <header style={{
             flexShrink: 0,
             height: '64px',
             display: 'flex',
@@ -183,6 +173,8 @@ const MobileLayout = ({ children }) => {
             padding: '0 24px',
             backgroundColor: 'var(--bg-surface)',
             borderBottom: '1px solid var(--border-color)',
+            position: 'sticky',
+            top: 0,
             zIndex: 10
           }}>
             {/* BOUTON HOME */}
@@ -230,15 +222,16 @@ const MobileLayout = ({ children }) => {
                 <Menu size={24} color="var(--color-text-main)" />
               </button>
             </div>
-          </div>
+          </header>
         )}
 
         {/* CONTENU TABLETTE */}
-        <div style={{ 
+        <main style={{ 
           flex: 1,
           padding: '20px',
           overflowY: 'auto',
-          overflowX: 'hidden'
+          overflowX: 'hidden',
+          width: '100%'
         }}>
           <div style={{
             maxWidth: '800px',
@@ -247,13 +240,13 @@ const MobileLayout = ({ children }) => {
           }}>
             {children}
           </div>
-        </div>
+        </main>
       </div>
     );
   }
 
   // =========================================
-  // 3. VERSION MOBILE (< 768px)
+  // 3. VERSION MOBILE (< 768px) - CORRIGÉ
   // =========================================
   return (
     <div style={{
@@ -262,22 +255,25 @@ const MobileLayout = ({ children }) => {
       display: 'flex',
       flexDirection: 'column',
       backgroundColor: 'var(--color-bg)',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      position: 'relative'
     }}>
       
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       {/* NAVBAR MOBILE */}
       {showNavbar && (
-        <div style={{
+        <header style={{
           flexShrink: 0,
           height: '60px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 20px',
+          padding: '0 16px',
           backgroundColor: 'var(--bg-surface)',
           borderBottom: '1px solid var(--border-color)',
+          position: 'sticky',
+          top: 0,
           zIndex: 10
         }}>
           
@@ -315,25 +311,30 @@ const MobileLayout = ({ children }) => {
                 background: 'none', 
                 border: 'none', 
                 padding: 0, 
-                cursor: 'pointer' 
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
               <Menu size={24} color="var(--color-text-main)" />
             </button>
           </div>
-        </div>
+        </header>
       )}
 
-      {/* CONTENU MOBILE */}
-      <div style={{ 
+      {/* CONTENU MOBILE - OPTIMISÉ */}
+      <main style={{ 
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
         WebkitOverflowScrolling: 'touch',
-        padding: showNavbar ? '16px' : '0'
+        padding: showNavbar ? '12px' : '0',
+        width: '100%',
+        minHeight: 0
       }}>
         {children}
-      </div>
+      </main>
     </div>
   );
 };
