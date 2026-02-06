@@ -19,17 +19,20 @@ const VideoCard = ({ video, onClick }) => {
     }
   }, [video, user]);
 
+  // --- 1. FONCTION HAPTIQUE ---
   const triggerHaptic = () => {
     if (navigator.vibrate) {
-      navigator.vibrate(50); 
+      navigator.vibrate(50); // Petite secousse
     }
   };
 
+  // --- 2. LOGIQUE BUSINESS ---
   const isNew = (dateString) => {
     const diffHours = Math.abs(new Date() - new Date(dateString)) / 36e5;
     return diffHours <= 24;
   };
 
+  // Seuil Trending : 100 vues
   const isTrending = (views) => views >= 100;
 
   const handleLike = async (e) => {
@@ -90,8 +93,8 @@ const VideoCard = ({ video, onClick }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       style={{
-        // --- ADAPTATION MODE NUIT ---
-        background: 'var(--bg-glass)', // Fond vitré dynamique
+        // --- 3. STYLE MODE NUIT READY ---
+        background: 'var(--bg-glass)', // Fond dynamique (verre)
         backdropFilter: 'blur(10px)',
         border: '1px solid var(--border-color)',
         borderRadius: '24px',
@@ -111,10 +114,12 @@ const VideoCard = ({ video, onClick }) => {
           background: '#000', overflow: 'hidden', flexShrink: 0,
           boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
         }}>
+          {/* Fallback image (Dégradé sombre toujours classe) */}
           <div style={{ width: '100%', height: '100%', background: 'linear-gradient(45deg, #1D1D1F, #434343)', display:'flex', alignItems:'center', justifyContent:'center' }}>
              <PlayCircle size={32} color="#FFD700" fill="rgba(255,215,0,0.2)" />
           </div>
 
+          {/* BADGE NEW */}
           {isNew(video.createdAt) && (
             <motion.div 
               initial={{ scale: 0 }} animate={{ scale: 1 }}
@@ -131,6 +136,7 @@ const VideoCard = ({ video, onClick }) => {
             </motion.div>
           )}
 
+          {/* BADGE TRENDING (Animé) */}
           {isTrending(video.views) && (
             <motion.div 
               initial={{ scale: 0 }} animate={{ scale: [1, 1.1, 1] }} 
@@ -191,6 +197,7 @@ const VideoCard = ({ video, onClick }) => {
   );
 };
 
+// Petits composants internes (Adaptés Nuit)
 const StatBadge = ({ icon, count, active }) => (
   <div style={{ 
     display: 'flex', alignItems: 'center', gap: '4px', 

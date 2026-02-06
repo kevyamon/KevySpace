@@ -5,7 +5,7 @@ import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
-import io from 'socket.io-client'; // 1. IMPORT OBLIGATOIRE
+import io from 'socket.io-client';
 
 // Composants
 import VideoPlayer from '../components/VideoPlayer';
@@ -28,6 +28,9 @@ const Watch = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [viewsCount, setViewsCount] = useState(0);
+  
+  // NOUVEAU : On gère le compteur de commentaires ici pour l'afficher dans VideoInfo
+  const [commentsCount, setCommentsCount] = useState(0);
 
   const hasViewedRef = useRef(false);
 
@@ -45,6 +48,10 @@ const Watch = () => {
           setVideo(data);
           setViewsCount(data.views || 0);
           setLikesCount(data.likes ? data.likes.length : 0);
+          
+          // Initialisation du compteur de commentaires
+          setCommentsCount(data.comments ? data.comments.length : 0);
+          
           if (user && data.likes) setIsLiked(data.likes.includes(user._id));
           setLoading(false);
         }
@@ -56,24 +63,14 @@ const Watch = () => {
 
     if (user) fetchVideo();
 
-    // --- 3. LES OREILLES DU SOCKET (C'EST ICI QUE ÇA SE PASSE) ---
-    
-    // A. Écoute des Likes
+    // --- 3. LES OREILLES DU SOCKET ---
     const handleLikeUpdate = (payload) => {
-        if (payload.id === id) { // Si ça concerne CETTE vidéo
+        if (payload.id === id) {
             setLikesCount(payload.likes.length);
             if (user) setIsLiked(payload.likes.includes(user._id));
         }
     };
 
-    // B. Écoute des Commentaires
-    const handleCommentsUpdate = (payload) => {
-        if (payload.id === id) {
-             setVideo(prev => ({ ...prev, comments: payload.comments }));
-        }
-    };
-
-    // C. Écoute des Vues (NOUVEAU)
     const handleViewUpdate = (payload) => {
         if (payload.id === id) {
             setViewsCount(payload.views);
@@ -81,39 +78,35 @@ const Watch = () => {
     };
 
     socket.on('video_updated', handleLikeUpdate);
-    socket.on('video_comments_updated', handleCommentsUpdate);
-    socket.on('video_viewed', handleViewUpdate); // On écoute les vues
+    socket.on('video_viewed', handleViewUpdate); 
 
     // Nettoyage
     return () => { 
         isMounted = false; 
         socket.off('video_updated', handleLikeUpdate);
-        socket.off('video_comments_updated', handleCommentsUpdate);
         socket.off('video_viewed', handleViewUpdate);
     };
 
   }, [id, user, navigate]);
 
-  // -- HANDLERS (Envoient les ordres, mais n'attendent pas forcément le retour pour l'affichage local car le Socket le fera) --
+  // -- HANDLERS --
 
   const handleViewTrigger = async () => {
     if (hasViewedRef.current) return;
     try {
         hasViewedRef.current = true;
         await api.put(`/api/videos/${id}/view`);
-        // Pas besoin de setState ici, le socket 'video_viewed' va nous le renvoyer !
     } catch (err) { console.error(err); }
   };
 
   const handleLike = async () => {
-    // Optimistic UI pour la réactivité immédiate (sensation de vitesse)
+    // Optimistic UI
     const wasLiked = isLiked;
     setIsLiked(!wasLiked);
     setLikesCount(prev => wasLiked ? prev - 1 : prev + 1);
 
     try {
       await api.put(`/api/videos/${id}/like`);
-      // Le socket confirmera la vraie valeur juste après
     } catch (err) {
       setIsLiked(wasLiked);
       setLikesCount(prev => wasLiked ? prev : prev - 1);
@@ -125,38 +118,37 @@ const Watch = () => {
     toast.success("Lien copié !");
   };
 
-  const handlePostComment = async (text) => {
-    try {
-      await api.post(`/api/videos/${id}/comment`, { text });
-      toast.success("Publié !");
-    } catch (err) { toast.error("Erreur envoi"); }
-  };
-
-  const handleDeleteComment = async (commentId) => {
-    if(!window.confirm("Supprimer ce commentaire ?")) return;
-    try {
-        await api.delete(`/api/videos/${id}/comment/${commentId}`);
-        toast.success("Supprimé");
-    } catch (err) { toast.error("Erreur suppression"); }
-  };
-
-  const handleEditComment = async (commentId, newText) => {
-    try {
-        await api.put(`/api/videos/${id}/comment/${commentId}`, { text: newText });
-        toast.success("Modifié");
-    } catch (err) { toast.error("Erreur modification"); }
-  };
-
   if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loader2 className="animate-spin" color="var(--color-gold)" size={32} /></div>;
   if (!video) return null;
 
   return (
-    <div style={{ minHeight: '100%', backgroundColor: '#FFF', paddingBottom: '40px', display: 'flex', flexDirection: 'column' }}>
-      <VideoPlayer videoUrl={video.videoUrl} thumbnailUrl={video.thumbnailUrl} onPlay={handleViewTrigger} />
-      <VideoInfo video={video} viewsCount={viewsCount} likesCount={likesCount} isLiked={isLiked} onLike={handleLike} onShare={handleShare} />
+    <div style={{ minHeight: '100%', backgroundColor: 'var(--color-bg)', paddingBottom: '40px', display: 'flex', flexDirection: 'column' }}>
+      
+      <VideoPlayer 
+        videoUrl={video.videoUrl} 
+        thumbnailUrl={video.thumbnailUrl} 
+        onPlay={handleViewTrigger} 
+      />
+      
+      {/* On passe le compteur de commentaires (mis à jour par CommentsSection) */}
+      <VideoInfo 
+        video={{...video, comments: Array(commentsCount).fill(0)}} // Astuce pour que VideoInfo affiche le bon chiffre
+        viewsCount={viewsCount} 
+        likesCount={likesCount} 
+        isLiked={isLiked} 
+        onLike={handleLike} 
+        onShare={handleShare} 
+      />
+      
       <div style={{ padding: '0 20px' }}>
-        <CommentsSection comments={video.comments} currentUser={user} onPostComment={handlePostComment} onDeleteComment={handleDeleteComment} onEditComment={handleEditComment} />
+        {/* LE FIX EST ICI : On passe videoId et setCommentsCount */}
+        <CommentsSection 
+          videoId={video._id} 
+          commentsCount={commentsCount}
+          setCommentsCount={setCommentsCount}
+        />
       </div>
+      
     </div>
   );
 };
