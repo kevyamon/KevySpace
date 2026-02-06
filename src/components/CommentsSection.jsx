@@ -11,19 +11,17 @@ const LONG_PRESS_DURATION = 800;
 const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
   const { user } = useContext(AuthContext);
   
-  // --- ÉTATS ---
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [inputText, setInputText] = useState('');
+  const [inputFocused, setInputFocused] = useState(false);
 
-  // États pour la Modale Focus (Appui Long)
   const [selectedComment, setSelectedComment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false); 
 
   const timerRef = useRef(null);
 
-  // --- 1. CHARGEMENT DES COMMENTAIRES (READ) ---
   useEffect(() => {
     const fetchComments = async () => {
       if (!videoId) return;
@@ -42,7 +40,6 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
     fetchComments();
   }, [videoId]);
 
-  // --- 2. GESTION DU LONG PRESS ---
   const handleStartPress = (comment) => {
     timerRef.current = setTimeout(() => {
       if (navigator.vibrate) navigator.vibrate(50);
@@ -58,8 +55,6 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
     }
   };
 
-  // --- 3. ACTIONS (CREATE / UPDATE / DELETE) ---
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!inputText.trim()) return;
@@ -70,7 +65,6 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
       return;
     }
 
-    // Optimistic UI
     const tempId = Date.now().toString();
     const newCommentObj = {
       _id: tempId,
@@ -148,8 +142,8 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
       
       {/* HEADER COMPTEUR */}
       <div style={{ marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>
-          Commentaires <span style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>{comments.length}</span>
+        <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-gold)' }}>
+          Commentaires <span style={{ color: 'rgba(245, 243, 240, 0.5)', fontSize: '16px' }}>{comments.length}</span>
         </h3>
       </div>
 
@@ -166,55 +160,64 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
                 key={comment._id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                // --- EVENTS LONG PRESS ---
                 onTouchStart={() => handleStartPress(comment)}
                 onTouchEnd={handleEndPress}
                 onMouseDown={() => handleStartPress(comment)}
                 onMouseUp={handleEndPress}
                 onMouseLeave={handleEndPress}
-                // -------------------------
-                whileTap={{ scale: 0.98, backgroundColor: 'var(--bg-input)' }}
+                whileTap={{ scale: 0.98 }}
                 style={{
                   display: 'flex', gap: '12px',
                   padding: '12px', borderRadius: '16px',
-                  backgroundColor: 'var(--bg-surface)', // Fond dynamique
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
                   userSelect: 'none', cursor: 'pointer',
-                  border: '1px solid var(--border-color)' // Bordure dynamique
+                  border: '1px solid rgba(255, 215, 0, 0.1)'
                 }}
               >
                 {/* AVATAR */}
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-input)', overflow: 'hidden', flexShrink: 0 }}>
+                <div style={{ 
+                  width: '40px', height: '40px', borderRadius: '50%', 
+                  background: 'rgba(255, 215, 0, 0.15)', 
+                  overflow: 'hidden', flexShrink: 0,
+                  border: '1px solid rgba(255, 215, 0, 0.25)' 
+                }}>
                   {comment.user?.profilePicture ? (
                     <img src={comment.user.profilePicture} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--color-gold)', fontSize: '14px' }}>
                       {comment.user?.name ? comment.user.name[0].toUpperCase() : '?'}
                     </div>
                   )}
                 </div>
 
                 {/* TEXTE */}
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-on-bg-secondary)' }}>
                       {comment.user?.name || 'Utilisateur'}
-                      {/* Badge "Moi" */}
                       {user && (comment.user?._id === user.id || comment.user?._id === user._id) && (
-                        <span style={{ marginLeft: '6px', fontSize: '10px', background: 'var(--bg-input)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-secondary)' }}>Moi</span>
+                        <span style={{ 
+                          marginLeft: '6px', fontSize: '10px', 
+                          background: 'rgba(255, 215, 0, 0.15)', 
+                          padding: '2px 6px', borderRadius: '4px', 
+                          color: 'var(--color-gold)' 
+                        }}>
+                          Moi
+                        </span>
                       )}
                     </span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    <span style={{ fontSize: '11px', color: 'rgba(245, 243, 240, 0.4)' }}>
                       {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : ''}
                     </span>
                   </div>
-                  <p style={{ fontSize: '14px', color: 'var(--text-primary)', marginTop: '4px', lineHeight: '1.4', wordBreak: 'break-word' }}>
+                  <p style={{ fontSize: '14px', color: 'var(--color-text-on-bg-secondary)', marginTop: '4px', lineHeight: '1.4', wordBreak: 'break-word' }}>
                     {comment.text}
                   </p>
                 </div>
               </motion.div>
             ))
           ) : (
-            <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px', marginTop: '20px' }}>
+            <p style={{ textAlign: 'center', color: 'rgba(245, 243, 240, 0.5)', fontSize: '14px', marginTop: '20px' }}>
               Aucun commentaire. Soyez le premier ! 👇
             </p>
           )}
@@ -224,9 +227,9 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
       {/* INPUT ZONE */}
       <div style={{ marginTop: '20px' }}>
          {editMode && (
-             <div style={{ display:'flex', justifyContent:'space-between', fontSize:'12px', color:'var(--color-gold)', marginBottom:'4px', fontWeight:'700' }}>
+             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--color-gold)', marginBottom: '4px', fontWeight: '700' }}>
                  <span>Modification en cours...</span>
-                 <button onClick={() => { setEditMode(false); setInputText(''); }} style={{ background:'none', border:'none', color:'#FF3B30', cursor:'pointer' }}>Annuler</button>
+                 <button onClick={() => { setEditMode(false); setInputText(''); }} style={{ background: 'none', border: 'none', color: '#FF3B30', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}>Annuler</button>
              </div>
          )}
          <form onSubmit={handleSubmit} style={{ position: 'relative' }}>
@@ -236,14 +239,18 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
               placeholder={editMode ? "Modifier votre message..." : "Ajouter un commentaire..."}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
               style={{
                 width: '100%', padding: '16px 50px 16px 20px',
-                borderRadius: '24px', border: 'none',
-                backgroundColor: 'var(--bg-input)', 
-                color: 'var(--text-primary)',       
+                borderRadius: '24px', 
+                border: inputFocused ? '1px solid var(--color-gold)' : '1px solid rgba(255, 215, 0, 0.2)',
+                backgroundColor: inputFocused ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.08)',
+                color: 'var(--color-text-on-bg-secondary)',       
                 fontSize: '15px', outline: 'none',
-                boxShadow: editMode ? '0 0 0 2px var(--color-gold)' : 'none',
-                transition: 'box-shadow 0.2s'
+                boxShadow: editMode ? '0 0 0 2px var(--color-gold)' : (inputFocused ? '0 4px 20px rgba(255, 215, 0, 0.15)' : 'none'),
+                transition: 'all 0.2s ease',
+                fontFamily: 'inherit'
               }}
             />
             <button 
@@ -251,62 +258,62 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
               style={{
                 position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
                 width: '36px', height: '36px', borderRadius: '50%',
-                backgroundColor: inputText.trim() ? 'var(--color-gold)' : 'var(--bg-surface)', 
-                border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                backgroundColor: inputText.trim() ? 'var(--color-gold)' : 'rgba(255, 255, 255, 0.1)', 
+                border: inputText.trim() ? 'none' : '1px solid rgba(255, 215, 0, 0.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: inputText.trim() ? 'pointer' : 'default',
                 transition: 'background-color 0.2s'
               }}
             >
-              <Send size={18} color={inputText.trim() ? '#000' : 'var(--text-secondary)'} />
+              <Send size={18} color={inputText.trim() ? 'var(--color-bg)' : 'rgba(245, 243, 240, 0.4)'} />
             </button>
          </form>
       </div>
 
-      {/* --- MODALE FOCUS (FIXÉE ET CENTRÉE) --- */}
+      {/* --- MODALE FOCUS (ON GARDE EN SURFACE BLANCHE - C'EST UNE OVERLAY) --- */}
       <AnimatePresence>
         {isModalOpen && selectedComment && (
           <div style={{ 
-            // LE FIX EST ICI : Container fixe qui prend tout l'écran et centre le contenu
             position: 'fixed', inset: 0, zIndex: 99999,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '20px' // Marge de sécurité
+            padding: '20px'
           }}>
             
-            {/* 1. FOND FLOU (BACKDROP) */}
+            {/* BACKDROP */}
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
               style={{ 
                 position: 'absolute', inset: 0, 
-                backgroundColor: 'rgba(0,0,0,0.7)', // Un peu plus sombre
+                backgroundColor: 'rgba(0,0,0,0.7)',
                 backdropFilter: 'blur(8px)', 
               }}
             />
 
-            {/* 2. CONTENU FLOTTANT (TAILLE RÉDUITE 10%) */}
+            {/* CONTENU FLOTTANT */}
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               style={{
-                position: 'relative', // Relative au container Flex
-                width: '100%', maxWidth: '300px', // Réduit (350 -> 300)
-                display: 'flex', flexDirection: 'column', gap: '14px' // Réduit (20 -> 14)
+                position: 'relative',
+                width: '100%', maxWidth: '300px',
+                display: 'flex', flexDirection: 'column', gap: '14px'
               }}
             >
-              {/* CLONE DU COMMENTAIRE (Pour focus) */}
+              {/* CLONE DU COMMENTAIRE */}
               <div style={{ 
                 background: 'var(--bg-surface)', 
-                padding: '14px', // Réduit (16 -> 14)
-                borderRadius: '18px', // Réduit (20 -> 18)
+                padding: '14px',
+                borderRadius: '18px',
                 boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '1px solid var(--border-color)'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                   <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--bg-input)', overflow:'hidden' }}>
+                   <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--bg-input)', overflow: 'hidden' }}>
                       {selectedComment.user?.profilePicture ? (
-                          <img src={selectedComment.user.profilePicture} style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                          <img src={selectedComment.user.profilePicture} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                       ) : (
-                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--text-secondary)', fontSize:'10px' }}>
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--text-secondary)', fontSize: '10px' }}>
                             {selectedComment.user?.name?.[0]}
                           </div>
                       )}
@@ -318,7 +325,7 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
                 </p>
               </div>
 
-              {/* BOUTONS D'ACTIONS (PLUS PETITS) */}
+              {/* BOUTONS D'ACTIONS */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 
                 <ModalButton icon={<Reply size={18}/>} label="Répondre" onClick={handleReply} />
@@ -329,7 +336,6 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
                     toast.success("Copié !"); 
                 }} />
 
-                {/* ACTIONS RÉSERVÉES À L'AUTEUR (OU ADMIN) */}
                 {user && (selectedComment.user?._id === user.id || selectedComment.user?._id === user._id) && (
                   <>
                     <ModalButton icon={<Edit2 size={18}/>} label="Modifier" onClick={handleEditInit} />
@@ -357,18 +363,18 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
   );
 };
 
-// Bouton interne pour la modale (Réduit)
+// Bouton interne pour la modale (reste en surface blanche - c'est une overlay)
 const ModalButton = ({ icon, label, onClick, danger }) => (
   <motion.button
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
     style={{
-      display: 'flex', alignItems: 'center', gap: '10px', // Réduit gap
-      width: '100%', padding: '12px', // Réduit padding (16 -> 12)
+      display: 'flex', alignItems: 'center', gap: '10px',
+      width: '100%', padding: '12px',
       backgroundColor: danger ? '#FF3B30' : 'var(--bg-surface)',
       color: danger ? '#FFF' : 'var(--text-primary)',
-      border: 'none', borderRadius: '14px', // Réduit radius
-      fontSize: '13px', fontWeight: '600', cursor: 'pointer', // Réduit font
+      border: 'none', borderRadius: '14px',
+      fontSize: '13px', fontWeight: '600', cursor: 'pointer',
       boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
     }}
   >

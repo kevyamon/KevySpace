@@ -89,7 +89,7 @@ const Profile = () => {
   return (
     <div style={{ padding: '20px 24px 100px 24px', minHeight: '100%' }}>
       
-      <h1 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '24px', color: '#1D1D1F' }}>
+      <h1 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '24px', color: 'var(--color-gold)' }}>
         Mon Profil
       </h1>
 

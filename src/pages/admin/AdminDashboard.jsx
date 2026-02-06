@@ -3,11 +3,11 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
-import { Plus, Trash2, Video, Mail, Phone, Lock, Unlock } from 'lucide-react'; // Loader2 retiré
+import { Plus, Trash2, Video, Mail, Phone, Lock, Unlock, User } from 'lucide-react';
 import Button from '../../components/Button';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../../components/ConfirmModal';
-import GlobalLoader from '../../components/GlobalLoader'; // <--- 1. IMPORT AJOUTÉ
+import GlobalLoader from '../../components/GlobalLoader';
 
 const AdminDashboard = () => {
   const { user } = useContext(AuthContext); 
@@ -51,7 +51,6 @@ const AdminDashboard = () => {
     setLoading(false);
   };
 
-  // --- ACTIONS MODAL ---
   const openDeleteVideoModal = (id) => {
     setModal({
       isOpen: true,
@@ -119,8 +118,16 @@ const AdminDashboard = () => {
     }
   };
 
+  const getSecureUrl = (url) => {
+    if (!url) return null;
+    if (url === 'no-photo.jpg') return null;
+    if (!url.startsWith('http')) return null;
+    if (url.startsWith('http://')) return url.replace('http://', 'https://');
+    return url;
+  };
+
   return (
-    <div style={{ padding: '24px', paddingBottom: '100px' }}>
+    <div style={{ padding: '24px 16px 60px 16px' }}>
       <ConfirmModal 
         isOpen={modal.isOpen}
         onClose={() => setModal({ ...modal, isOpen: false })}
@@ -131,51 +138,167 @@ const AdminDashboard = () => {
         confirmText={modal.confirmText}
       />
 
-      {/* HEADER PROPRE (SANS BOUTON LOGOUT) */}
+      {/* HEADER */}
       <div style={{ marginBottom: '24px', marginTop: '10px' }}>
-        <h1 style={{ fontSize: '24px', color: 'var(--color-gold)' }}>Dashboard Admin</h1>
-        <p style={{ color: '#888', fontSize: '14px' }}>Command Center</p>
+        <h1 style={{ fontSize: '24px', color: 'var(--color-gold)', fontWeight: '800' }}>Dashboard Admin</h1>
+        <p style={{ color: 'rgba(245, 243, 240, 0.5)', fontSize: '14px' }}>Command Center</p>
       </div>
 
-      <div style={{ display: 'flex', backgroundColor: '#E5E5EA', padding: '4px', borderRadius: '16px', marginBottom: '32px' }}>
-        <button onClick={() => setActiveTab('videos')} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: 'none', fontWeight: '600', backgroundColor: activeTab === 'videos' ? '#fff' : 'transparent', color: activeTab === 'videos' ? '#000' : '#8E8E93', transition: 'all 0.2s ease', cursor: 'pointer' }}>Vidéos</button>
-        <button onClick={() => setActiveTab('users')} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: 'none', fontWeight: '600', backgroundColor: activeTab === 'users' ? '#fff' : 'transparent', color: activeTab === 'users' ? '#000' : '#8E8E93', transition: 'all 0.2s ease', cursor: 'pointer' }}>Utilisateurs</button>
+      {/* TABS */}
+      <div style={{ 
+        display: 'flex', 
+        backgroundColor: 'rgba(255, 255, 255, 0.08)', 
+        padding: '4px', 
+        borderRadius: '16px', 
+        marginBottom: '32px',
+        border: '1px solid rgba(255, 215, 0, 0.15)' 
+      }}>
+        <button 
+          onClick={() => setActiveTab('videos')} 
+          style={{ 
+            flex: 1, padding: '12px', borderRadius: '12px', border: 'none', fontWeight: '600', 
+            backgroundColor: activeTab === 'videos' ? 'var(--color-gold)' : 'transparent', 
+            color: activeTab === 'videos' ? 'var(--color-bg)' : 'rgba(245, 243, 240, 0.5)', 
+            transition: 'all 0.2s ease', cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          Vidéos
+        </button>
+        <button 
+          onClick={() => setActiveTab('users')} 
+          style={{ 
+            flex: 1, padding: '12px', borderRadius: '12px', border: 'none', fontWeight: '600', 
+            backgroundColor: activeTab === 'users' ? 'var(--color-gold)' : 'transparent', 
+            color: activeTab === 'users' ? 'var(--color-bg)' : 'rgba(245, 243, 240, 0.5)', 
+            transition: 'all 0.2s ease', cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          Utilisateurs
+        </button>
       </div>
 
       {loading ? (
-        <GlobalLoader text="Chargement des données..." /> // <--- 2. REMPLACEMENT ICI
+        <GlobalLoader text="Chargement des données..." />
       ) : (
         <>
+          {/* ONGLET VIDÉOS */}
           {activeTab === 'videos' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <Button fullWidth onClick={() => navigate('/admin/upload')}><Plus size={20} /> Nouveau cours</Button>
               {videos.map((video) => (
                 <div key={video._id} style={cardStyle}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={iconBoxStyle}><Video size={24} color="#1D1D1F" /></div>
-                    <div><h3 style={{ fontSize: '16px', fontWeight: '600' }}>{video.title}</h3></div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                    <div style={iconBoxStyle}>
+                      <Video size={22} color="#FFD700" />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <h3 style={{ 
+                        fontSize: '14px', fontWeight: '700', color: 'var(--color-text-on-bg-secondary)',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                      }}>
+                        {video.title}
+                      </h3>
+                    </div>
                   </div>
-                  <button onClick={() => openDeleteVideoModal(video._id)} style={deleteBtnStyle}><Trash2 size={18} color="#FF3B30" /></button>
+                  <button onClick={() => openDeleteVideoModal(video._id)} style={deleteBtnStyle}>
+                    <Trash2 size={18} color="#FF3B30" />
+                  </button>
                 </div>
               ))}
             </div>
           )}
+
+          {/* ONGLET UTILISATEURS */}
           {activeTab === 'users' && (
-             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-               {usersList.map((usr) => (
-                 <div key={usr._id} style={cardStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
-                       <div style={{...iconBoxStyle, backgroundColor: usr.role==='admin'?'#FFD700':'#E5E5EA'}}><span style={{fontWeight:'bold'}}>{usr.name.charAt(0).toUpperCase()}</span></div>
-                       <div style={{overflow:'hidden'}}><h3 style={{fontSize:'16px', fontWeight:'600'}}>{usr.name}</h3><p style={{fontSize:'12px', color:'#666', textOverflow:'ellipsis', overflow:'hidden'}}>{usr.email}</p></div>
-                    </div>
-                    {usr._id !== user._id && (
-                      <div style={{display:'flex', gap:'8px'}}>
-                        <button onClick={() => openBlockUserModal(usr)} style={{...deleteBtnStyle, background: usr.isBlocked ? '#FFE5E5' : '#E5F9E5'}}>{usr.isBlocked ? <Lock size={18} color="#D00"/> : <Unlock size={18} color="#0D0"/>}</button>
-                        <button onClick={() => openDeleteUserModal(usr._id)} style={deleteBtnStyle}><Trash2 size={18} color="#FF3B30" /></button>
+             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+               {usersList.map((usr) => {
+                 const avatarUrl = getSecureUrl(usr.profilePicture);
+                 
+                 return (
+                   <div key={usr._id} style={cardStyle}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                         {/* AVATAR AVEC IMAGE DE PROFIL */}
+                         <div style={{
+                           ...iconBoxStyle, 
+                           backgroundColor: avatarUrl ? 'transparent' : (usr.role === 'admin' ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255, 215, 0, 0.15)'),
+                           borderRadius: '50%',
+                           overflow: 'hidden',
+                           border: usr.role === 'admin' ? '2px solid var(--color-gold)' : '1px solid rgba(255, 215, 0, 0.25)'
+                         }}>
+                           {avatarUrl ? (
+                             <img 
+                               src={avatarUrl} 
+                               alt={usr.name} 
+                               crossOrigin="anonymous"
+                               referrerPolicy="no-referrer"
+                               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                               onError={(e) => { e.target.style.display = 'none'; }}
+                             />
+                           ) : (
+                             <span style={{ fontWeight: 'bold', color: 'var(--color-gold)', fontSize: '16px' }}>
+                               {usr.name.charAt(0).toUpperCase()}
+                             </span>
+                           )}
+                         </div>
+                         
+                         <div style={{ minWidth: 0, flex: 1 }}>
+                           <h3 style={{ 
+                             fontSize: '14px', fontWeight: '700', color: 'var(--color-text-on-bg-secondary)',
+                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                           }}>
+                             {usr.name}
+                             {usr.role === 'admin' && (
+                               <span style={{ 
+                                 marginLeft: '6px', fontSize: '10px', 
+                                 background: 'rgba(255, 215, 0, 0.2)', 
+                                 padding: '2px 6px', borderRadius: '4px', 
+                                 color: 'var(--color-gold)' 
+                               }}>
+                                 Admin
+                               </span>
+                             )}
+                           </h3>
+                           <p style={{ 
+                             fontSize: '12px', color: 'rgba(245, 243, 240, 0.5)', 
+                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                           }}>
+                             {usr.email}
+                           </p>
+                           {usr.isBlocked && (
+                             <span style={{ 
+                               fontSize: '10px', color: '#FF3B30', fontWeight: '600',
+                               background: 'rgba(255, 59, 48, 0.15)',
+                               padding: '2px 6px', borderRadius: '4px'
+                             }}>
+                               Bloqué
+                             </span>
+                           )}
+                         </div>
                       </div>
-                    )}
-                 </div>
-               ))}
+
+                      {/* ACTIONS (seulement si ce n'est pas soi-même) */}
+                      {usr._id !== user._id && (
+                        <div style={{ display: 'flex', gap: '8px', flexShrink: 0, marginLeft: '8px' }}>
+                          <button 
+                            onClick={() => openBlockUserModal(usr)} 
+                            style={{
+                              ...actionBtnStyle, 
+                              background: usr.isBlocked ? 'rgba(255, 59, 48, 0.15)' : 'rgba(52, 199, 89, 0.15)',
+                              border: usr.isBlocked ? '1px solid rgba(255, 59, 48, 0.25)' : '1px solid rgba(52, 199, 89, 0.25)'
+                            }}
+                          >
+                            {usr.isBlocked ? <Lock size={16} color="#FF3B30"/> : <Unlock size={16} color="#34C759"/>}
+                          </button>
+                          <button onClick={() => openDeleteUserModal(usr._id)} style={deleteBtnStyle}>
+                            <Trash2 size={16} color="#FF3B30" />
+                          </button>
+                        </div>
+                      )}
+                   </div>
+                 );
+               })}
              </div>
           )}
         </>
@@ -184,8 +307,36 @@ const AdminDashboard = () => {
   );
 };
 
-const cardStyle = { backgroundColor: '#fff', padding: '16px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' };
-const iconBoxStyle = { width: '48px', height: '48px', borderRadius: '14px', flexShrink: 0, backgroundColor: '#F2F2F7', display: 'flex', alignItems: 'center', justifyContent: 'center' };
-const deleteBtnStyle = { background: '#FFE5E5', border: 'none', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' };
+/* --- STYLES CONSTANTS --- */
+const cardStyle = { 
+  backgroundColor: 'rgba(255, 255, 255, 0.08)', 
+  padding: '14px 16px', 
+  borderRadius: '16px', 
+  display: 'flex', 
+  alignItems: 'center', 
+  justifyContent: 'space-between', 
+  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.15)',
+  border: '1px solid rgba(255, 215, 0, 0.1)',
+  gap: '8px'
+};
+
+const iconBoxStyle = { 
+  width: '44px', height: '44px', borderRadius: '14px', flexShrink: 0, 
+  backgroundColor: 'rgba(255, 215, 0, 0.15)', 
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  border: '1px solid rgba(255, 215, 0, 0.25)' 
+};
+
+const actionBtnStyle = { 
+  border: 'none', width: '34px', height: '34px', borderRadius: '10px', 
+  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' 
+};
+
+const deleteBtnStyle = { 
+  background: 'rgba(255, 59, 48, 0.15)', 
+  border: '1px solid rgba(255, 59, 48, 0.25)', 
+  width: '34px', height: '34px', borderRadius: '10px', 
+  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' 
+};
 
 export default AdminDashboard;
