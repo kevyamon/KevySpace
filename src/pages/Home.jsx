@@ -1,5 +1,5 @@
 // src/pages/Home.jsx
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { SearchX, ArrowUp } from 'lucide-react'; 
 import api from '../services/api';
@@ -13,23 +13,42 @@ import RefreshButton from '../components/RefreshButton';
 const ScrollToTopButton = () => {
     const [visible, setVisible] = useState(false);
     useEffect(() => {
-        const toggle = () => setVisible(window.scrollY > 300);
-        window.addEventListener('scroll', toggle);
-        return () => window.removeEventListener('scroll', toggle);
+        const toggle = () => {
+            const scrollable = document.querySelector('[data-scroll-container]');
+            if (scrollable) {
+                setVisible(scrollable.scrollTop > 300);
+            } else {
+                setVisible(window.scrollY > 300);
+            }
+        };
+        const scrollable = document.querySelector('[data-scroll-container]');
+        const target = scrollable || window;
+        target.addEventListener('scroll', toggle);
+        return () => target.removeEventListener('scroll', toggle);
     }, []);
+    
+    const handleScrollTop = useCallback(() => {
+        const scrollable = document.querySelector('[data-scroll-container]');
+        if (scrollable) {
+            scrollable.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, []);
+
     return (
         <AnimatePresence>
             {visible && (
                 <motion.button
                     initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    onClick={handleScrollTop}
                     style={{
                         position: 'fixed', bottom: '90px', right: '20px', zIndex: 99,
                         width: '45px', height: '45px', borderRadius: '50%',
-                        background: 'var(--color-text-main)',
+                        background: 'var(--color-gold)',
                         color: 'var(--color-bg)',
                         border: 'none',
-                        boxShadow: '0 4px 12px var(--shadow-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
                     }}
                 >
                     <ArrowUp size={24} />
@@ -81,12 +100,12 @@ const Home = () => {
   );
 
   return (
-    <div style={{ padding: '0 24px 100px 24px', minHeight: '100%' }}>
+    <div style={{ padding: '0 16px 40px 16px', minHeight: '100%' }}>
       
       <HomeHeader user={user} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-text-main)' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-gold)' }}>
           {searchQuery ? `Résultats pour "${searchQuery}"` : 'Récemment ajoutés'}
         </h2>
         
@@ -101,10 +120,14 @@ const Home = () => {
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', marginTop: '40px' }}
         >
-          <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <SearchX size={32} color="var(--color-text-secondary)" />
+          <div style={{ 
+            width: '80px', height: '80px', borderRadius: '50%', 
+            background: 'rgba(255, 215, 0, 0.15)', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center' 
+          }}>
+            <SearchX size={32} color="var(--color-gold)" />
           </div>
-          <p style={{ textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '15px' }}>
+          <p style={{ textAlign: 'center', color: 'var(--color-text-on-bg-secondary)', fontSize: '15px' }}>
             {searchQuery ? "Aucun module ne correspond à ta recherche." : "Aucune formation disponible pour le moment."}
           </p>
         </motion.div>

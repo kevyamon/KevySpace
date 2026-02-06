@@ -20,30 +20,30 @@ const HomeHeader = ({ user, searchQuery, setSearchQuery }) => {
         marginBottom: '20px' 
       }}>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: '800', lineHeight: '1.2', color: 'var(--text-primary)' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: '800', lineHeight: '1.2', color: 'var(--color-text-on-bg-secondary)' }}>
             Salut, <span style={{ color: 'var(--color-gold)' }}>{user?.name?.split(' ')[0]}</span>
           </h1>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '500' }}>
+          <p style={{ fontSize: '13px', color: 'rgba(245, 243, 240, 0.6)', fontWeight: '500' }}>
             Qu'apprenons-nous aujourd'hui ?
           </p>
         </div>
 
         {/* BOUTON NOTIFICATION (JAUNE + ANIMÉ) */}
         <motion.button 
-          whileTap={{ rotate: [0, -20, 20, 0] }} // Petite animation Ding-Dong
+          whileTap={{ rotate: [0, -20, 20, 0] }}
           onClick={() => navigate('/notifications')}
           style={{ 
             position: 'relative',
-            background: 'var(--bg-surface)', // Fond dynamique
-            border: '1px solid var(--border-color)', // Bordure dynamique
+            background: 'rgba(255, 215, 0, 0.15)',
+            border: '1px solid rgba(255, 215, 0, 0.3)',
             borderRadius: '50%', 
             width: '44px', height: '44px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 12px var(--shadow-color)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
             cursor: 'pointer'
           }}
         >
-          <Bell size={20} color="#FFD700" fill="#FFD700" /> {/* Jaune Or reste fixe */}
+          <Bell size={20} color="#FFD700" fill="#FFD700" />
           
           {unreadCount > 0 && (
             <span style={{
@@ -51,17 +51,17 @@ const HomeHeader = ({ user, searchQuery, setSearchQuery }) => {
               width: '8px', height: '8px',
               backgroundColor: '#FF3B30',
               borderRadius: '50%',
-              border: '1px solid var(--bg-surface)'
+              border: '2px solid var(--color-bg)'
             }}></span>
           )}
         </motion.button>
       </div>
 
-      {/* BARRE DE RECHERCHE "LIQUID GLASS" AMÉLIORÉE */}
+      {/* BARRE DE RECHERCHE ADAPTÉE AU FOND FONCÉ */}
       <div style={{ position: 'relative' }}>
         <div style={{ 
           position: 'absolute', left: '16px', top: '50%', 
-          transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-secondary)'
+          transform: 'translateY(-50%)', pointerEvents: 'none', color: 'rgba(245, 243, 240, 0.4)'
         }}>
           <Search size={18} />
         </div>
@@ -73,24 +73,26 @@ const HomeHeader = ({ user, searchQuery, setSearchQuery }) => {
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{
             width: '100%',
-            padding: '14px 40px 14px 48px', // Espace pour la croix à droite
+            padding: '14px 40px 14px 48px',
             borderRadius: '16px',
-            border: '1px solid var(--border-color)', // Bordure subtile
-            backgroundColor: 'var(--bg-glass)', // Fond vitré dynamique (Noir/Blanc transparent)
+            border: '1px solid rgba(255, 215, 0, 0.2)',
+            backgroundColor: 'rgba(255, 255, 255, 0.08)',
             backdropFilter: 'blur(10px)', 
-            boxShadow: '0 4px 20px var(--shadow-color)',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
             fontSize: '15px',
-            color: 'var(--text-primary)', // Texte dynamique
+            color: 'var(--color-text-on-bg-secondary)',
             outline: 'none',
             transition: 'all 0.2s ease'
           }}
           onFocus={(e) => {
-             e.target.style.boxShadow = '0 4px 25px rgba(255, 215, 0, 0.15)'; // Ombre dorée au focus
+             e.target.style.boxShadow = '0 4px 25px rgba(255, 215, 0, 0.2)';
              e.target.style.borderColor = 'var(--color-gold)';
+             e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.12)';
           }}
           onBlur={(e) => {
-             e.target.style.boxShadow = '0 4px 20px var(--shadow-color)';
-             e.target.style.borderColor = 'var(--border-color)';
+             e.target.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.15)';
+             e.target.style.borderColor = 'rgba(255, 215, 0, 0.2)';
+             e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
           }}
         />
 
@@ -104,10 +106,10 @@ const HomeHeader = ({ user, searchQuery, setSearchQuery }) => {
                     onClick={() => setSearchQuery('')}
                     style={{
                         position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                        background: 'var(--bg-input)', // Fond bouton dynamique
+                        background: 'rgba(255, 215, 0, 0.2)',
                         border: 'none', borderRadius: '50%',
-                        width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer', color: 'var(--text-secondary)'
+                        width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', color: 'var(--color-gold)'
                     }}
                 >
                     <X size={12} />

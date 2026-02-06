@@ -10,13 +10,10 @@ const Input = ({
   icon, 
   required = false 
 }) => {
-  // État pour savoir si on montre le mot de passe ou non
   const [showPassword, setShowPassword] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
-  // Est-ce un champ mot de passe ?
   const isPassword = type === 'password';
-
-  // Si c'est un mot de passe et qu'on veut le voir, on le passe en 'text', sinon on garde le type original
   const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
 
   return (
@@ -28,9 +25,10 @@ const Input = ({
           left: '16px',
           top: '50%',
           transform: 'translateY(-50%)',
-          color: '#8E8E93',
+          color: isFocused ? 'var(--color-gold)' : 'rgba(245, 243, 240, 0.4)',
           display: 'flex',
-          zIndex: 1
+          zIndex: 1,
+          transition: 'color 0.2s ease'
         }}>
           {icon}
         </div>
@@ -46,26 +44,30 @@ const Input = ({
         style={{
           width: '100%',
           padding: '16px',
-          paddingLeft: icon ? '48px' : '16px', // Place pour icône gauche
-          paddingRight: isPassword ? '48px' : '16px', // Place pour l'œil à droite
+          paddingLeft: icon ? '48px' : '16px',
+          paddingRight: isPassword ? '48px' : '16px',
           borderRadius: '16px',
-          border: 'none',
-          backgroundColor: '#FFFFFF',
+          border: isFocused ? '1px solid var(--color-gold)' : '1px solid rgba(255, 215, 0, 0.2)',
+          backgroundColor: isFocused ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.08)',
           fontSize: '16px',
-          color: 'var(--color-text-main)',
+          color: 'var(--color-text-on-bg-secondary)',
           outline: 'none',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+          boxShadow: isFocused ? '0 4px 20px rgba(255, 215, 0, 0.15)' : '0 2px 10px rgba(0, 0, 0, 0.15)',
           transition: 'all 0.2s ease',
           fontFamily: 'inherit'
         }}
-        onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px var(--color-gold)'}
-        onBlur={(e) => e.target.style.boxShadow = '0 2px 10px rgba(0,0,0,0.03)'}
+        onFocus={(e) => {
+          setIsFocused(true);
+        }}
+        onBlur={(e) => {
+          setIsFocused(false);
+        }}
       />
 
       {/* BOUTON ŒIL (Uniquement pour les mots de passe) */}
       {isPassword && (
         <button
-          type="button" // Important pour ne pas soumettre le formulaire
+          type="button"
           onClick={() => setShowPassword(!showPassword)}
           style={{
             position: 'absolute',
@@ -75,9 +77,10 @@ const Input = ({
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            color: '#8E8E93',
+            color: showPassword ? 'var(--color-gold)' : 'rgba(245, 243, 240, 0.4)',
             display: 'flex',
-            padding: 0
+            padding: 0,
+            transition: 'color 0.2s ease'
           }}
         >
           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}

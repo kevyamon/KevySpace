@@ -12,30 +12,23 @@ const Certificates = () => {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Ref pour stocker l'ID utilisateur et éviter les problèmes de closure dans le Socket
   const userIdRef = useRef(null);
 
-  // 1. Mise à jour de la Ref quand l'user change
   useEffect(() => {
     if (user) {
-      // On gère les deux cas : _id (Mongo) ou id (transformé)
       userIdRef.current = String(user._id || user.id);
     }
   }, [user]);
 
-  // 2. Chargement initial + Gestion Socket
   useEffect(() => {
     fetchCertificates();
 
-    // --- CONNEXION SOCKET ---
-    // Création locale : garantit une connexion fraiche au montage du composant
     const socket = io('https://kevyspace-backend.onrender.com');
 
     const handleCertificateAction = (payload) => {
       const myCurrentId = userIdRef.current;
       const targetId = String(payload.targetUserId || '').trim();
 
-      // VÉRIFICATION STRICTE
       if (myCurrentId && targetId === myCurrentId) {
         
         if (payload.type === 'add') {
@@ -55,10 +48,9 @@ const Certificates = () => {
 
     socket.on('certificate_action', handleCertificateAction);
 
-    // --- NETTOYAGE (VACCIN) ---
     return () => {
       socket.off('certificate_action', handleCertificateAction);
-      socket.disconnect(); // Coupe la connexion en quittant la page
+      socket.disconnect();
     };
   }, []); 
 
@@ -73,29 +65,62 @@ const Certificates = () => {
     }
   };
 
-  if (loading) return <div style={{height:'80vh', display:'flex', alignItems:'center', justifyContent:'center'}}><Loader2 className="animate-spin" color="var(--color-gold)" size={40} /></div>;
+  if (loading) return (
+    <div style={{ height: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Loader2 className="animate-spin" color="var(--color-gold)" size={40} />
+    </div>
+  );
 
   return (
-    <div style={{ padding: '24px 24px 100px 24px', minHeight: '100%' }}>
+    <div style={{ padding: '24px 16px 60px 16px', minHeight: '100%' }}>
+      {/* EN-TÊTE */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
-        <div style={{ width: '44px', height: '44px', borderRadius: '14px', backgroundColor: '#FFF9E6', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(255, 215, 0, 0.1)' }}>
+        <div style={{ 
+          width: '44px', height: '44px', borderRadius: '14px', 
+          backgroundColor: 'rgba(255, 215, 0, 0.15)', 
+          display: 'flex', alignItems: 'center', justifyContent: 'center', 
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+          border: '1px solid rgba(255, 215, 0, 0.25)' 
+        }}>
           <Award size={24} color="#FFD700" />
         </div>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#1D1D1F', lineHeight: '1.2' }}>Mes Certificats</h1>
-          <p style={{ fontSize: '13px', color: '#86868B' }}>Vos trophées de compétences ({certificates.length})</p>
+          <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-gold)', lineHeight: '1.2' }}>Mes Certificats</h1>
+          <p style={{ fontSize: '13px', color: 'rgba(245, 243, 240, 0.6)' }}>Vos trophées de compétences ({certificates.length})</p>
         </div>
       </div>
 
+      {/* ÉTAT VIDE */}
       {certificates.length === 0 ? (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '60px', textAlign: 'center', padding: '40px 20px', backgroundColor: '#FFF', borderRadius: '24px', boxShadow: '0 8px 32px rgba(0,0,0,0.03)' }}>
-          <div style={{ width: '100px', height: '100px', borderRadius: '50%', marginBottom: '24px', background: 'linear-gradient(135deg, #F5F5F7 0%, #FFF 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #E5E5EA' }}>
-            <Lock size={40} color="#C7C7CC" />
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          style={{ 
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+            marginTop: '60px', textAlign: 'center', padding: '40px 20px', 
+            backgroundColor: 'rgba(255, 255, 255, 0.06)', 
+            borderRadius: '24px', 
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+            border: '1px solid rgba(255, 215, 0, 0.1)' 
+          }}
+        >
+          <div style={{ 
+            width: '100px', height: '100px', borderRadius: '50%', marginBottom: '24px', 
+            background: 'rgba(255, 215, 0, 0.1)', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            border: '1px solid rgba(255, 215, 0, 0.2)' 
+          }}>
+            <Lock size={40} color="rgba(255, 215, 0, 0.5)" />
           </div>
-          <h3 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '8px', color: '#1D1D1F' }}>Aucun certificat... pour l'instant !</h3>
-          <p style={{ fontSize: '14px', color: '#86868B', lineHeight: '1.6', maxWidth: '300px' }}>Complétez vos formations pour débloquer vos certificats officiels.</p>
+          <h3 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '8px', color: 'var(--color-text-on-bg-secondary)' }}>
+            Aucun certificat... pour l'instant !
+          </h3>
+          <p style={{ fontSize: '14px', color: 'rgba(245, 243, 240, 0.6)', lineHeight: '1.6', maxWidth: '300px' }}>
+            Complétez vos formations pour débloquer vos certificats officiels.
+          </p>
         </motion.div>
       ) : (
+        /* GRILLE DE CERTIFICATS */
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
           <AnimatePresence>
             {certificates.map((cert) => (
@@ -105,20 +130,53 @@ const Certificates = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 layout 
-                style={{ backgroundColor: '#FFF', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.02)' }}
+                style={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)', 
+                  borderRadius: '20px', 
+                  overflow: 'hidden', 
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)', 
+                  border: '1px solid rgba(255, 215, 0, 0.15)' 
+                }}
               >
-                <div style={{ height: '160px', backgroundColor: '#F5F5F7', position: 'relative', overflow:'hidden' }}>
+                {/* PREVIEW IMAGE/PDF */}
+                <div style={{ height: '160px', backgroundColor: 'rgba(255, 255, 255, 0.04)', position: 'relative', overflow: 'hidden' }}>
                   {cert.fileUrl?.endsWith('.pdf') ? (
-                     <div style={{height:'100%', display:'flex', alignItems:'center', justifyContent:'center', background:'#FFF9E6'}}><FileText size={50} color="#DAA520"/></div>
+                     <div style={{ 
+                       height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                       background: 'rgba(255, 215, 0, 0.1)' 
+                     }}>
+                       <FileText size={50} color="#FFD700" />
+                     </div>
                   ) : (
                      <img src={cert.fileUrl} alt={cert.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   )}
                 </div>
+
+                {/* INFOS */}
                 <div style={{ padding: '20px' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#1D1D1F' }}>{cert.title}</h3>
-                  <p style={{ fontSize: '12px', color: '#86868B', marginBottom: '16px' }}>Obtenu le {new Date(cert.awardedAt).toLocaleDateString()}</p>
+                  <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: 'var(--color-text-on-bg-secondary)' }}>
+                    {cert.title}
+                  </h3>
+                  <p style={{ fontSize: '12px', color: 'rgba(245, 243, 240, 0.5)', marginBottom: '16px' }}>
+                    Obtenu le {new Date(cert.awardedAt).toLocaleDateString()}
+                  </p>
                   
-                  <a href={cert.fileUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', borderRadius: '12px', backgroundColor: '#1D1D1F', color: '#FFF', fontSize: '13px', fontWeight: '700', border: 'none', textDecoration:'none', transition:'transform 0.1s' }}>
+                  {/* BOUTON TÉLÉCHARGER */}
+                  <a 
+                    href={cert.fileUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    style={{ 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', 
+                      padding: '12px', borderRadius: '12px', 
+                      backgroundColor: 'var(--color-gold)', 
+                      color: 'var(--color-bg)', 
+                      fontSize: '13px', fontWeight: '700', 
+                      border: 'none', textDecoration: 'none', 
+                      transition: 'transform 0.1s',
+                      boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)' 
+                    }}
+                  >
                     <Download size={16} /> Télécharger
                   </a>
                 </div>

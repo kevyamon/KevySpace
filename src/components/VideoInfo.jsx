@@ -21,17 +21,17 @@ const VideoInfo = ({ video, viewsCount, likesCount, isLiked, onLike, onShare }) 
   return (
     <div style={{ padding: '20px' }}>
       {/* Titre */}
-      <h1 style={{ fontSize: '20px', fontWeight: '800', lineHeight: '1.3', marginBottom: '8px', color: 'var(--text-primary)' }}>
+      <h1 style={{ fontSize: '20px', fontWeight: '800', lineHeight: '1.3', marginBottom: '8px', color: 'var(--color-gold)' }}>
         {video?.title}
       </h1>
 
       {/* Stats (Vues, Likes, Date) */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', color: 'rgba(245, 243, 240, 0.6)', marginBottom: '24px', flexWrap: 'wrap' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <Eye size={14} /> {viewsCount.toLocaleString()} vues
         </span>
         <span>•</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: isLiked ? '#FF3B30' : 'var(--text-secondary)', fontWeight: isLiked ? '700' : '400' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: isLiked ? '#FF3B30' : 'rgba(245, 243, 240, 0.6)', fontWeight: isLiked ? '700' : '400' }}>
           <Heart size={14} fill={isLiked ? "#FF3B30" : "none"} /> {likesCount} likes
         </span>
         <span>•</span>
@@ -45,20 +45,20 @@ const VideoInfo = ({ video, viewsCount, likesCount, isLiked, onLike, onShare }) 
         
         {/* BOUTON LIKE (Cœur) */}
         <ActionButton 
-          icon={<Heart size={20} fill={isLiked ? "#FF3B30" : "none"} color={isLiked ? "#FF3B30" : "var(--text-primary)"} />} 
+          icon={<Heart size={20} fill={isLiked ? "#FF3B30" : "none"} color={isLiked ? "#FF3B30" : "var(--color-gold)"} />} 
           label={isLiked ? "Aimé" : "J'aime"} 
           onClick={handleLike} 
           active={isLiked} 
         />
         
-        <ActionButton icon={<Share2 size={20} />} label="Partager" onClick={handleShare} />
-        <ActionButton icon={<MessageCircle size={20} />} label={`${video?.comments?.length || 0}`} onClick={() => {}} />
+        <ActionButton icon={<Share2 size={20} color="var(--color-gold)" />} label="Partager" onClick={handleShare} />
+        <ActionButton icon={<MessageCircle size={20} color="var(--color-gold)" />} label={`${video?.comments?.length || 0}`} onClick={() => {}} />
       </div>
 
       {/* DESCRIPTION ACCORDÉON */}
       <div style={{ 
-        backgroundColor: 'var(--bg-input)', 
-        border: '1px solid var(--border-color)',
+        backgroundColor: 'rgba(255, 255, 255, 0.08)', 
+        border: '1px solid rgba(255, 215, 0, 0.15)',
         borderRadius: '16px', padding: '16px',
         marginBottom: '32px',
         maxHeight: isDescExpanded ? 'none' : '150px', 
@@ -66,10 +66,10 @@ const VideoInfo = ({ video, viewsCount, likesCount, isLiked, onLike, onShare }) 
         transition: 'all 0.3s ease',
         position: 'relative'
       }}>
-        <p style={{ fontWeight: '700', marginBottom: '8px', fontSize: '14px', color: 'var(--text-primary)' }}>Description</p>
+        <p style={{ fontWeight: '700', marginBottom: '8px', fontSize: '14px', color: 'var(--color-gold)' }}>Description</p>
         
         <div style={{ 
-          fontSize: '14px', lineHeight: '1.6', color: 'var(--text-secondary)',
+          fontSize: '14px', lineHeight: '1.6', color: 'var(--color-text-on-bg-secondary)',
           display: isDescExpanded ? 'block' : '-webkit-box',
           WebkitLineClamp: isDescExpanded ? 'none' : 3,
           WebkitBoxOrient: 'vertical',
@@ -83,8 +83,8 @@ const VideoInfo = ({ video, viewsCount, likesCount, isLiked, onLike, onShare }) 
           onClick={() => setIsDescExpanded(!isDescExpanded)}
           style={{ 
             display: 'block', width: '100%', textAlign: 'center',
-            background: 'transparent', border: 'none', borderTop: '1px solid var(--border-color)',
-            fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)',
+            background: 'transparent', border: 'none', borderTop: '1px solid rgba(255, 215, 0, 0.15)',
+            fontSize: '12px', fontWeight: '700', color: 'var(--color-gold)',
             marginTop: '12px', paddingTop: '8px', cursor: 'pointer'
           }}
         >
@@ -95,7 +95,7 @@ const VideoInfo = ({ video, viewsCount, likesCount, isLiked, onLike, onShare }) 
   );
 };
 
-// --- LE BOUTON CORRIGÉ (Visible sur fond blanc et noir) ---
+// --- LE BOUTON CORRIGÉ (Adapté au fond foncé) ---
 const ActionButton = ({ icon, label, onClick, active }) => (
   <motion.button 
     whileTap={{ scale: 0.95 }}
@@ -106,17 +106,13 @@ const ActionButton = ({ icon, label, onClick, active }) => (
       padding: '12px', 
       borderRadius: '16px', 
       
-      // 1. FOND : Surface ou Rouge pâle si actif
-      backgroundColor: active ? 'rgba(255, 59, 48, 0.1)' : 'var(--bg-surface)', 
+      backgroundColor: active ? 'rgba(255, 59, 48, 0.15)' : 'rgba(255, 255, 255, 0.08)', 
       
-      // 2. BORDURE : Indispensable pour la visibilité
-      border: active ? '1px solid #FF3B30' : '1px solid var(--border-color)', 
+      border: active ? '1px solid #FF3B30' : '1px solid rgba(255, 215, 0, 0.2)', 
       
-      // 3. COULEUR TEXTE
-      color: active ? '#FF3B30' : 'var(--text-primary)', 
+      color: active ? '#FF3B30' : 'var(--color-text-on-bg-secondary)', 
       
-      // 4. OMBRE
-      boxShadow: '0 2px 6px var(--shadow-color)',
+      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
       
       fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' 
     }}

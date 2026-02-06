@@ -82,7 +82,7 @@ const Register = () => {
           marginBottom: '24px', width: 'fit-content' 
         }}
       >
-        <ArrowLeft color="var(--color-text-main)" />
+        <ArrowLeft color="var(--color-gold)" />
       </button>
 
       <motion.div
@@ -91,8 +91,10 @@ const Register = () => {
         transition={{ duration: 0.4 }}
         style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
       >
-        <h1 style={{ fontSize: '32px', marginBottom: '8px', color: 'var(--color-text-main)', fontWeight: '800' }}>Créer un compte</h1>
-        <p style={{ color: 'var(--color-text-secondary)', marginBottom: '32px' }}>
+        <h1 style={{ fontSize: '32px', marginBottom: '8px', color: 'var(--color-text-on-bg-secondary)', fontWeight: '800' }}>
+          Créer un <span style={{ color: 'var(--color-gold)' }}>compte</span>
+        </h1>
+        <p style={{ color: 'rgba(245, 243, 240, 0.6)', marginBottom: '32px' }}>
           Rejoignez KevySpace pour commencer.
         </p>
 
@@ -125,8 +127,8 @@ const Register = () => {
                   style={{
                     width: '100%',
                     height: '56px',
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-color)',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 215, 0, 0.2)',
                     borderRadius: '16px',
                     display: 'flex',
                     alignItems: 'center',
@@ -135,11 +137,11 @@ const Register = () => {
                     cursor: 'pointer',
                     fontSize: '15px',
                     fontWeight: '600',
-                    color: 'var(--color-text-main)'
+                    color: 'var(--color-text-on-bg-secondary)'
                   }}
                 >
                   <span>{COUNTRY_CODES.find(c => c.code === countryCode)?.flag} {countryCode}</span>
-                  <ChevronDown size={16} />
+                  <ChevronDown size={16} color="var(--color-gold)" />
                 </button>
 
                 {showDropdown && (
@@ -156,7 +158,7 @@ const Register = () => {
                       borderRadius: '16px',
                       maxHeight: '200px',
                       overflowY: 'auto',
-                      boxShadow: '0 8px 24px var(--shadow-color)',
+                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
                       zIndex: 1000
                     }}
                   >
@@ -220,7 +222,7 @@ const Register = () => {
           </div>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: '24px', marginBottom: '24px', fontSize: '14px', color: 'var(--color-text-secondary)' }}>
+        <p style={{ textAlign: 'center', marginTop: '24px', marginBottom: '24px', fontSize: '14px', color: 'rgba(245, 243, 240, 0.6)' }}>
           Déjà un compte ?{' '}
           <Link to="/login" style={{ color: 'var(--color-gold)', fontWeight: '600', textDecoration: 'none' }}>
             Se connecter

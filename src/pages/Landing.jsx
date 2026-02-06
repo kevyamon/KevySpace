@@ -12,15 +12,14 @@ const Landing = () => {
 
   return (
     <div style={{
-      /* Layout global */
       minHeight: '100%', 
       width: '100%',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center', 
       padding: '20px', 
-      paddingTop: '30px', // RÉDUIT (avant: 50px)
-      paddingBottom: '20px', // RÉDUIT (avant: 32px)
+      paddingTop: '30px',
+      paddingBottom: '20px',
       overflowX: 'hidden', 
     }}>
       
@@ -40,11 +39,12 @@ const Landing = () => {
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
           <h1 style={{ 
-            fontSize: 'clamp(32px, 8vw, 42px)', // LÉGÈREMENT RÉDUIT
+            fontSize: 'clamp(32px, 8vw, 42px)',
             lineHeight: '1.1', 
             marginBottom: '12px',
             fontWeight: '800',
             textAlign: 'center',
+            color: 'var(--color-text-on-bg-secondary)'
           }}>
             Kevy<span style={{ color: 'var(--color-gold)' }}>Space</span>.
           </h1>
@@ -56,9 +56,9 @@ const Landing = () => {
             text="La formation réinventée." 
             delay={0.3}
             style={{
-              fontSize: '22px', // RÉDUIT (26px -> 22px)
+              fontSize: '22px',
               fontWeight: '700',
-              color: 'var(--color-text-main)',
+              color: 'var(--color-gold)',
               lineHeight: '1.2',
             }}
           />
@@ -69,7 +69,7 @@ const Landing = () => {
             transition={{ delay: 1.5, duration: 0.8 }}
             style={{ 
               fontSize: '14px', 
-              color: 'var(--color-text-secondary)', 
+              color: 'rgba(245, 243, 240, 0.6)', 
               fontWeight: '500',
               marginTop: '6px'
             }}
@@ -80,10 +80,10 @@ const Landing = () => {
 
         {/* LISTE FEATURES (COMPACTÉE) */}
         <div style={{ 
-          marginTop: '24px', // FORTEMENT RÉDUIT (48px -> 24px)
+          marginTop: '24px',
           display: 'flex', 
           flexDirection: 'column', 
-          gap: '16px', // RÉDUIT (24px -> 16px)
+          gap: '16px',
           width: '100%' 
         }}>
           <FeatureItem 
@@ -118,12 +118,11 @@ const Landing = () => {
         style={{ 
           display: 'flex', 
           flexDirection: 'column', 
-          gap: '10px', // Espacement réduit entre boutons
+          gap: '10px',
           flex: '0 0 auto',
           width: '100%'
         }}
       >
-        {/* BOUTONS EN TAILLE SMALL */}
         <Button fullWidth onClick={() => navigate('/login')} pulse={true} size="small">
           Se connecter
         </Button>
@@ -131,11 +130,11 @@ const Landing = () => {
           Créer un compte
         </Button>
         
-        {/* FOOTER BIEN VISIBLE MAINTENANT */}
+        {/* FOOTER */}
         <div style={{ 
           textAlign: 'center', 
           fontSize: '10px', 
-          color: '#999', 
+          color: 'rgba(245, 243, 240, 0.35)', 
           marginTop: '10px',
           fontWeight: '500',
           lineHeight: '1.4' 
@@ -202,10 +201,11 @@ const FeatureItem = ({ icon, text, delay, direction }) => {
       style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
     >
       <div style={{ 
-        background: '#fff', 
-        padding: '10px', // Padding réduit
+        background: 'rgba(255, 215, 0, 0.15)', 
+        padding: '10px',
         borderRadius: '10px', 
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', 
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)', 
+        border: '1px solid rgba(255, 215, 0, 0.25)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -214,8 +214,8 @@ const FeatureItem = ({ icon, text, delay, direction }) => {
       </div>
       <span style={{ 
         fontWeight: '600', 
-        fontSize: '14px', // Police réduite
-        color: 'var(--color-text-main)',
+        fontSize: '14px',
+        color: 'var(--color-text-on-bg-secondary)',
       }}>
         {text}
       </span>

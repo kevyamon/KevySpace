@@ -138,10 +138,10 @@ const Profile = () => {
               position: 'absolute',
               bottom: '0',
               right: '0',
-              backgroundColor: '#1D1D1F', // Noir élégant
+              backgroundColor: '#1D1D1F',
               width: '36px', height: '36px',
               borderRadius: '50%',
-              border: '3px solid #FFF', // Bordure blanche pour séparer de l'image
+              border: '3px solid #FFF',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
               boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
@@ -191,8 +191,11 @@ const Profile = () => {
           style={{ 
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
             width: '100%', padding: '16px', borderRadius: '18px',
-            backgroundColor: '#1D1D1F', color: '#FFF', border: 'none',
-            fontSize: '14px', fontWeight: '700', cursor: 'pointer'
+            backgroundColor: 'var(--color-gold)', 
+            color: 'var(--color-bg)', 
+            border: 'none',
+            fontSize: '14px', fontWeight: '700', cursor: 'pointer',
+            boxShadow: '0 4px 16px rgba(255, 215, 0, 0.3)'
           }}
         >
           <Edit2 size={18} /> Modifier mes informations
