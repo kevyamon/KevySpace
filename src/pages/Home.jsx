@@ -1,10 +1,12 @@
 // src/pages/Home.jsx
-import React, { useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { SearchX, ArrowUp } from 'lucide-react'; 
 import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import io from 'socket.io-client';
+import toast from 'react-hot-toast';
 
 import HomeHeader from '../components/HomeHeader';
 import VideoCard from '../components/VideoCard';
@@ -69,6 +71,38 @@ const Home = () => {
     setGlobalLoading(true);
     fetchVideos();
     return () => setGlobalLoading(false);
+  }, []);
+
+  // =====================
+  // SOCKET IO — TEMPS RÉEL VIDÉOS
+  // =====================
+  useEffect(() => {
+    const socket = io('https://kevyspace-backend.onrender.com');
+
+    const handleVideoAction = (payload) => {
+      if (payload.type === 'add') {
+        setVideos(prev => {
+          const exists = prev.some(v => String(v._id) === String(payload.data._id));
+          if (exists) return prev;
+          return [payload.data, ...prev];
+        });
+        toast.success(`🎓 Nouveau cours : "${payload.data.title}"`, {
+          duration: 5000,
+          icon: '🆕'
+        });
+      }
+
+      if (payload.type === 'delete') {
+        setVideos(prev => prev.filter(v => String(v._id) !== String(payload.id)));
+      }
+    };
+
+    socket.on('video_action', handleVideoAction);
+
+    return () => {
+      socket.off('video_action', handleVideoAction);
+      socket.disconnect();
+    };
   }, []);
 
   const fetchVideos = async () => {
