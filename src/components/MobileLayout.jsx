@@ -30,6 +30,8 @@ const useScreenType = () => {
   return screenType;
 };
 
+const SIDEBAR_WIDTH = '280px';
+
 const MobileLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user } = useContext(AuthContext);
@@ -48,12 +50,13 @@ const MobileLayout = ({ children }) => {
   if (screenType === 'desktop') {
     return (
       <div style={{ 
-        minHeight: '100vh', 
+        height: '100vh', 
         backgroundColor: 'var(--color-bg)',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        overflow: 'hidden'
       }}>
-        {/* HEADER DESKTOP */}
+        {/* HEADER DESKTOP — PLEINE LARGEUR */}
         {showNavbar && (
           <header style={{
             height: '64px',
@@ -63,11 +66,9 @@ const MobileLayout = ({ children }) => {
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '0 32px',
-            position: 'sticky',
-            top: 0,
+            flexShrink: 0,
             zIndex: 100,
-            boxShadow: '0 2px 10px var(--shadow-color)',
-            flexShrink: 0
+            boxShadow: '0 2px 10px var(--shadow-color)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <img 
@@ -95,45 +96,44 @@ const MobileLayout = ({ children }) => {
           </header>
         )}
 
-        {/* CONTENU PRINCIPAL DESKTOP */}
+        {/* CORPS : SIDEBAR FIXE + CONTENU SCROLLABLE */}
         <div style={{ 
           display: 'flex', 
           flex: 1,
-          maxWidth: '1400px',
-          margin: '0 auto',
-          width: '100%',
-          padding: '24px',
-          gap: '24px'
+          overflow: 'hidden'
         }}>
-          {/* SIDEBAR DESKTOP — MODE EMBEDDED */}
+          {/* SIDEBAR FIXE — COLLÉE À GAUCHE */}
           {showSidebar && (
-            <div style={{
-              width: '280px',
+            <aside style={{
+              width: SIDEBAR_WIDTH,
               flexShrink: 0,
-              position: 'sticky',
-              top: '88px',
-              height: 'calc(100vh - 112px)',
+              height: '100%',
               overflowY: 'auto',
               overflowX: 'hidden',
               backgroundColor: 'var(--bg-surface)',
-              borderRadius: '16px',
-              border: '1px solid var(--border-color)',
-              boxShadow: '0 4px 20px var(--shadow-color)'
+              borderRight: '1px solid var(--border-color)',
+              boxShadow: '2px 0 20px var(--shadow-color)'
             }}>
               <Sidebar embedded />
-            </div>
+            </aside>
           )}
 
-          {/* CONTENU */}
+          {/* CONTENU PRINCIPAL — SCROLLABLE */}
           <main style={{
             flex: 1,
             minWidth: 0,
-            color: 'var(--color-text-on-bg)',
             overflowY: 'auto',
             overflowX: 'hidden',
-            minHeight: 'calc(100vh - 120px)'
+            color: 'var(--color-text-on-bg)'
           }}>
-            {children}
+            <div style={{
+              maxWidth: '1100px',
+              margin: '0 auto',
+              padding: '24px',
+              width: '100%'
+            }}>
+              {children}
+            </div>
           </main>
         </div>
       </div>
@@ -247,7 +247,6 @@ const MobileLayout = ({ children }) => {
       
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      {/* NAVBAR MOBILE */}
       {showNavbar && (
         <div style={{
           flexShrink: 0,
@@ -301,7 +300,6 @@ const MobileLayout = ({ children }) => {
         </div>
       )}
 
-      {/* CONTENU MOBILE */}
       <div style={{ 
         flex: 1,
         overflowY: 'auto',
