@@ -4,6 +4,7 @@ import { Loader2, MessageCircle } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import io from 'socket.io-client';
 
 import CommentItem from './comments/CommentItem';
 import CommentInput from './comments/CommentInput';
@@ -25,9 +26,17 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
 
   const timerRef = useRef(null);
   const commentsListRef = useRef(null);
+  const userIdRef = useRef(null);
+
+  // Stocker l'ID user dans une ref pour éviter les problèmes de closure
+  useEffect(() => {
+    if (user) {
+      userIdRef.current = String(user._id || user.id);
+    }
+  }, [user]);
 
   // =====================
-  // CHARGEMENT
+  // CHARGEMENT + SOCKET
   // =====================
   useEffect(() => {
     const fetchComments = async () => {
@@ -44,6 +53,54 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
       }
     };
     fetchComments();
+
+    // --- CONNEXION SOCKET ---
+    const socket = io('https://kevyspace-backend.onrender.com');
+
+    const handleCommentAction = (payload) => {
+      // On ne traite que les événements pour CETTE vidéo
+      if (payload.videoId !== videoId) return;
+
+      const myId = userIdRef.current;
+
+      if (payload.type === 'add') {
+        // Éviter les doublons : si c'est MON commentaire, je l'ai déjà ajouté en optimistic UI
+        if (payload.userId === myId) return;
+
+        setComments(prev => {
+          // Vérifier qu'il n'existe pas déjà
+          const exists = prev.some(c => String(c._id) === String(payload.data._id));
+          if (exists) return prev;
+          return [payload.data, ...prev];
+        });
+        if (setCommentsCount) setCommentsCount(prev => prev + 1);
+      }
+
+      if (payload.type === 'update') {
+        // Si c'est MON edit, je l'ai déjà mis à jour en optimistic UI
+        if (payload.userId === myId) return;
+
+        setComments(prev => prev.map(c => 
+          String(c._id) === String(payload.data._id) ? payload.data : c
+        ));
+      }
+
+      if (payload.type === 'delete') {
+        // Si c'est MA suppression, je l'ai déjà retiré en optimistic UI
+        if (payload.userId === myId) return;
+
+        setComments(prev => prev.filter(c => String(c._id) !== String(payload.id)));
+        if (setCommentsCount) setCommentsCount(prev => Math.max(0, prev - 1));
+      }
+    };
+
+    socket.on('comment_action', handleCommentAction);
+
+    // --- NETTOYAGE ---
+    return () => {
+      socket.off('comment_action', handleCommentAction);
+      socket.disconnect();
+    };
   }, [videoId]);
 
   // =====================
@@ -100,8 +157,10 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
     try {
       const res = await api.post(`/api/videos/${videoId}/comments`, { text: newCommentObj.text });
       const savedComment = res.data.data;
+      // Remplacer le commentaire temporaire par le vrai
       setComments(prev => prev.map(c => c._id === tempId ? savedComment : c));
     } catch (err) {
+      // Rollback
       setComments(prev => prev.filter(c => c._id !== tempId));
       toast.error("Erreur lors de l'envoi.");
       if (setCommentsCount) setCommentsCount(prev => prev - 1);
