@@ -18,6 +18,17 @@ const Notifications = () => {
     archiveNotification 
   } = useContext(NotificationContext);
 
+  const handleNotificationClick = (notif) => {
+    // Marquer comme lue
+    if (!notif.read) {
+      markAsRead(notif.id);
+    }
+    // Naviguer vers le lien si disponible
+    if (notif.link) {
+      navigate(notif.link);
+    }
+  };
+
   return (
     <div style={{ 
       padding: '20px 16px', 
@@ -40,7 +51,6 @@ const Notifications = () => {
           <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-gold)' }}>Notifications</h1>
         </div>
         
-        {/* BOUTON "TOUT LIRE" */}
         {unreadCount > 0 && (
           <button 
             onClick={markAllAsRead}
@@ -61,7 +71,6 @@ const Notifications = () => {
       {/* LISTE DES NOTIFICATIONS */}
       <div style={{ flex: 1 }}>
         {notifications.length === 0 ? (
-          /* ÉTAT VIDE */
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -100,6 +109,7 @@ const Notifications = () => {
                 onDelete={deleteNotification}
                 onArchive={archiveNotification}
                 onRead={markAsRead}
+                onClick={() => handleNotificationClick(notif)}
               />
             ))}
           </AnimatePresence>

@@ -1,6 +1,6 @@
 // src/components/CommentsSection.jsx
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { Loader2, MessageCircle } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -9,6 +9,7 @@ import io from 'socket.io-client';
 import CommentItem from './comments/CommentItem';
 import CommentInput from './comments/CommentInput';
 import CommentModal from './comments/CommentModal';
+import CommentSkeleton from './comments/CommentSkeleton';
 
 const LONG_PRESS_DURATION = 800;
 const COMMENTS_CONTAINER_HEIGHT = '400px';
@@ -24,11 +25,13 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
+  // NOUVEAU : Stocker l'ID du commentaire parent pour les réponses
+  const [replyingTo, setReplyingTo] = useState(null);
+
   const timerRef = useRef(null);
   const commentsListRef = useRef(null);
   const userIdRef = useRef(null);
 
-  // Stocker l'ID user dans une ref pour éviter les problèmes de closure
   useEffect(() => {
     if (user) {
       userIdRef.current = String(user._id || user.id);
@@ -54,21 +57,16 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
     };
     fetchComments();
 
-    // --- CONNEXION SOCKET ---
     const socket = io('https://kevyspace-backend.onrender.com');
 
     const handleCommentAction = (payload) => {
-      // On ne traite que les événements pour CETTE vidéo
       if (payload.videoId !== videoId) return;
 
       const myId = userIdRef.current;
 
       if (payload.type === 'add') {
-        // Éviter les doublons : si c'est MON commentaire, je l'ai déjà ajouté en optimistic UI
         if (payload.userId === myId) return;
-
         setComments(prev => {
-          // Vérifier qu'il n'existe pas déjà
           const exists = prev.some(c => String(c._id) === String(payload.data._id));
           if (exists) return prev;
           return [payload.data, ...prev];
@@ -77,18 +75,14 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
       }
 
       if (payload.type === 'update') {
-        // Si c'est MON edit, je l'ai déjà mis à jour en optimistic UI
         if (payload.userId === myId) return;
-
         setComments(prev => prev.map(c => 
           String(c._id) === String(payload.data._id) ? payload.data : c
         ));
       }
 
       if (payload.type === 'delete') {
-        // Si c'est MA suppression, je l'ai déjà retiré en optimistic UI
         if (payload.userId === myId) return;
-
         setComments(prev => prev.filter(c => String(c._id) !== String(payload.id)));
         if (setCommentsCount) setCommentsCount(prev => Math.max(0, prev - 1));
       }
@@ -96,7 +90,6 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
 
     socket.on('comment_action', handleCommentAction);
 
-    // --- NETTOYAGE ---
     return () => {
       socket.off('comment_action', handleCommentAction);
       socket.disconnect();
@@ -148,6 +141,8 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
 
     setComments([newCommentObj, ...comments]);
     setInputText('');
+    const currentReplyingTo = replyingTo;
+    setReplyingTo(null);
     if (setCommentsCount) setCommentsCount(prev => prev + 1);
 
     if (commentsListRef.current) {
@@ -155,12 +150,16 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
     }
 
     try {
-      const res = await api.post(`/api/videos/${videoId}/comments`, { text: newCommentObj.text });
+      // Construire le payload avec parentComment si c'est une réponse
+      const payload = { text: newCommentObj.text };
+      if (currentReplyingTo) {
+        payload.parentComment = currentReplyingTo;
+      }
+
+      const res = await api.post(`/api/videos/${videoId}/comments`, payload);
       const savedComment = res.data.data;
-      // Remplacer le commentaire temporaire par le vrai
       setComments(prev => prev.map(c => c._id === tempId ? savedComment : c));
     } catch (err) {
-      // Rollback
       setComments(prev => prev.filter(c => c._id !== tempId));
       toast.error("Erreur lors de l'envoi.");
       if (setCommentsCount) setCommentsCount(prev => prev - 1);
@@ -193,6 +192,7 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
   const handleEditInit = () => {
     setInputText(selectedComment.text);
     setEditMode(true);
+    setReplyingTo(null);
     setIsModalOpen(false);
     setTimeout(() => document.getElementById('comment-input')?.focus(), 100);
   };
@@ -213,19 +213,25 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
   };
 
   // =====================
-  // RÉPONDRE
+  // RÉPONDRE — STOCKE L'ID PARENT
   // =====================
   const handleReply = () => {
-    setInputText(`@${selectedComment.user?.name || 'User'} `);
+    const parentId = selectedComment._id;
+    const parentName = selectedComment.user?.name || 'User';
+    
+    setReplyingTo(parentId);
+    setInputText(`@${parentName} `);
+    setEditMode(false);
     setIsModalOpen(false);
     setTimeout(() => document.getElementById('comment-input')?.focus(), 100);
   };
 
   // =====================
-  // ANNULER ÉDITION
+  // ANNULER
   // =====================
   const handleCancelEdit = () => {
     setEditMode(false);
+    setReplyingTo(null);
     setInputText('');
   };
 
@@ -254,7 +260,7 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
           <MessageCircle size={20} />
           Commentaires
           <span style={{ color: 'rgba(245, 243, 240, 0.5)', fontSize: '16px' }}>
-            {comments.length}
+            {loading ? '...' : comments.length}
           </span>
         </h3>
       </div>
@@ -270,13 +276,11 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
           borderRadius: '16px',
           border: '1px solid rgba(255, 215, 0, 0.1)',
           backgroundColor: 'rgba(255, 255, 255, 0.03)',
-          padding: comments.length > 0 ? '12px' : '0'
+          padding: '12px'
         }}
       >
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 20px' }}>
-            <Loader2 className="animate-spin" color="var(--color-gold)" />
-          </div>
+          <CommentSkeleton count={4} />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {comments.length > 0 ? (
@@ -305,7 +309,7 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
       </div>
 
       {/* INDICATEUR SCROLL */}
-      {comments.length > 5 && (
+      {!loading && comments.length > 5 && (
         <div style={{
           textAlign: 'center',
           padding: '8px 0 4px 0',
@@ -314,6 +318,38 @@ const CommentsSection = ({ videoId, commentsCount, setCommentsCount }) => {
           fontWeight: '500'
         }}>
           ↕ Scrollez pour voir plus de commentaires
+        </div>
+      )}
+
+      {/* INDICATEUR DE RÉPONSE */}
+      {replyingTo && !editMode && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '8px 12px',
+          marginTop: '8px',
+          backgroundColor: 'rgba(255, 215, 0, 0.1)',
+          borderRadius: '12px',
+          border: '1px solid rgba(255, 215, 0, 0.2)',
+          fontSize: '12px',
+          color: 'var(--color-gold)',
+          fontWeight: '600'
+        }}>
+          <span>↩ Réponse à un commentaire</span>
+          <button
+            onClick={() => { setReplyingTo(null); setInputText(''); }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#FF3B30',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: '700'
+            }}
+          >
+            Annuler
+          </button>
         </div>
       )}
 
